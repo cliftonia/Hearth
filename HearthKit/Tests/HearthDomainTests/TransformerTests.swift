@@ -168,3 +168,18 @@ struct ChatModelTests {
         #expect(ChatModel(id: ChatModel.ID(name)).displayName == displayName)
     }
 }
+
+struct SearchSourceTests {
+    @Test(arguments: [
+        ("https://docs.example.com/ps", true),
+        ("HTTP://example.com", true),
+        ("tel:+15550100", false),
+        ("javascript:alert(1)", false),
+        ("otherapp://open?item=1", false),
+        ("file:///etc/hosts", false),
+        ("https:///no-host", false)
+    ])
+    func `only links to web pages are accepted`(address: String, isAccepted: Bool) throws {
+        #expect(SearchSource.isWebLink(try #require(URL(string: address))) == isAccepted)
+    }
+}

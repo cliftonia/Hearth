@@ -13,6 +13,10 @@ struct MarkdownSection: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        // A reply is untrusted text: only links to web pages are opened when tapped.
+        .environment(\.openURL, OpenURLAction { url in
+            SearchSource.isWebLink(url) ? .systemAction : .discarded
+        })
     }
 
     @ViewBuilder

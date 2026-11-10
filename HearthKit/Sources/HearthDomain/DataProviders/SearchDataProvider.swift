@@ -18,9 +18,9 @@ public extension SearchDataProvider {
 }
 
 extension SearchSource {
-    /// Fails for results without a usable link.
+    /// Fails for results whose link is missing or is not a web page.
     init?(from dto: SearchResultDTO) {
-        guard let address = dto.url, let url = URL(string: address), url.host() != nil else {
+        guard let address = dto.url, let url = URL(string: address), Self.isWebLink(url) else {
             return nil
         }
         self.init(title: dto.title ?? address, url: url, snippet: dto.content ?? "")

@@ -14,6 +14,12 @@ public struct SearchSource: Identifiable, Hashable, Codable, Sendable {
 
     public var id: URL { url }
 
+    /// Whether a link leads to a web page. Links from a model or a search engine are untrusted,
+    /// and any other scheme could place a call or open another app when tapped.
+    public static func isWebLink(_ url: URL) -> Bool {
+        ["http", "https"].contains(url.scheme?.lowercased() ?? "") && url.host() != nil
+    }
+
     public init(title: String, url: URL, snippet: String) {
         self.title = title
         self.url = url
