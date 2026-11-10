@@ -34,6 +34,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
     /// Whether questions the user might ask next are suggested under each reply.
     public let isFollowUpsEnabled: Bool
     public let thinkingLevel: ThinkingLevelKind
+    /// Whether the pages a search finds are fetched and read, not just their snippets. The phone fetches them itself.
+    public let isPageReadingEnabled: Bool
 
     public init(
         ollamaAddress: String = "",
@@ -46,7 +48,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         isAutoReadEnabled: Bool = false,
         isLockEnabled: Bool = false,
         isFollowUpsEnabled: Bool = true,
-        thinkingLevel: ThinkingLevelKind = .medium
+        thinkingLevel: ThinkingLevelKind = .medium,
+        isPageReadingEnabled: Bool = true
     ) {
         self.ollamaAddress = ollamaAddress
         self.searchAddress = searchAddress
@@ -59,6 +62,7 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         self.isLockEnabled = isLockEnabled
         self.isFollowUpsEnabled = isFollowUpsEnabled
         self.thinkingLevel = thinkingLevel
+        self.isPageReadingEnabled = isPageReadingEnabled
     }
 
     /// Settings saved before a field existed are read with that field's default, so nothing saved is lost.
@@ -75,7 +79,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             isAutoReadEnabled: try container.decodeIfPresent(Bool.self, forKey: .isAutoReadEnabled) ?? false,
             isLockEnabled: try container.decodeIfPresent(Bool.self, forKey: .isLockEnabled) ?? false,
             isFollowUpsEnabled: try container.decodeIfPresent(Bool.self, forKey: .isFollowUpsEnabled) ?? true,
-            thinkingLevel: try container.decodeIfPresent(ThinkingLevelKind.self, forKey: .thinkingLevel) ?? .medium
+            thinkingLevel: try container.decodeIfPresent(ThinkingLevelKind.self, forKey: .thinkingLevel) ?? .medium,
+            isPageReadingEnabled: try container.decodeIfPresent(Bool.self, forKey: .isPageReadingEnabled) ?? true
         )
     }
 
@@ -103,7 +108,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             isAutoReadEnabled: isAutoReadEnabled ?? self.isAutoReadEnabled,
             isLockEnabled: isLockEnabled,
             isFollowUpsEnabled: isFollowUpsEnabled,
-            thinkingLevel: thinkingLevel ?? self.thinkingLevel
+            thinkingLevel: thinkingLevel ?? self.thinkingLevel,
+            isPageReadingEnabled: isPageReadingEnabled
         )
     }
 

@@ -7,6 +7,7 @@ struct ChatInteractorTests {
         let subject: ChatInteractor
         let requests: Recorder<ChatRequest>
         let queries: Recorder<String>
+        let kinds: Recorder<SearchKind>
     }
 
     private static let model = ChatModel(id: ChatModel.ID("gemma4:latest"), canThink: true, canUseTools: true)
@@ -17,10 +18,12 @@ struct ChatInteractorTests {
     private func makeTestSubject(
         rounds: [[ChatDelta]] = [[.text("Hello")]],
         failure: (any Error & Sendable)? = nil,
+        page: @escaping @Sendable (URL) async throws -> String = { _ in "" },
         search: @escaping @Sendable (String) async throws -> [SearchSource] = { _ in [] }
     ) -> Fixture {
         let requests = Recorder<ChatRequest>()
         let queries = Recorder<String>()
+        let kinds = Recorder<SearchKind>()
         let chat = ChatDataProvider(
             fetchModels: { _ in [] },
             streamChat: { _, request in
@@ -36,12 +39,13 @@ struct ChatInteractorTests {
                 return "\"Loaded models.\"\nsecond line"
             }
         )
-        let searchProvider = SearchDataProvider { _, query in
-            queries.record(query)
-            return try await search(query)
+        let searchProvider = SearchDataProvider(fetchPage: page) { _, request in
+            queries.record(request.query)
+            kinds.record(request.kind)
+            return try await search(request.query)
         }
         let subject = ChatInteractor(chat: chat, search: searchProvider, now: { Date(timeIntervalSince1970: 1_800_000_000) })
-        return Fixture(subject: subject, requests: requests, queries: queries)
+        return Fixture(subject: subject, requests: requests, queries: queries, kinds: kinds)
     }
 
     private func turn(
@@ -99,7 +103,7 @@ struct ChatInteractorTests {
 
     @Test(arguments: [SearchModeKind.always, .automatic])
     func `no search is made or offered without a search server`(mode: SearchModeKind) async throws {
-        let fixture = makeTestSubject(rounds: [[.searchRequested("anything"), .text("Hello")]])
+        let fixture = makeTestSubject(rounds: [[.searchRequested(SearchRequest(query: "anything")), .text("Hello")]])
         let settings = ServerSettings(ollamaAddress: "https://ollama.example")
 
         _ = try await events(fixture.subject.run(turn(searchMode: mode, settings: settings)))
@@ -112,7 +116,7 @@ struct ChatInteractorTests {
 
     @Test func `a model that asks for a search is given the results and then answers`() async throws {
         let fixture = makeTestSubject(
-            rounds: [[.thinking("I should check."), .searchRequested("loaded models")], [.text("Nothing [1].")]],
+            rounds: [[.thinking("I should check."), .searchRequested(SearchRequest(query: "loaded models"))], [.text("Nothing [1].")]],
             search: { _ in [Self.source] }
         )
 
@@ -137,19 +141,71 @@ struct ChatInteractorTests {
         #expect(fixture.requests.values.first?.messages.first?.text.contains("web_search tool") == true)
     }
 
-    @Test func `a model that keeps asking is made to answer after two rounds`() async throws {
-        let fixture = makeTestSubject(rounds: [[.searchRequested("again")]], search: { _ in [Self.source] })
+    @Test func `a model that keeps asking is told to answer after three searches`() async throws {
+        let fixture = makeTestSubject(rounds: [[.searchRequested(SearchRequest(query: "again"))]], search: { _ in [Self.source] })
 
         _ = try await events(fixture.subject.run(turn(searchMode: .automatic)))
 
-        #expect(fixture.requests.values.map(\.isWebSearchOffered) == [true, true, false])
-        #expect(fixture.queries.values.count == 2)
+        let requests = fixture.requests.values
+        #expect(requests.map(\.isWebSearchOffered) == [true, true, true, false])
+        #expect(fixture.queries.values.count == 3)
+        #expect(requests[1].messages.last?.text.contains("no searches left") == false)
+        #expect(requests[3].messages.last?.text.contains("You have no searches left. Answer the user now") == true)
+    }
+
+    @Test func `a search for news is made as news`() async throws {
+        let news = SearchRequest(query: "world headlines", kind: .news)
+        let fixture = makeTestSubject(rounds: [[.searchRequested(news)], [.text("Here they are.")]], search: { _ in [Self.source] })
+
+        _ = try await events(fixture.subject.run(turn(searchMode: .automatic)))
+
+        #expect(fixture.kinds.values == [.news])
+    }
+
+    @Test func `the text of a found page is handed to the model, and a page that cannot be read is passed over`() async throws {
+        let unreadable = SearchSource(title: "Blog", url: URL(filePath: "/blog"), snippet: "A snippet.")
+        let story = "<html><body><article><p>" + String(repeating: "Ollama 0.40 was released today. ", count: 20) + "</p></article></body></html>"
+        let fixture = makeTestSubject(
+            rounds: [[.searchRequested(SearchRequest(query: "ollama"))], [.text("Done")]],
+            page: { url in
+                guard url == Self.source.url else {
+                    throw URLError(.timedOut)
+                }
+                return story
+            },
+            search: { _ in [Self.source, unreadable] }
+        )
+
+        let events = try await events(fixture.subject.run(turn(searchMode: .automatic)))
+
+        let results = try #require(fixture.requests.values.last?.messages.last?.text)
+        #expect(results.contains("Text of the page:\nOllama 0.40 was released today."))
+        #expect(results.contains("[2] Blog"))
+        #expect(results.components(separatedBy: "Text of the page:").count == 2)
+        #expect(events.last == .text("Done"))
+    }
+
+    @Test func `pages are not fetched when reading them is turned off`() async throws {
+        let fetched = Recorder<URL>()
+        let fixture = makeTestSubject(
+            rounds: [[.searchRequested(SearchRequest(query: "ollama"))], [.text("Done")]],
+            page: { url in
+                fetched.record(url)
+                return ""
+            },
+            search: { _ in [Self.source] }
+        )
+        let settings = ServerSettings(ollamaAddress: "https://ollama.example", searchAddress: "https://search.example", isPageReadingEnabled: false)
+
+        _ = try await events(fixture.subject.run(turn(searchMode: .automatic, settings: settings)))
+
+        #expect(fetched.values.isEmpty)
     }
 
     @Test func `later results are numbered on from the earlier ones, and repeats are dropped`() async throws {
         let other = SearchSource(title: "Blog", url: URL(filePath: "/blog"), snippet: "")
         let fixture = makeTestSubject(
-            rounds: [[.searchRequested("first")], [.searchRequested("second")], [.text("Done")]],
+            rounds: [[.searchRequested(SearchRequest(query: "first"))], [.searchRequested(SearchRequest(query: "second"))], [.text("Done")]],
             search: { query in query == "first" ? [Self.source] : [Self.source, other] }
         )
 

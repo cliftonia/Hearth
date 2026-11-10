@@ -18,11 +18,13 @@ public struct SearchService: Sendable {
         self.session = session
     }
 
-    public func search(baseURL: URL, query: String) async throws -> [SearchResultDTO] {
-        let url = baseURL.appending(path: "search").appending(queryItems: [
-            URLQueryItem(name: "q", value: query),
-            URLQueryItem(name: "format", value: "json")
-        ])
+    /// - Parameter category: A SearXNG category such as `news`; `nil` searches the general web.
+    public func search(baseURL: URL, query: String, category: String? = nil) async throws -> [SearchResultDTO] {
+        var items = [URLQueryItem(name: "q", value: query), URLQueryItem(name: "format", value: "json")]
+        if let category {
+            items.append(URLQueryItem(name: "categories", value: category))
+        }
+        let url = baseURL.appending(path: "search").appending(queryItems: items)
         var request = URLRequest(url: url)
         request.timeoutInterval = 20
         return try await session.decoded(SearchResponseDTO.self, for: request).results

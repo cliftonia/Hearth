@@ -29,8 +29,9 @@ and your conversations stay on the device.
 - **Streamed Markdown**: headings, lists, quotes, tables and code blocks you can copy
 - **Maths** written in LaTeX shown as readable text, `x² ≤ a/b`, on one line rather than typeset
 - **Thinking** folded away under "Thought for N seconds", with a level of Off, Light, Medium or High for models that reason
-- **Web search when it is needed**: a model that can call tools searches SearXNG on its own and cites its sources;
-  for one that cannot, a toggle searches before it replies
+- **Web search when it is needed**: a model that can call tools searches SearXNG on its own, asks for news when the
+  question is about current events, reads the top pages it finds and cites its sources; for a model that cannot call
+  tools, a toggle searches before it replies
 - **Suggested follow-up questions** under each reply; tap one to ask it
 - **Attachments**: photos from the library or camera for models that can see, PDFs and text files for any model
 - **Edit and resend** a message you already sent
@@ -121,7 +122,7 @@ swiftlint lint
 ```
 
 Tests are written with Swift Testing: the stream decoding, prompt building, sentence chunking for
-speech, Markdown and maths parsing, follow-up questions, export, the chat interactor, the
+speech, Markdown, maths and web page parsing, follow-up questions, export, the chat interactor, the
 conversation store, file storage, the app lock and the drawer's grouping. The codebase holds a
 zero-warning SwiftLint bar.
 
@@ -135,5 +136,9 @@ zero-warning SwiftLint bar.
   Follow-ups can be turned off in Settings.
 - **Thinking levels are a request.** Ollama accepts them for every thinking model, but some models think
   as much as they please whatever the level.
-- **A model may search the web up to twice in one turn** before it must answer.
+- **A model may search the web up to three times in one turn**, after which it is told to answer from what it has.
+- **Reading pages is done by the device.** The top three results of a search are fetched directly and reduced to
+  text, so those sites see the device's address rather than the server's. It can be turned off in Settings, leaving
+  the model with snippets only.
+- **A reply keeps streaming for a short while in the background**, as long as iOS allows, usually about half a minute.
 - The app icon is drawn by `python3 Tools/make_icon.py` (needs Pillow).

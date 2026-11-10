@@ -47,7 +47,10 @@ public final class ChatInteractor: Sendable {
 
     private static let maximumSources = 5
     /// How many times in one turn the model may go back to the web before it must answer.
-    private static let maximumSearchRounds = 2
+    private static let maximumSearchRounds = 3
+    /// How many of a search's results have their pages read, and how much of each page is kept.
+    private static let maximumPagesRead = 3
+    private static let pageExcerptLength = 2500
 
     private let chat: ChatDataProvider
     private let search: SearchDataProvider
@@ -109,7 +112,7 @@ private extension ChatInteractor {
         let builder = PromptBuilder(instructions: turn.settings.customInstructions)
         var sources: [SearchSource] = []
         if turn.searchMode == .always, let searchURL, let query = builder.searchQuery(history: turn.history) {
-            sources = await found(for: query, at: searchURL, excluding: [], report: report)
+            sources = await found(for: SearchRequest(query: query), at: searchURL, excluding: [], report: report)
             report(.sources(sources))
         }
         var messages = builder.messages(history: turn.history, sources: sources, style: turn.style, now: now(), offersSearch: isAutomatic)
@@ -122,25 +125,32 @@ private extension ChatInteractor {
                 thinking: turn.style == .chat ? turn.settings.thinkingLevel : .off,
                 isWebSearchOffered: offersSearch
             )
-            let queries = try await reply(to: request, at: baseURL, report: report)
-            guard offersSearch, let searchURL, !queries.isEmpty else {
+            let requests = try await reply(to: request, at: baseURL, report: report)
+            guard offersSearch, let searchURL, !requests.isEmpty else {
                 return
             }
             round += 1
             var fresh: [SearchSource] = []
-            for query in queries {
-                fresh += await found(for: query, at: searchURL, excluding: sources + fresh, report: report)
+            for request in requests {
+                fresh += await found(for: request, at: searchURL, excluding: sources + fresh, report: report)
             }
-            messages.append(PromptMessage(role: .assistant, text: "", searchQueries: queries))
-            messages.append(PromptMessage(role: .tool, text: builder.searchResultsText(fresh, numberedFrom: sources.count + 1)))
+            let pages = turn.settings.isPageReadingEnabled ? await pageTexts(for: fresh) : [:]
+            let results = builder.searchResultsText(
+                fresh,
+                numberedFrom: sources.count + 1,
+                pages: pages,
+                isLastSearch: round >= Self.maximumSearchRounds
+            )
+            messages.append(PromptMessage(role: .assistant, text: "", searchQueries: requests.map(\.query)))
+            messages.append(PromptMessage(role: .tool, text: results))
             sources += fresh
             report(.sources(sources))
         }
     }
 
     /// Streams one reply from the model and returns the searches it asked for, if any.
-    func reply(to request: ChatRequest, at baseURL: URL, report: (Event) -> Void) async throws -> [String] {
-        var queries: [String] = []
+    func reply(to request: ChatRequest, at baseURL: URL, report: (Event) -> Void) async throws -> [SearchRequest] {
+        var queries: [SearchRequest] = []
         for try await delta in chat.streamChat(baseURL, request) {
             switch delta {
             case .thinking(let text):
@@ -155,16 +165,39 @@ private extension ChatInteractor {
     }
 
     /// Searches the web. A failed search is reported and the turn carries on without it: the reply matters more.
-    func found(for query: String, at searchURL: URL, excluding known: [SearchSource], report: (Event) -> Void) async -> [SearchSource] {
-        report(.searching(query))
+    func found(for request: SearchRequest, at searchURL: URL, excluding known: [SearchSource], report: (Event) -> Void) async -> [SearchSource] {
+        report(.searching(request.query))
         do {
-            let results = try await search.search(searchURL, query).filter { result in
+            let results = try await search.search(searchURL, request).filter { result in
                 !known.contains { $0.url == result.url }
             }
             return Array(results.prefix(Self.maximumSources))
         } catch {
             report(.searchFailed)
             return []
+        }
+    }
+
+    /// Reads the pages behind the leading results, all at once. A page that cannot be read is simply
+    /// left out: the result's snippet still stands, and the reply matters more than any one page.
+    func pageTexts(for sources: [SearchSource]) async -> [URL: String] {
+        let fetchPage = search.fetchPage
+        let excerptLength = Self.pageExcerptLength
+        return await withTaskGroup(of: (URL, String?).self) { group in
+            for source in sources.prefix(Self.maximumPagesRead) {
+                group.addTask {
+                    guard let html = try? await fetchPage(source.url) else {
+                        return (source.url, nil)
+                    }
+                    let text = HTMLTextTransformer().text(from: html, maximumLength: excerptLength)
+                    return (source.url, text.count > 200 ? text : nil)
+                }
+            }
+            var pages: [URL: String] = [:]
+            for await (url, text) in group {
+                pages[url] = text
+            }
+            return pages
         }
     }
 }

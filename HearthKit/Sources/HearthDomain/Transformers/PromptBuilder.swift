@@ -23,7 +23,8 @@ public struct PromptBuilder: Sendable {
         var systemText = systemText(sources: sources, style: style, now: now)
         if offersSearch {
             systemText += "\n\nYou can search the web with the web_search tool. Use it when a question needs current "
-                + "information or facts you are not sure of. Answer directly, without searching, when you already know."
+                + "information or facts you are not sure of, with category news for current events. "
+                + "Answer directly, without searching, when you already know."
         }
         let system = PromptMessage(role: .system, text: systemText)
         let turns = history
@@ -47,14 +48,24 @@ public struct PromptBuilder: Sendable {
     }
 
     /// Search results as the model reads them after asking for a search, numbered so that it can cite them.
-    public func searchResultsText(_ sources: [SearchSource], numberedFrom first: Int) -> String {
+    ///
+    /// - Parameters:
+    ///   - pages: The text read from a result's page, where it could be fetched.
+    ///   - isLastSearch: Whether the model has no searches left and must now answer.
+    public func searchResultsText(_ sources: [SearchSource], numberedFrom first: Int, pages: [URL: String] = [:], isLastSearch: Bool = false) -> String {
+        let ending = isLastSearch
+            ? "You have no searches left. Answer the user now from what you have, and say what you could not find."
+            : "Say so if they do not answer the question."
         guard !sources.isEmpty else {
-            return "The search returned no results. Say so if you cannot answer without them."
+            return "The search returned no results. \(ending)"
         }
         let listing = sources.enumerated()
-            .map { index, source in "[\(first + index)] \(source.title)\n\(source.url.absoluteString)\n\(source.snippet)" }
+            .map { index, source in
+                let page = pages[source.url].map { "\nText of the page:\n\($0)" } ?? ""
+                return "[\(first + index)] \(source.title)\n\(source.url.absoluteString)\n\(source.snippet)\(page)"
+            }
             .joined(separator: "\n\n")
-        return "\(listing)\n\nCite the results you use as [1], [2]. Say so if they do not answer the question."
+        return "\(listing)\n\nCite the results you use as [1], [2]. \(ending)"
     }
 
     /// The text to search the web for: the user's latest message, kept to a searchable length.

@@ -43,8 +43,8 @@ public struct ChatRequest: Sendable, Equatable {
 public enum ChatDelta: Sendable, Equatable {
     case thinking(String)
     case text(String)
-    /// The model asked for a web search with this query.
-    case searchRequested(String)
+    /// The model asked for a web search.
+    case searchRequested(SearchRequest)
 }
 
 public struct ChatDataProvider: Sendable {
@@ -83,7 +83,8 @@ public extension ChatDataProvider {
                                 }
                                 for call in chunk.message?.toolCalls ?? [] where call.function.name == OllamaToolDTO.webSearchName {
                                     if let query = call.function.arguments.query, !query.isEmpty {
-                                        continuation.yield(.searchRequested(query))
+                                        let isNews = call.function.arguments.category == OllamaToolDTO.newsCategory
+                                        continuation.yield(.searchRequested(SearchRequest(query: query, kind: isNews ? .news : .general)))
                                     }
                                 }
                             }

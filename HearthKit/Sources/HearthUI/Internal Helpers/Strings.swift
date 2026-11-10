@@ -111,6 +111,8 @@ enum Strings {
     static let lockEnableReason = String(localized: "lock.enableReason", defaultValue: "Confirm it is you to turn on the lock.", bundle: .module)
     static let unlockReason = String(localized: "lock.reason", defaultValue: "Unlock your conversations.", bundle: .module)
     static let unlock = String(localized: "lock.unlock", defaultValue: "Unlock", bundle: .module)
+    static let readPages = String(localized: "settings.readPages", defaultValue: "Read the pages a search finds", bundle: .module)
+    static let readPagesFooter = String(localized: "settings.readPagesFooter", defaultValue: "Gives the model the text of the top results, not just a snippet. Your phone fetches those pages itself, so the sites see your phone's address rather than your server's.", bundle: .module)
     static let theme = String(localized: "settings.theme", defaultValue: "Theme", bundle: .module)
     static let themeSystem = String(localized: "settings.themeSystem", defaultValue: "System", bundle: .module)
     static let themeLight = String(localized: "settings.themeLight", defaultValue: "Light", bundle: .module)

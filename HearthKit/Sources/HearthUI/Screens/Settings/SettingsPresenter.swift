@@ -29,6 +29,7 @@ final class SettingsViewModel {
     var isAutoReadEnabled = false
     var isLockEnabled = false
     var isFollowUpsEnabled = true
+    var isPageReadingEnabled = true
     var connectionCheck: ConnectionCheckKind = .idle
 }
 
@@ -67,6 +68,7 @@ final class SettingsPresenter {
         viewModel.isAutoReadEnabled = settings.isAutoReadEnabled
         viewModel.isLockEnabled = settings.isLockEnabled
         viewModel.isFollowUpsEnabled = settings.isFollowUpsEnabled
+        viewModel.isPageReadingEnabled = settings.isPageReadingEnabled
         viewModel.connectionCheck = .idle
         await loadVoicesAction()
     }
@@ -138,7 +140,9 @@ final class SettingsPresenter {
             customInstructions: viewModel.customInstructions.trimmingCharacters(in: .whitespacesAndNewlines),
             isAutoReadEnabled: viewModel.isAutoReadEnabled,
             isLockEnabled: viewModel.isLockEnabled,
-            isFollowUpsEnabled: viewModel.isFollowUpsEnabled
+            isFollowUpsEnabled: viewModel.isFollowUpsEnabled,
+            thinkingLevel: settingsStore.settings.thinkingLevel,
+            isPageReadingEnabled: viewModel.isPageReadingEnabled
         )
     }
 }

@@ -29,9 +29,12 @@ public struct OllamaModelDTO: Decodable, Sendable {
 /// What a model was asked to look up when it called the web search tool.
 public struct OllamaToolArgumentsDTO: Codable, Sendable, Equatable {
     public let query: String?
+    /// "news" when the model wants current events rather than the general web.
+    public let category: String?
 
-    public init(query: String?) {
+    public init(query: String?, category: String? = nil) {
         self.query = query
+        self.category = category
     }
 }
 
@@ -56,6 +59,20 @@ public struct OllamaToolCallDTO: Codable, Sendable, Equatable {
 public struct OllamaToolPropertyDTO: Encodable, Sendable, Equatable {
     public let type: String
     public let description: String
+    /// The only values the model may give, when the property is a choice.
+    public let allowedValues: [String]?
+
+    public init(type: String, description: String, allowedValues: [String]? = nil) {
+        self.type = type
+        self.description = description
+        self.allowedValues = allowedValues
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case type
+        case description
+        case allowedValues = "enum"
+    }
 }
 
 public struct OllamaToolParametersDTO: Encodable, Sendable, Equatable {
@@ -73,6 +90,7 @@ public struct OllamaToolSpecDTO: Encodable, Sendable, Equatable {
 /// A tool offered to the model. The app offers one: a web search.
 public struct OllamaToolDTO: Encodable, Sendable, Equatable {
     public static let webSearchName = "web_search"
+    public static let newsCategory = "news"
 
     public let type: String
     public let function: OllamaToolSpecDTO
@@ -81,10 +99,17 @@ public struct OllamaToolDTO: Encodable, Sendable, Equatable {
         type: "function",
         function: OllamaToolSpecDTO(
             name: webSearchName,
-            description: "Search the web for current or factual information.",
+            description: "Search the web for current or factual information. The text of the top pages is returned.",
             parameters: OllamaToolParametersDTO(
                 type: "object",
-                properties: ["query": OllamaToolPropertyDTO(type: "string", description: "What to search for")],
+                properties: [
+                    "query": OllamaToolPropertyDTO(type: "string", description: "What to search for"),
+                    "category": OllamaToolPropertyDTO(
+                        type: "string",
+                        description: "Use news for current events, headlines and anything from the last few days.",
+                        allowedValues: ["general", newsCategory]
+                    )
+                ],
                 required: ["query"]
             )
         )

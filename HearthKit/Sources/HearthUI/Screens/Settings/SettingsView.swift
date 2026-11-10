@@ -19,6 +19,13 @@ struct SettingsView: View {
                     Text(Strings.serversFooter)
                 }
                 Section {
+                    Toggle(Strings.readPages, isOn: $viewModel.isPageReadingEnabled)
+                } header: {
+                    Text(Strings.searchLabel)
+                } footer: {
+                    Text(Strings.readPagesFooter)
+                }
+                Section {
                     Button(Strings.testConnection) { Task { await presenter.testAction() } }
                         .foregroundStyle(HearthColor.pine)
                     connectionStatus(viewModel.connectionCheck)

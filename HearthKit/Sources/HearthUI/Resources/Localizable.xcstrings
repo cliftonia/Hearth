@@ -914,6 +914,28 @@
         }
       }
     },
+    "settings.readPages": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read the pages a search finds"
+          }
+        }
+      }
+    },
+    "settings.readPagesFooter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gives the model the text of the top results, not just a snippet. Your phone fetches those pages itself, so the sites see your phone's address rather than your server's."
+          }
+        }
+      }
+    },
     "settings.readReplies": {
       "extractionState": "manual",
       "localizations": {

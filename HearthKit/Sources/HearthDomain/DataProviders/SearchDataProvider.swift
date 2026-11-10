@@ -1,19 +1,48 @@
 import Foundation
 import HearthData
 
-public struct SearchDataProvider: Sendable {
-    public let search: @Sendable (URL, String) async throws -> [SearchSource]
+/// Which part of the web a search covers.
+public enum SearchKind: Sendable, Equatable {
+    case general
+    /// Current events and headlines.
+    case news
+}
 
-    public init(search: @escaping @Sendable (URL, String) async throws -> [SearchSource]) {
+/// A web search a model asked for.
+public struct SearchRequest: Sendable, Equatable {
+    public let query: String
+    public let kind: SearchKind
+
+    public init(query: String, kind: SearchKind = .general) {
+        self.query = query
+        self.kind = kind
+    }
+}
+
+public struct SearchDataProvider: Sendable {
+    /// The raw HTML of a page, for reading what a result actually says.
+    public let fetchPage: @Sendable (URL) async throws -> String
+    public let search: @Sendable (URL, SearchRequest) async throws -> [SearchSource]
+
+    public init(
+        fetchPage: @escaping @Sendable (URL) async throws -> String = { _ in "" },
+        search: @escaping @Sendable (URL, SearchRequest) async throws -> [SearchSource]
+    ) {
+        self.fetchPage = fetchPage
         self.search = search
     }
 }
 
 public extension SearchDataProvider {
-    static func live(service: SearchService = SearchService()) -> SearchDataProvider {
-        SearchDataProvider { baseURL, query in
-            try await service.search(baseURL: baseURL, query: query).compactMap(SearchSource.init(from:))
-        }
+    static func live(service: SearchService = SearchService(), pages: PageService = PageService()) -> SearchDataProvider {
+        SearchDataProvider(
+            fetchPage: { url in try await pages.fetchHTML(url: url) },
+            search: { baseURL, request in
+                let category = request.kind == .news ? OllamaToolDTO.newsCategory : nil
+                return try await service.search(baseURL: baseURL, query: request.query, category: category)
+                    .compactMap(SearchSource.init(from:))
+            }
+        )
     }
 }
 

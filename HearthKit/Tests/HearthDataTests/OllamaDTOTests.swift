@@ -47,17 +47,20 @@ struct OllamaDTOTests {
         let parameters = try #require(function["parameters"] as? [String: Any])
         #expect(function["name"] as? String == "web_search")
         #expect(parameters["required"] as? [String] == ["query"])
+        let category = try #require((parameters["properties"] as? [String: Any])?["category"] as? [String: Any])
+        #expect(category["enum"] as? [String] == ["general", "news"])
         #expect(plain["tools"] == nil)
     }
 
     @Test func `a streamed tool call carries the query the model asked for`() throws {
-        let call = #"{"id":"call_1","function":{"index":0,"name":"web_search","arguments":{"query":"latest Swift"}}}"#
+        let call = #"{"id":"call_1","function":{"index":0,"name":"web_search","arguments":{"query":"latest Swift","category":"news"}}}"#
         let line = #"{"message":{"role":"assistant","content":"","tool_calls":[\#(call)]},"done":false}"#
 
         let decoded = try #require(try OllamaChatChunkDTO(line: line).message?.toolCalls?.first)
 
         #expect(decoded.function.name == "web_search")
         #expect(decoded.function.arguments.query == "latest Swift")
+        #expect(decoded.function.arguments.category == "news")
     }
 
     @Test func `a tool call and its result are sent back under the keys Ollama expects`() throws {
