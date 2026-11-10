@@ -6,6 +6,8 @@ struct RootView: View {
 
     var body: some View {
         @Bindable var router = coordinator.router
+        // Sheets are separate presentations, so each is given the chosen theme as well as the root.
+        let colorScheme = coordinator.settingsStore.settings.appearance.colorScheme
         DrawerContainer(isOpen: $router.isSidebarOpen) {
             SidebarView(presenter: coordinator.sidebarPresenter)
         } content: {
@@ -13,11 +15,14 @@ struct RootView: View {
         }
         .sheet(isPresented: $router.isSettingsPresented) {
             SettingsView(presenter: coordinator.settingsPresenter)
+                .preferredColorScheme(colorScheme)
         }
         .fullScreenCover(isPresented: $router.isVoicePresented) {
             VoiceView(presenter: coordinator.voicePresenter)
+                .preferredColorScheme(colorScheme)
         }
         .tint(HearthColor.pine)
+        .preferredColorScheme(colorScheme)
     }
 }
 

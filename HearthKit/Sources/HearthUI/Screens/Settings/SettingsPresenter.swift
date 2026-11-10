@@ -24,6 +24,7 @@ final class SettingsViewModel {
     var speechAddress = ""
     var voice = ServerSettings.defaultVoice
     var voices: [String] = []
+    var appearance: AppearanceKind = .system
     var connectionCheck: ConnectionCheckKind = .idle
 }
 
@@ -50,6 +51,7 @@ final class SettingsPresenter {
         viewModel.searchAddress = settings.searchAddress
         viewModel.speechAddress = settings.speechAddress
         viewModel.voice = settings.voice
+        viewModel.appearance = settings.appearance
         viewModel.connectionCheck = .idle
         await loadVoicesAction()
     }
@@ -73,6 +75,19 @@ final class SettingsPresenter {
         }
     }
 
+    /// The theme takes effect as soon as it is chosen, without waiting for Done.
+    func appearanceAction() {
+        let settings = settingsStore.settings
+        guard settings.appearance != viewModel.appearance else {
+            return
+        }
+        do {
+            try settingsStore.update(settings.updating(appearance: viewModel.appearance))
+        } catch {
+            logger.error("Saving the theme failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
     func saveAction() {
         do {
             try settingsStore.update(draft)
@@ -93,7 +108,8 @@ final class SettingsPresenter {
             searchAddress: viewModel.searchAddress.trimmingCharacters(in: .whitespaces),
             speechAddress: viewModel.speechAddress.trimmingCharacters(in: .whitespaces),
             voice: viewModel.voice.trimmingCharacters(in: .whitespaces),
-            defaultModelID: settingsStore.settings.defaultModelID
+            defaultModelID: settingsStore.settings.defaultModelID,
+            appearance: viewModel.appearance
         )
     }
 }

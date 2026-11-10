@@ -15,6 +15,7 @@ final class AppRouter {
 @MainActor
 public final class AppCoordinator {
     let router = AppRouter()
+    let settingsStore: SettingsStore
     let chatPresenter: ChatPresenter
     let sidebarPresenter: SidebarPresenter
     let settingsPresenter: SettingsPresenter
@@ -31,6 +32,7 @@ public final class AppCoordinator {
         ))
         let settingsStore = dependencies.settingsStore
         let fetchModels = dependencies.fetchModels
+        self.settingsStore = settingsStore
         self.chatPresenter = chatPresenter
         self.sidebarPresenter = SidebarPresenter(
             conversationStore: dependencies.conversationStore,

@@ -1,3 +1,4 @@
+import HearthDomain
 import SwiftUI
 
 struct SettingsView: View {
@@ -24,6 +25,15 @@ struct SettingsView: View {
                 }
                 Section(Strings.voice) {
                     voiceControl(voice: $viewModel.voice, voices: viewModel.voices)
+                }
+                Section(Strings.theme) {
+                    Picker(Strings.theme, selection: $viewModel.appearance) {
+                        ForEach(AppearanceKind.allCases, id: \.self) { appearance in
+                            Text(appearance.title).tag(appearance)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .onChange(of: viewModel.appearance) { presenter.appearanceAction() }
                 }
             }
             .scrollContentBackground(.hidden)

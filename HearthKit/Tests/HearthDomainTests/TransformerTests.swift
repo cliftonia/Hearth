@@ -155,6 +155,38 @@ struct ServerSettingsTests {
     func `an address with no host is no address`(address: String) {
         #expect(ServerSettings(ollamaAddress: address).ollamaURL == nil)
     }
+
+    @Test func `settings saved before the theme existed keep their addresses and follow the system`() throws {
+        let json = #"{"ollamaAddress":"https://a.example","searchAddress":"","speechAddress":"http://b.example.ts.net:8880","voice":"af_heart"}"#
+
+        let settings = try JSONDecoder().decode(ServerSettings.self, from: Data(json.utf8))
+
+        #expect(settings.ollamaAddress == "https://a.example")
+        #expect(settings.speechAddress == "http://b.example.ts.net:8880")
+        #expect(settings.voice == "af_heart")
+        #expect(settings.appearance == .system)
+    }
+
+    @Test(arguments: AppearanceKind.allCases)
+    func `the theme survives a round trip and a change of model`(appearance: AppearanceKind) throws {
+        let settings = ServerSettings(ollamaAddress: "https://a.example", appearance: appearance)
+
+        let decoded = try JSONDecoder().decode(ServerSettings.self, from: JSONEncoder().encode(settings))
+
+        #expect(decoded == settings)
+        #expect(decoded.updating(defaultModelID: ChatModel.ID("gemma4")).appearance == appearance)
+    }
+
+    @Test func `changing the theme leaves everything else as it was`() {
+        let settings = ServerSettings(ollamaAddress: "https://a.example", voice: "af_heart", defaultModelID: ChatModel.ID("gemma4"))
+
+        let dark = settings.updating(appearance: .dark)
+
+        #expect(dark.appearance == .dark)
+        #expect(dark.ollamaAddress == "https://a.example")
+        #expect(dark.voice == "af_heart")
+        #expect(dark.defaultModelID == ChatModel.ID("gemma4"))
+    }
 }
 
 struct ChatModelTests {

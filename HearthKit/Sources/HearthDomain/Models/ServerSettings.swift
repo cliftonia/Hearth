@@ -1,6 +1,13 @@
 import Foundation
 
-/// Where the user's services live, and how replies should sound.
+/// Whether the app follows the phone's light or dark appearance, or keeps to one.
+public enum AppearanceKind: String, Codable, Sendable, CaseIterable {
+    case system
+    case light
+    case dark
+}
+
+/// Where the user's services live, how replies should sound and how the app should look.
 public struct ServerSettings: Hashable, Codable, Sendable {
     public static let defaultVoice = "bf_emma"
 
@@ -9,19 +16,35 @@ public struct ServerSettings: Hashable, Codable, Sendable {
     public let speechAddress: String
     public let voice: String
     public let defaultModelID: ChatModel.ID?
+    public let appearance: AppearanceKind
 
     public init(
         ollamaAddress: String = "",
         searchAddress: String = "",
         speechAddress: String = "",
         voice: String = ServerSettings.defaultVoice,
-        defaultModelID: ChatModel.ID? = nil
+        defaultModelID: ChatModel.ID? = nil,
+        appearance: AppearanceKind = .system
     ) {
         self.ollamaAddress = ollamaAddress
         self.searchAddress = searchAddress
         self.speechAddress = speechAddress
         self.voice = voice
         self.defaultModelID = defaultModelID
+        self.appearance = appearance
+    }
+
+    /// Settings saved before a field existed are read with that field's default, so nothing saved is lost.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            ollamaAddress: try container.decodeIfPresent(String.self, forKey: .ollamaAddress) ?? "",
+            searchAddress: try container.decodeIfPresent(String.self, forKey: .searchAddress) ?? "",
+            speechAddress: try container.decodeIfPresent(String.self, forKey: .speechAddress) ?? "",
+            voice: try container.decodeIfPresent(String.self, forKey: .voice) ?? Self.defaultVoice,
+            defaultModelID: try container.decodeIfPresent(ChatModel.ID.self, forKey: .defaultModelID),
+            appearance: try container.decodeIfPresent(AppearanceKind.self, forKey: .appearance) ?? .system
+        )
     }
 
     public var ollamaURL: URL? { Self.url(from: ollamaAddress) }
@@ -31,13 +54,14 @@ public struct ServerSettings: Hashable, Codable, Sendable {
     /// The host of the chat server, for display.
     public var ollamaHost: String? { ollamaURL?.host() }
 
-    public func updating(defaultModelID: ChatModel.ID) -> ServerSettings {
+    public func updating(defaultModelID: ChatModel.ID? = nil, appearance: AppearanceKind? = nil) -> ServerSettings {
         ServerSettings(
             ollamaAddress: ollamaAddress,
             searchAddress: searchAddress,
             speechAddress: speechAddress,
             voice: voice,
-            defaultModelID: defaultModelID
+            defaultModelID: defaultModelID ?? self.defaultModelID,
+            appearance: appearance ?? self.appearance
         )
     }
 

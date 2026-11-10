@@ -1,5 +1,31 @@
+import HearthDomain
 import SwiftUI
 import UIKit
+
+extension AppearanceKind {
+    /// The colour scheme to force, or `nil` to follow the phone.
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system:
+            nil
+        case .light:
+            .light
+        case .dark:
+            .dark
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .system:
+            Strings.themeSystem
+        case .light:
+            Strings.themeLight
+        case .dark:
+            Strings.themeDark
+        }
+    }
+}
 
 extension Color {
     /// A colour that follows the light or dark appearance.
