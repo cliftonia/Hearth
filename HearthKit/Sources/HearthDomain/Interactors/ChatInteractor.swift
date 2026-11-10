@@ -145,8 +145,10 @@ private extension ChatInteractor {
         }
         let searchURL = turn.settings.searchURL
         let isAutomatic = turn.searchMode == .automatic && searchURL != nil && turn.model.canUseTools
-        // Memory is never written from a turn that carries a file: only what the user says may be remembered.
-        let canRemember = turn.remember != nil && turn.model.canUseTools && turn.history.last?.documents.isEmpty != false
+        // Memory is written only from what the user says. A file or a web search anywhere in the conversation
+        // stays in front of the model for the rest of it, so such a conversation writes no memories at all.
+        let carriesOutsideText = turn.history.contains { !$0.documents.isEmpty || !$0.sources.isEmpty }
+        let canRemember = turn.remember != nil && turn.model.canUseTools && !carriesOutsideText
         let builder = PromptBuilder(instructions: turn.settings.customInstructions, memories: turn.memories)
         var sources: [SearchSource] = []
         if turn.searchMode == .always, let searchURL, let query = builder.searchQuery(history: turn.history) {
@@ -242,6 +244,8 @@ private extension ChatInteractor {
             "Memory is full. Update or delete an entry instead, or carry on."
         case .refused(.notFound):
             "There is no memory with that id. Carry on with your reply."
+        case .refused(.writtenByUser):
+            "The user wrote that memory themselves, so only they can change it, in Settings. Tell them so, then carry on."
         case .refused(.notStored):
             "The memory could not be stored just now. Carry on with your reply."
         }

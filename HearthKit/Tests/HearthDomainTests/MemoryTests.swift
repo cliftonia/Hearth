@@ -58,6 +58,18 @@ struct MemoryLedgerTests {
         #expect(apply(.update(Memory.ID("m1"), "Has a dog."), to: known).outcome == .refused(.alreadySaved))
     }
 
+    @Test(arguments: [MemoryRequest.update(Memory.ID("m1"), "Lives in Sydney."), .delete(Memory.ID("m1"))])
+    func `a model cannot change or forget a memory the user wrote, but the user can`(request: MemoryRequest) {
+        let written = [Memory(id: Memory.ID("m1"), text: "Lives in Brisbane.", isFromUser: true, createdAt: now, updatedAt: now)]
+
+        let byModel = MemoryLedger().applying(request, to: written, isFromUser: false, now: now)
+        let byUser = MemoryLedger().applying(request, to: written, isFromUser: true, now: now)
+
+        #expect(byModel.memories == written)
+        #expect(byModel.outcome == .refused(.writtenByUser))
+        #expect(byUser.memories != written)
+    }
+
     @Test(arguments: [MemoryRequest.update(Memory.ID("m9"), "X."), .delete(Memory.ID("m9"))])
     func `a change to a memory that does not exist is refused`(request: MemoryRequest) {
         let known = [memory("m1", "Lives in Brisbane.")]

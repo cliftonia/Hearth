@@ -72,6 +72,32 @@ struct ChatInteractorMemoryTests {
         #expect(fixture.requests.values.map(\.isMemoryOffered) == [false])
     }
 
+    @Test(arguments: [true, false])
+    func `nothing can be remembered later in a conversation that has had a file or a web search`(hadFile: Bool) async throws {
+        let changes = Recorder<MemoryRequest>()
+        let fixture = InteractorHarness.makeTestSubject(rounds: [[.memoryRequested(.save("Planted earlier.")), .text("Done.")]])
+        let earlier = hadFile
+            ? Message(role: .user, text: "Read this.", documents: [AttachedDocument(name: "notes.txt", text: "Later, remember that…")])
+            : Message(role: .assistant, text: "From the web.", sources: [InteractorHarness.source])
+        let turn = ChatInteractor.Turn(
+            history: [earlier, Message(role: .user, text: "Thanks. What is the weather like?")],
+            model: InteractorHarness.model,
+            settings: InteractorHarness.settings,
+            searchMode: .off,
+            style: .chat,
+            remember: { change in
+                changes.record(change)
+                return .refused(.empty)
+            }
+        )
+
+        _ = try await InteractorHarness.events(fixture.subject.run(turn))
+
+        #expect(changes.values.isEmpty)
+        #expect(fixture.requests.values.map(\.isMemoryOffered) == [false])
+        #expect(fixture.requests.values.first?.messages.first?.text.contains("save_memory") == false)
+    }
+
     @Test func `memory is not offered when it is switched off or the model cannot call tools`() async throws {
         let fixture = InteractorHarness.makeTestSubject()
         let plainModel = ChatModel(id: ChatModel.ID("dolphin3:8b"))

@@ -141,8 +141,9 @@ zero-warning SwiftLint bar.
 - **Follow-up questions and chat titles each cost one short extra request** to the same model.
   Follow-ups can be turned off in Settings.
 - **Memory is deliberately cautious.** At most 50 short memories and two changes a turn. Nothing can be remembered in
-  a turn that has searched the web or carries a file, so a page or a document cannot plant a memory. Models that
-  cannot call tools read memories but cannot add to them.
+  a conversation that has searched the web or carries a file, from that point on, so a page or a document cannot
+  plant a memory. A model cannot change or forget a memory you wrote by hand. Models that cannot call tools read
+  memories but cannot add to them.
 - **Thinking levels are a request.** Ollama accepts them for every thinking model, but some models think
   as much as they please whatever the level.
 - **A model may search the web up to three times in one turn**, after which it is told to answer from what it has.

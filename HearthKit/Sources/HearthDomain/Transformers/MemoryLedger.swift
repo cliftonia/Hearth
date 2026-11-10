@@ -24,6 +24,9 @@ public struct MemoryLedger: Sendable {
             guard let existing = memories.first(where: { $0.id == id }) else {
                 return (memories, .refused(.notFound))
             }
+            guard isFromUser || !existing.isFromUser else {
+                return (memories, .refused(.writtenByUser))
+            }
             let fact = normalised(text)
             if let refusal = refusal(for: fact, among: memories.filter { $0.id != id }) {
                 return (memories, .refused(refusal))
@@ -33,6 +36,9 @@ public struct MemoryLedger: Sendable {
         case .delete(let id):
             guard let existing = memories.first(where: { $0.id == id }) else {
                 return (memories, .refused(.notFound))
+            }
+            guard isFromUser || !existing.isFromUser else {
+                return (memories, .refused(.writtenByUser))
             }
             return (memories.filter { $0.id != id }, .deleted(existing))
         }

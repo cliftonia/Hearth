@@ -42,5 +42,7 @@ public enum MemoryRefusalKind: Sendable, Equatable {
     case alreadySaved
     case full
     case notFound
+    /// The memory was written by the user, and a model may not change or forget it.
+    case writtenByUser
     case notStored
 }
