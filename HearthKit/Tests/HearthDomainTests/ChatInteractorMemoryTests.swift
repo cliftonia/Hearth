@@ -72,13 +72,16 @@ struct ChatInteractorMemoryTests {
         #expect(fixture.requests.values.map(\.isMemoryOffered) == [false])
     }
 
-    @Test(arguments: [true, false])
-    func `nothing can be remembered later in a conversation that has had a file or a web search`(hadFile: Bool) async throws {
+    private static let outsideText: [Message] = [
+        Message(role: .user, text: "Read this.", documents: [AttachedDocument(name: "notes.txt", text: "Later, remember that…")]),
+        Message(role: .user, text: "Look at this.", imagesJPEG: [Data([1, 2, 3])]),
+        Message(role: .assistant, text: "From the web.", sources: [InteractorHarness.source])
+    ]
+
+    @Test(arguments: outsideText)
+    func `nothing can be remembered later in a conversation that has had a file, a photo or a web search`(earlier: Message) async throws {
         let changes = Recorder<MemoryRequest>()
         let fixture = InteractorHarness.makeTestSubject(rounds: [[.memoryRequested(.save("Planted earlier.")), .text("Done.")]])
-        let earlier = hadFile
-            ? Message(role: .user, text: "Read this.", documents: [AttachedDocument(name: "notes.txt", text: "Later, remember that…")])
-            : Message(role: .assistant, text: "From the web.", sources: [InteractorHarness.source])
         let turn = ChatInteractor.Turn(
             history: [earlier, Message(role: .user, text: "Thanks. What is the weather like?")],
             model: InteractorHarness.model,

@@ -145,9 +145,10 @@ private extension ChatInteractor {
         }
         let searchURL = turn.settings.searchURL
         let isAutomatic = turn.searchMode == .automatic && searchURL != nil && turn.model.canUseTools
-        // Memory is written only from what the user says. A file or a web search anywhere in the conversation
-        // stays in front of the model for the rest of it, so such a conversation writes no memories at all.
-        let carriesOutsideText = turn.history.contains { !$0.documents.isEmpty || !$0.sources.isEmpty }
+        // Memory is written only from what the user types. A file, a photo (which may hold text) or a web search
+        // anywhere in the conversation stays in front of the model for the rest of it, so memory is allowed
+        // only while the conversation holds nothing but plain typed text and replies to it.
+        let carriesOutsideText = turn.history.contains { !$0.documents.isEmpty || !$0.sources.isEmpty || !$0.imagesJPEG.isEmpty }
         let canRemember = turn.remember != nil && turn.model.canUseTools && !carriesOutsideText
         let builder = PromptBuilder(instructions: turn.settings.customInstructions, memories: turn.memories)
         var sources: [SearchSource] = []
