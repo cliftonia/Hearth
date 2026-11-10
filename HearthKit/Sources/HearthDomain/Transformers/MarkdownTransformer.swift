@@ -1,0 +1,108 @@
+import Foundation
+
+public enum MarkdownBlockKind: Hashable, Sendable {
+    case heading(level: Int, text: String)
+    case paragraph(String)
+    case code(language: String?, text: String)
+    case list(isOrdered: Bool, items: [String])
+    case quote(String)
+    case rule
+}
+
+public struct MarkdownBlock: Identifiable, Hashable, Sendable {
+    public let id: Int
+    public let kind: MarkdownBlockKind
+}
+
+/// Splits Markdown into the blocks a chat reply is laid out from. Inline styling is left in the text.
+public struct MarkdownTransformer: Sendable {
+    public init() {}
+
+    public func blocks(from markdown: String) -> [MarkdownBlock] {
+        var kinds: [MarkdownBlockKind] = []
+        var paragraph: [String] = []
+        var lines = markdown.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).map(String.init)[...]
+
+        func flushParagraph() {
+            if !paragraph.isEmpty {
+                kinds.append(.paragraph(paragraph.joined(separator: "\n")))
+                paragraph = []
+            }
+        }
+
+        while let line = lines.popFirst() {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix("```") {
+                flushParagraph()
+                kinds.append(codeBlock(opening: trimmed, lines: &lines))
+            } else if trimmed.isEmpty {
+                flushParagraph()
+            } else if let block = singleLineBlock(trimmed) {
+                flushParagraph()
+                kinds.append(block)
+            } else if let item = listItem(trimmed) {
+                flushParagraph()
+                kinds.append(list(first: item, lines: &lines))
+            } else {
+                paragraph.append(trimmed)
+            }
+        }
+        flushParagraph()
+        return kinds.enumerated().map { MarkdownBlock(id: $0.offset, kind: $0.element) }
+    }
+
+    private func codeBlock(opening: String, lines: inout ArraySlice<String>) -> MarkdownBlockKind {
+        let language = opening.dropFirst(3).trimmingCharacters(in: .whitespaces)
+        var code: [String] = []
+        while let line = lines.popFirst() {
+            if line.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
+                break
+            }
+            code.append(line)
+        }
+        return .code(language: language.isEmpty ? nil : language, text: code.joined(separator: "\n"))
+    }
+
+    private func singleLineBlock(_ line: String) -> MarkdownBlockKind? {
+        // The quantifier braces inside these regex literals are mistaken for code blocks by the linter.
+        // swiftlint:disable opening_brace
+        if let heading = line.firstMatch(of: /^(#{1,6})\s+(.+)$/) {
+            return .heading(level: heading.1.count, text: String(heading.2))
+        }
+        if line.wholeMatch(of: /^(-{3,}|\*{3,}|_{3,})$/) != nil {
+            return .rule
+        }
+        // swiftlint:enable opening_brace
+        if let quote = line.firstMatch(of: /^>\s?(.*)$/) {
+            return .quote(String(quote.1))
+        }
+        return nil
+    }
+
+    private func listItem(_ line: String) -> (isOrdered: Bool, text: String)? {
+        if let bullet = line.firstMatch(of: /^[-*+]\s+(.+)$/) {
+            return (false, String(bullet.1))
+        }
+        if let numbered = line.firstMatch(of: /^\d+[.)]\s+(.+)$/) {
+            return (true, String(numbered.1))
+        }
+        return nil
+    }
+
+    private func list(first: (isOrdered: Bool, text: String), lines: inout ArraySlice<String>) -> MarkdownBlockKind {
+        var items = [first.text]
+        while let next = lines.first {
+            let trimmed = next.trimmingCharacters(in: .whitespaces)
+            if let item = listItem(trimmed), item.isOrdered == first.isOrdered {
+                items.append(item.text)
+            } else if !trimmed.isEmpty, next.hasPrefix("  "), let last = items.popLast() {
+                // An indented line continues the item above it.
+                items.append(last + " " + trimmed)
+            } else {
+                break
+            }
+            lines.removeFirst()
+        }
+        return .list(isOrdered: first.isOrdered, items: items)
+    }
+}
