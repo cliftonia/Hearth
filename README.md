@@ -109,8 +109,10 @@ HearthCore    Tagged identifiers, logging
   implementation, so tests pass in their own.
 - **Errors** are thrown raw by the data layer, given meaning in the domain (`ChatError`) and caught
   in the Presenter, which shows them in a banner.
-- **Untrusted text**: a model's reply and a search result are treated as untrusted. Only `http` and
-  `https` links open when tapped.
+- **Untrusted text**: a model's reply, a search result and a web page are all treated as untrusted. Only `http` and
+  `https` links open when tapped. Pages are read only from public HTTPS addresses, never from a private, tailnet or
+  numeric one, and a redirect is held to the same rule. Page text is reduced in a single pass that hostile markup
+  cannot slow down, and it is handed to the model fenced and marked as material, not instructions.
 - **Strings** live in `Localizable.xcstrings`, rebuilt from `Strings.swift` by `python3 Tools/sync_strings.py`.
 
 ## Tests and linting
@@ -123,7 +125,7 @@ swiftlint lint
 
 Tests are written with Swift Testing: the stream decoding, prompt building, sentence chunking for
 speech, Markdown, maths and web page parsing, follow-up questions, export, the chat interactor, the
-conversation store, file storage, the app lock and the drawer's grouping. The codebase holds a
+conversation store, file storage, which addresses a page may be read from, the app lock and the drawer's grouping. The codebase holds a
 zero-warning SwiftLint bar.
 
 ## Good to know
@@ -139,6 +141,7 @@ zero-warning SwiftLint bar.
 - **A model may search the web up to three times in one turn**, after which it is told to answer from what it has.
 - **Reading pages is done by the device.** The top three results of a search are fetched directly and reduced to
   text, so those sites see the device's address rather than the server's. It can be turned off in Settings, leaving
-  the model with snippets only.
+  the model with snippets only. A page can still try to mislead the model; marking its text as untrusted lowers that
+  risk but cannot remove it.
 - **A reply keeps streaming for a short while in the background**, as long as iOS allows, usually about half a minute.
 - The app icon is drawn by `python3 Tools/make_icon.py` (needs Pillow).

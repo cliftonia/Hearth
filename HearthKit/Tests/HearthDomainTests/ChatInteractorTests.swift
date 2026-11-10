@@ -179,9 +179,10 @@ struct ChatInteractorTests {
         let events = try await events(fixture.subject.run(turn(searchMode: .automatic)))
 
         let results = try #require(fixture.requests.values.last?.messages.last?.text)
-        #expect(results.contains("Text of the page:\nOllama 0.40 was released today."))
+        #expect(results.contains("<<<PAGE\nOllama 0.40 was released today."))
         #expect(results.contains("[2] Blog"))
-        #expect(results.components(separatedBy: "Text of the page:").count == 2)
+        #expect(results.components(separatedBy: "<<<PAGE").count == 2)
+        #expect(results.contains("not instructions"))
         #expect(events.last == .text("Done"))
     }
 
