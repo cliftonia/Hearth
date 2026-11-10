@@ -22,10 +22,23 @@ public final class ConversationStore {
     }
 
     /// Puts the conversation at the top of the list and writes it to disk.
+    ///
+    /// Whether it is pinned is the store's to decide, so a copy edited elsewhere cannot undo a pin.
     public func save(_ conversation: Conversation) async throws {
-        conversations.removeAll { $0.id == conversation.id }
-        conversations.insert(conversation, at: 0)
-        try await provider.save(conversation)
+        let saved = conversation.updating(isPinned: self.conversation(for: conversation.id)?.isPinned)
+        conversations.removeAll { $0.id == saved.id }
+        conversations.insert(saved, at: 0)
+        try await provider.save(saved)
+    }
+
+    /// Pins or unpins a conversation without counting it as activity: its place by date is unchanged.
+    public func setPinned(_ isPinned: Bool, for id: Conversation.ID) async throws {
+        guard let index = conversations.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+        let pinned = conversations[index].updating(isPinned: isPinned)
+        conversations[index] = pinned
+        try await provider.save(pinned)
     }
 
     public func delete(_ id: Conversation.ID) async throws {

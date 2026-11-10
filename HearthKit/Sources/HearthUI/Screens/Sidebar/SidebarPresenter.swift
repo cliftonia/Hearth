@@ -21,9 +21,11 @@ final class SidebarViewModel {
 struct SidebarRowViewConfiguration: Hashable, Identifiable {
     let id: Conversation.ID
     let title: String
+    let isPinned: Bool
 }
 
 enum SidebarGroupKind: Hashable, CaseIterable {
+    case pinned
     case today
     case yesterday
     case previousWeek
@@ -99,6 +101,14 @@ final class SidebarPresenter {
         delegate?.sidebarPresenterDidRequestSettings(self)
     }
 
+    func pinAction(_ row: SidebarRowViewConfiguration) async {
+        do {
+            try await conversationStore.setPinned(!row.isPinned, for: row.id)
+        } catch {
+            logger.error("Pinning a conversation failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
     func deleteAction(_ id: Conversation.ID) async {
         do {
             try await conversationStore.delete(id)
@@ -117,12 +127,20 @@ struct ConversationGrouper {
             needle.isEmpty || conversation.title.localizedCaseInsensitiveContains(needle)
                 || conversation.messages.contains { $0.text.localizedCaseInsensitiveContains(needle) }
         }
-        let grouped = Dictionary(grouping: matching) { kind(for: $0.updatedAt, now: now, calendar: calendar) }
+        let grouped = Dictionary(grouping: matching) { conversation in
+            conversation.isPinned ? .pinned : kind(for: conversation.updatedAt, now: now, calendar: calendar)
+        }
         return SidebarGroupKind.allCases.compactMap { kind in
             guard let members = grouped[kind], !members.isEmpty else {
                 return nil
             }
-            let rows = members.map { SidebarRowViewConfiguration(id: $0.id, title: $0.title.isEmpty ? Strings.newChat : $0.title) }
+            let rows = members.map { conversation in
+                SidebarRowViewConfiguration(
+                    id: conversation.id,
+                    title: conversation.title.isEmpty ? Strings.newChat : conversation.title,
+                    isPinned: conversation.isPinned
+                )
+            }
             return SidebarGroupViewConfiguration(id: kind, title: title(for: kind), rows: rows)
         }
     }
@@ -143,6 +161,8 @@ struct ConversationGrouper {
 
     private func title(for kind: SidebarGroupKind) -> String {
         switch kind {
+        case .pinned:
+            Strings.pinned
         case .today:
             Strings.today
         case .yesterday:

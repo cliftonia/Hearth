@@ -738,6 +738,28 @@
         }
       }
     },
+    "sidebar.pin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pin"
+          }
+        }
+      }
+    },
+    "sidebar.pinned": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned"
+          }
+        }
+      }
+    },
     "sidebar.previousWeek": {
       "extractionState": "manual",
       "localizations": {
@@ -778,6 +800,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Today"
+          }
+        }
+      }
+    },
+    "sidebar.unpin": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpin"
           }
         }
       }

@@ -94,20 +94,31 @@ struct SidebarView: View {
     private func conversationRow(_ row: SidebarRowViewConfiguration) -> some View {
         let isSelected = row.id == presenter.selectedID
         return Button(action: { presenter.selectAction(row.id) }, label: {
-            Text(row.title)
-                .font(.subheadline)
-                .foregroundStyle(HearthColor.ink)
-                .lineLimit(1)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 9)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(isSelected ? HearthColor.bubble : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .contentShape(Rectangle())
+            HStack(spacing: 6) {
+                Text(row.title)
+                    .font(.subheadline)
+                    .foregroundStyle(HearthColor.ink)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "pin.fill")
+                    .font(.caption2)
+                    .foregroundStyle(HearthColor.pine)
+                    .opacity(row.isPinned ? 1 : 0)
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 9)
+            .background(isSelected ? HearthColor.bubble : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .contentShape(Rectangle())
         })
         .buttonStyle(.plain)
         .padding(.horizontal, 8)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityValue(row.isPinned ? Strings.pinned : "")
         .contextMenu {
+            Button(action: { Task { await presenter.pinAction(row) } }, label: {
+                Label(row.isPinned ? Strings.unpin : Strings.pin, systemImage: row.isPinned ? "pin.slash" : "pin")
+            })
             Button(role: .destructive, action: { Task { await presenter.deleteAction(row.id) } }, label: {
                 Label(Strings.delete, systemImage: "trash")
             })

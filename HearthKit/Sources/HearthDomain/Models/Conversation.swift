@@ -81,6 +81,7 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
     public let title: String
     public let modelID: ChatModel.ID?
     public let messages: [Message]
+    public let isPinned: Bool
     public let createdAt: Date
     public let updatedAt: Date
 
@@ -89,6 +90,7 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
         title: String = "",
         modelID: ChatModel.ID? = nil,
         messages: [Message] = [],
+        isPinned: Bool = false,
         createdAt: Date = Date(),
         updatedAt: Date = Date()
     ) {
@@ -96,16 +98,38 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
         self.title = title
         self.modelID = modelID
         self.messages = messages
+        self.isPinned = isPinned
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
 
-    public func updating(title: String? = nil, modelID: ChatModel.ID? = nil, messages: [Message]? = nil, updatedAt: Date? = nil) -> Conversation {
+    /// Conversations saved before pinning existed carry no `isPinned`; they are read as not pinned.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            id: try container.decode(ID.self, forKey: .id),
+            title: try container.decode(String.self, forKey: .title),
+            modelID: try container.decodeIfPresent(ChatModel.ID.self, forKey: .modelID),
+            messages: try container.decode([Message].self, forKey: .messages),
+            isPinned: try container.decodeIfPresent(Bool.self, forKey: .isPinned) ?? false,
+            createdAt: try container.decode(Date.self, forKey: .createdAt),
+            updatedAt: try container.decode(Date.self, forKey: .updatedAt)
+        )
+    }
+
+    public func updating(
+        title: String? = nil,
+        modelID: ChatModel.ID? = nil,
+        messages: [Message]? = nil,
+        isPinned: Bool? = nil,
+        updatedAt: Date? = nil
+    ) -> Conversation {
         Conversation(
             id: id,
             title: title ?? self.title,
             modelID: modelID ?? self.modelID,
             messages: messages ?? self.messages,
+            isPinned: isPinned ?? self.isPinned,
             createdAt: createdAt,
             updatedAt: updatedAt ?? self.updatedAt
         )
