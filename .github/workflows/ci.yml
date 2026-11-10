@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    runs-on: xcode-27
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install SwiftLint 0.53.0
+        run: |
+          curl -fsSL -o swiftlint.zip https://github.com/realm/SwiftLint/releases/download/0.53.0/portable_swiftlint.zip
+          mkdir -p "$HOME/bin" && unzip -q swiftlint.zip -d "$HOME/bin"
+          test "$("$HOME/bin/swiftlint" version)" = "0.53.0"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+      - name: SwiftLint
+        run: swiftlint lint --strict --quiet
+      - name: Strings catalog is in step with Strings.swift
+        run: python3 Tools/sync_strings.py && git diff --exit-code -- HearthKit/Sources/HearthUI/Resources/Localizable.xcstrings
+      - name: Layers only import downwards
+        run: |
+          ! grep -rnE "^import (SwiftUI|UIKit|HearthUI)" HearthKit/Sources/HearthDomain HearthKit/Sources/HearthData HearthKit/Sources/HearthCore
+          ! grep -rnE "^import (HearthDomain|HearthUI)" HearthKit/Sources/HearthData HearthKit/Sources/HearthCore
+          ! grep -rnE "^import HearthData" HearthKit/Sources/HearthUI
+
+  test:
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: Select Xcode 27.1
+        run: sudo xcode-select -s /Applications/Xcode_27.1.app && xcodebuild -version
+      - name: Install XcodeGen
+        run: command -v xcodegen || brew install xcodegen
+      - name: Generate the project
+        run: xcodegen generate
+      - name: Build
+        run: >
+          xcodebuild build-for-testing -project Hearth.xcodeproj -scheme Hearth
+          -destination "generic/platform=iOS Simulator" -quiet
+      - name: Boot a simulator
+        run: |
+          SIM_DEVICE=$(xcrun simctl list devices available | grep -E "^\s+iPhone" | head -1 | grep -oE "[0-9A-F-]{36}")
+          test -n "$SIM_DEVICE"
+          echo "SIM_DEVICE=$SIM_DEVICE" >> "$GITHUB_ENV"
+          for attempt in $(seq 1 36); do
+            xcrun simctl boot "$SIM_DEVICE" && xcrun simctl bootstatus "$SIM_DEVICE" -b && break
+            if [ "$attempt" = 36 ]; then
+              xcrun simctl runtime list
+              exit 1
+            fi
+            echo "runtime not ready (attempt $attempt); waiting"
+            xcrun simctl shutdown "$SIM_DEVICE" || true
+            sleep 10
+          done
+      - name: Test
+        timeout-minutes: 15
+        run: >
+          xcodebuild test-without-building -project Hearth.xcodeproj -scheme Hearth
+          -destination "platform=iOS Simulator,id=$SIM_DEVICE"

@@ -1,5 +1,6 @@
 # Hearth
 
+[![CI](https://github.com/cliftonia/Hearth/actions/workflows/ci.yml/badge.svg)](https://github.com/cliftonia/Hearth/actions/workflows/ci.yml)
 ![Platform](https://img.shields.io/badge/platform-iOS%2017%2B%20%C2%B7%20iPadOS-2C6B5A)
 ![Swift](https://img.shields.io/badge/Swift-5.9%2B-2C6B5A)
 ![Dependencies](https://img.shields.io/badge/dependencies-none-2C6B5A)
@@ -133,6 +134,9 @@ Tests are written with Swift Testing: the stream decoding, prompt building, sent
 speech, Markdown, maths and web page parsing, memory and its limits, follow-up questions, export, the chat interactor, the
 conversation store, file storage, which addresses a page may be read from, the app lock and the drawer's grouping. The codebase holds a
 zero-warning SwiftLint bar.
+
+The same checks run on every push and pull request through GitHub Actions (`.github/workflows/ci.yml`), together with
+a check that the string catalog matches `Strings.swift` and that each layer imports only the layers beneath it.
 
 ## Good to know
 
