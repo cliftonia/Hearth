@@ -3,11 +3,12 @@ import SwiftUI
 
 @main
 struct HearthApp: App {
-    @State private var coordinator = AppCoordinator(dependencies: .live(defaults: .fromInfoPlist))
+    /// Shared with the app's shortcuts, which may run before any window exists.
+    @MainActor static let coordinator = AppCoordinator(dependencies: .live(defaults: .fromInfoPlist))
 
     var body: some Scene {
         WindowGroup {
-            coordinator.start()
+            Self.coordinator.start()
         }
     }
 }

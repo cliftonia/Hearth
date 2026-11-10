@@ -8,20 +8,36 @@ public enum ReplyStyle: Sendable {
 
 /// Turns a conversation, and any web results, into the messages sent to the model.
 public struct PromptBuilder: Sendable {
-    public init() {}
+    /// The most text taken from one attached file, so a long document cannot crowd out the conversation.
+    public static let maximumDocumentLength = 60_000
+
+    private let instructions: String
+
+    /// - Parameter instructions: The user's standing instructions, if any.
+    public init(instructions: String) {
+        self.instructions = instructions.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 
     public func messages(history: [Message], sources: [SearchSource], style: ReplyStyle, now: Date) -> [PromptMessage] {
         let system = PromptMessage(role: .system, text: systemText(sources: sources, style: style, now: now))
         let turns = history
-            .filter { !$0.text.isEmpty || !$0.imagesJPEG.isEmpty }
+            .filter { !$0.isEmpty }
             .map { message in
                 PromptMessage(
                     role: message.role == .user ? .user : .assistant,
-                    text: message.text,
+                    text: text(of: message),
                     imagesJPEG: message.imagesJPEG
                 )
             }
         return [system] + turns
+    }
+
+    /// The message as the model reads it: any attached files first, then what was typed.
+    private func text(of message: Message) -> String {
+        let files = message.documents.map { document in
+            "Attached file \"\(document.name)\":\n\(document.text.prefix(Self.maximumDocumentLength))"
+        }
+        return (files + [message.text]).filter { !$0.isEmpty }.joined(separator: "\n\n")
     }
 
     /// The text to search the web for: the user's latest message, kept to a searchable length.
@@ -43,6 +59,9 @@ public struct PromptBuilder: Sendable {
                 "Your reply will be spoken aloud. Answer in a few short, natural sentences. "
                     + "Use no Markdown, lists, code or symbols."
             )
+        }
+        if !instructions.isEmpty {
+            parts.append("The user has given these standing instructions. Follow them:\n\(instructions)")
         }
         if !sources.isEmpty {
             let listing = sources.enumerated()

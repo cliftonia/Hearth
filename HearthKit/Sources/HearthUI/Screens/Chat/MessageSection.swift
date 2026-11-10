@@ -8,6 +8,7 @@ struct MessageSection: View {
     let isStreaming: Bool
     let isSpeaking: Bool
     let speakAction: (() -> Void)?
+    let editAction: (() -> Void)?
     let retryAction: (() -> Void)?
 
     @State private var copyCount = 0
@@ -26,14 +27,18 @@ struct MessageSection: View {
             if !message.imagesJPEG.isEmpty {
                 PhotoStrip(imagesJPEG: message.imagesJPEG, sideLength: 96, removeAction: nil)
             }
+            if !message.documents.isEmpty {
+                DocumentStrip(documents: message.documents, removeAction: nil)
+            }
             if !message.text.isEmpty {
                 Text(message.text)
                     .font(.body)
                     .foregroundStyle(HearthColor.ink)
-                    .textSelection(.enabled)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
                     .background(HearthColor.bubble, in: UnevenRoundedRectangle(cornerRadii: Self.bubbleRadii, style: .continuous))
+                    .contentShape(.contextMenuPreview, UnevenRoundedRectangle(cornerRadii: Self.bubbleRadii, style: .continuous))
+                    .contextMenu { userMenu }
             }
         }
         .padding(.leading, 48)
@@ -62,12 +67,33 @@ struct MessageSection: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    @ViewBuilder private var userMenu: some View {
+        Button(action: copyAction) {
+            Label(Strings.copy, systemImage: "doc.on.doc")
+        }
+        if let editAction {
+            Button(action: editAction) {
+                Label(Strings.edit, systemImage: "pencil")
+            }
+        }
+    }
+
+    private func copyAction() {
+        UIPasteboard.general.string = message.text
+        copyCount += 1
+    }
+
     private var actions: some View {
         HStack(spacing: 4) {
-            actionButton(systemImage: "doc.on.doc", label: Strings.copy) {
-                UIPasteboard.general.string = message.text
-                copyCount += 1
+            actionButton(systemImage: "doc.on.doc", label: Strings.copy, action: copyAction)
+            ShareLink(item: message.text) {
+                Image(systemName: "square.and.arrow.up")
+                    .font(.footnote)
+                    .foregroundStyle(HearthColor.mute)
+                    .frame(width: 34, height: 30)
+                    .contentShape(Rectangle())
             }
+            .accessibilityLabel(Strings.share)
             if let speakAction {
                 actionButton(
                     systemImage: isSpeaking ? "stop.circle" : "speaker.wave.2",

@@ -9,15 +9,19 @@ A native iOS chat app for your own [Ollama](https://ollama.com) server. Pick any
 
 ## Features
 
-- **Chat** with any model on the server, chosen from a picker that groups local and cloud models. Replies stream in as Markdown with headings, lists, quotes and copyable code blocks.
+- **Chat** with any model on the server, chosen from a picker that groups local and cloud models. Replies stream in as Markdown with headings, lists, quotes, tables and copyable code blocks.
+- **Maths** written in LaTeX is shown as readable Unicode text (`x² ≤ a/b`). It is an approximation on one line, not typesetting.
 - **Thinking** from models that reason is folded away under a "Thought for N seconds" line.
-- **Photos** can be attached for models that can see.
+- **Attachments**: photos from the library or the camera for models that can see, and PDFs or text files for any model.
+- **Edit and resend** a message you already sent; the replies after it are replaced.
+- **Custom instructions** in Settings are given to the model at the start of every conversation.
 - **Web search** per message: results from SearXNG are handed to the model and shown as source links under the reply.
 - **Dictation** into the message field, recognised on the device where the phone supports it.
 - **Read aloud**: any reply spoken through a Kokoro (OpenAI-compatible) speech server.
-- **Voice conversation**: speak, pause, hear the answer, speak again. Tap the orb to interrupt.
-- **History** in a drawer, grouped by day, searchable, titled by the model.
-- Light and dark appearance, Dynamic Type and VoiceOver labels throughout.
+- **Voice conversation**: speak, pause, hear the answer, speak again. Tap the orb to interrupt. A "Start Voice Conversation" shortcut opens it from Siri, Shortcuts, Spotlight or the Action button.
+- **History** in a drawer, grouped by day, searchable and titled by the model. Chats can be pinned, renamed, shared as Markdown and deleted.
+- **Theme**: follow the system, or keep to light or dark.
+- Dynamic Type and VoiceOver labels throughout.
 
 ## Requirements
 
@@ -71,7 +75,7 @@ xcodebuild test -project Hearth.xcodeproj -scheme Hearth -destination 'platform=
 swiftlint lint
 ```
 
-Tests are written with Swift Testing and cover the stream decoding, prompt building, sentence chunking for speech, Markdown block parsing, the chat interactor and file storage.
+Tests are written with Swift Testing and cover the stream decoding, prompt building, sentence chunking for speech, Markdown and maths parsing, export, the chat interactor, the conversation store and file storage.
 
 ## Notes
 

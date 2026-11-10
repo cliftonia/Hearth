@@ -66,6 +66,7 @@ enum HearthFont {
     static let display = Font.system(.title, design: .serif).weight(.semibold)
     static let spoken = Font.system(.title3, design: .serif)
     static let code = Font.system(.footnote, design: .monospaced)
+    static let math = Font.system(.title3, design: .serif)
 
     static func heading(level: Int) -> Font {
         switch level {

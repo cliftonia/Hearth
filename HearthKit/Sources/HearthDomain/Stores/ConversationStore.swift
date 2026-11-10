@@ -33,12 +33,21 @@ public final class ConversationStore {
 
     /// Pins or unpins a conversation without counting it as activity: its place by date is unchanged.
     public func setPinned(_ isPinned: Bool, for id: Conversation.ID) async throws {
+        try await replace(id) { $0.updating(isPinned: isPinned) }
+    }
+
+    /// Gives a conversation a new title, leaving its place by date unchanged.
+    public func rename(_ id: Conversation.ID, to title: String) async throws {
+        try await replace(id) { $0.updating(title: title) }
+    }
+
+    private func replace(_ id: Conversation.ID, with change: (Conversation) -> Conversation) async throws {
         guard let index = conversations.firstIndex(where: { $0.id == id }) else {
             return
         }
-        let pinned = conversations[index].updating(isPinned: isPinned)
-        conversations[index] = pinned
-        try await provider.save(pinned)
+        let changed = change(conversations[index])
+        conversations[index] = changed
+        try await provider.save(changed)
     }
 
     public func delete(_ id: Conversation.ID) async throws {

@@ -6,6 +6,8 @@ public enum MarkdownBlockKind: Hashable, Sendable {
     case code(language: String?, text: String)
     case list(isOrdered: Bool, items: [String])
     case quote(String)
+    case table(header: [String], rows: [[String]])
+    case math(String)
     case rule
 }
 
@@ -37,6 +39,9 @@ public struct MarkdownTransformer: Sendable {
                 kinds.append(codeBlock(opening: trimmed, lines: &lines))
             } else if trimmed.isEmpty {
                 flushParagraph()
+            } else if let block = table(header: trimmed, lines: &lines) ?? math(opening: trimmed, lines: &lines) {
+                flushParagraph()
+                kinds.append(block)
             } else if let block = singleLineBlock(trimmed) {
                 flushParagraph()
                 kinds.append(block)
@@ -61,6 +66,54 @@ public struct MarkdownTransformer: Sendable {
             code.append(line)
         }
         return .code(language: language.isEmpty ? nil : language, text: code.joined(separator: "\n"))
+    }
+
+    /// A table is a row of cells followed by a row of dashes; without the dashes the line is ordinary text.
+    private func table(header: String, lines: inout ArraySlice<String>) -> MarkdownBlockKind? {
+        guard header.hasPrefix("|"), let separator = lines.first, isTableSeparator(separator) else {
+            return nil
+        }
+        lines.removeFirst()
+        var rows: [[String]] = []
+        while let next = lines.first?.trimmingCharacters(in: .whitespaces), next.hasPrefix("|") {
+            rows.append(cells(in: next))
+            lines.removeFirst()
+        }
+        return .table(header: cells(in: header), rows: rows)
+    }
+
+    private func isTableSeparator(_ line: String) -> Bool {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        return trimmed.contains("-") && trimmed.contains("|") && trimmed.allSatisfy { "|-: ".contains($0) }
+    }
+
+    private func cells(in row: String) -> [String] {
+        var inner = row.trimmingCharacters(in: .whitespaces)[...]
+        if inner.hasPrefix("|") {
+            inner = inner.dropFirst()
+        }
+        if inner.hasSuffix("|") {
+            inner = inner.dropLast()
+        }
+        return inner.split(separator: "|", omittingEmptySubsequences: false).map { $0.trimmingCharacters(in: .whitespaces) }
+    }
+
+    /// Display maths, opened by `$$` or `\\[` and closed on the same line or a later one.
+    private func math(opening: String, lines: inout ArraySlice<String>) -> MarkdownBlockKind? {
+        guard let closing = ["$$": "$$", "\\[": "\\]"].first(where: { opening.hasPrefix($0.key) })?.value else {
+            return nil
+        }
+        var body = [String(opening.dropFirst(2))]
+        while !(body.last ?? "").hasSuffix(closing), let next = lines.popFirst() {
+            body.append(next.trimmingCharacters(in: .whitespaces))
+        }
+        if var last = body.popLast() {
+            if last.hasSuffix(closing) {
+                last.removeLast(closing.count)
+            }
+            body.append(last)
+        }
+        return .math(body.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }.joined(separator: " "))
     }
 
     private func singleLineBlock(_ line: String) -> MarkdownBlockKind? {

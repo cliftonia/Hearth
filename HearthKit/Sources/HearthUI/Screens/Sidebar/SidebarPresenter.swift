@@ -8,6 +8,7 @@ import os
 protocol SidebarPresenterDelegate: AnyObject {
     func sidebarPresenter(_ presenter: SidebarPresenter, didSelect id: Conversation.ID)
     func sidebarPresenter(_ presenter: SidebarPresenter, didDelete id: Conversation.ID)
+    func sidebarPresenter(_ presenter: SidebarPresenter, didRename id: Conversation.ID, to title: String)
     func sidebarPresenterDidRequestNewChat(_ presenter: SidebarPresenter)
     func sidebarPresenterDidRequestSettings(_ presenter: SidebarPresenter)
 }
@@ -16,6 +17,9 @@ protocol SidebarPresenterDelegate: AnyObject {
 @Observable
 final class SidebarViewModel {
     var query = ""
+    var isRenaming = false
+    var renameDraft = ""
+    var renamingID: Conversation.ID?
 }
 
 struct SidebarRowViewConfiguration: Hashable, Identifiable {
@@ -107,6 +111,32 @@ final class SidebarPresenter {
         } catch {
             logger.error("Pinning a conversation failed: \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    func renameAction(_ row: SidebarRowViewConfiguration) {
+        viewModel.renamingID = row.id
+        viewModel.renameDraft = row.title
+        viewModel.isRenaming = true
+    }
+
+    func commitRenameAction() async {
+        let title = viewModel.renameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let id = viewModel.renamingID, !title.isEmpty else {
+            return
+        }
+        viewModel.renamingID = nil
+        do {
+            try await conversationStore.rename(id, to: title)
+            delegate?.sidebarPresenter(self, didRename: id, to: title)
+        } catch {
+            logger.error("Renaming a conversation failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// The conversation as Markdown, for sharing.
+    func exportText(for id: Conversation.ID) -> String {
+        let exporter = ConversationExporter(userLabel: Strings.exportUser, assistantLabel: Strings.brand, untitled: Strings.newChat)
+        return conversationStore.conversation(for: id).map(exporter.markdown(for:)) ?? ""
     }
 
     func deleteAction(_ id: Conversation.ID) async {

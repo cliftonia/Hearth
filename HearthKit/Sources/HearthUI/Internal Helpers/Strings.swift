@@ -19,7 +19,14 @@ enum Strings {
     static let openSettings = String(localized: "chat.openSettings", defaultValue: "Open Settings", bundle: .module)
 
     static let composerPlaceholder = String(localized: "composer.placeholder", defaultValue: "Message", bundle: .module)
-    static let attach = String(localized: "composer.attach", defaultValue: "Attach photos", bundle: .module)
+    static let attach = String(localized: "composer.attach", defaultValue: "Attach", bundle: .module)
+    static let chooseFile = String(localized: "composer.chooseFile", defaultValue: "Choose file", bundle: .module)
+    static let takePhoto = String(localized: "composer.takePhoto", defaultValue: "Take photo", bundle: .module)
+    static let photoLibrary = String(localized: "composer.photoLibrary", defaultValue: "Photo library", bundle: .module)
+    static let removeFile = String(localized: "composer.removeFile", defaultValue: "Remove file", bundle: .module)
+    static let filesUnreadable = String(localized: "composer.filesUnreadable", defaultValue: "Some files could not be read. PDFs and text files are supported.", bundle: .module)
+    static let editingMessage = String(localized: "composer.editing", defaultValue: "Editing message", bundle: .module)
+    static let cancelEdit = String(localized: "composer.cancelEdit", defaultValue: "Cancel editing", bundle: .module)
     static let removePhoto = String(localized: "composer.removePhoto", defaultValue: "Remove photo", bundle: .module)
     static let search = String(localized: "composer.search", defaultValue: "Search", bundle: .module)
     static let searchLabel = String(localized: "composer.searchLabel", defaultValue: "Web search", bundle: .module)
@@ -30,6 +37,9 @@ enum Strings {
     static let startVoice = String(localized: "composer.voice", defaultValue: "Start voice conversation", bundle: .module)
 
     static let copy = String(localized: "message.copy", defaultValue: "Copy", bundle: .module)
+    static let edit = String(localized: "message.edit", defaultValue: "Edit", bundle: .module)
+    static let share = String(localized: "message.share", defaultValue: "Share", bundle: .module)
+    static let exportUser = String(localized: "export.user", defaultValue: "You", bundle: .module)
     static let readAloud = String(localized: "message.speak", defaultValue: "Read aloud", bundle: .module)
     static let stopReading = String(localized: "message.stopSpeaking", defaultValue: "Stop reading", bundle: .module)
     static let tryAgain = String(localized: "message.retry", defaultValue: "Try again", bundle: .module)
@@ -61,6 +71,10 @@ enum Strings {
     static let pinned = String(localized: "sidebar.pinned", defaultValue: "Pinned", bundle: .module)
     static let pin = String(localized: "sidebar.pin", defaultValue: "Pin", bundle: .module)
     static let unpin = String(localized: "sidebar.unpin", defaultValue: "Unpin", bundle: .module)
+    static let rename = String(localized: "sidebar.rename", defaultValue: "Rename", bundle: .module)
+    static let renameChat = String(localized: "sidebar.renameChat", defaultValue: "Rename chat", bundle: .module)
+    static let chatTitle = String(localized: "sidebar.chatTitle", defaultValue: "Title", bundle: .module)
+    static let save = String(localized: "sidebar.save", defaultValue: "Save", bundle: .module)
     static let delete = String(localized: "sidebar.delete", defaultValue: "Delete", bundle: .module)
     static let noChats = String(localized: "sidebar.empty", defaultValue: "No chats yet", bundle: .module)
     static let settings = String(localized: "sidebar.settings", defaultValue: "Settings", bundle: .module)
@@ -76,6 +90,9 @@ enum Strings {
     static let serversFooter = String(localized: "settings.serversFooter", defaultValue: "Search and speech are optional. An address without a scheme is taken to be HTTPS.", bundle: .module)
     static let voice = String(localized: "settings.voice", defaultValue: "Voice", bundle: .module)
     static let voiceName = String(localized: "settings.voiceName", defaultValue: "Voice name", bundle: .module)
+    static let instructions = String(localized: "settings.instructions", defaultValue: "Custom instructions", bundle: .module)
+    static let instructionsPlaceholder = String(localized: "settings.instructionsPlaceholder", defaultValue: "For example: answer briefly. I live in Brisbane.", bundle: .module)
+    static let instructionsFooter = String(localized: "settings.instructionsFooter", defaultValue: "Given to the model at the start of every conversation.", bundle: .module)
     static let theme = String(localized: "settings.theme", defaultValue: "Theme", bundle: .module)
     static let themeSystem = String(localized: "settings.themeSystem", defaultValue: "System", bundle: .module)
     static let themeLight = String(localized: "settings.themeLight", defaultValue: "Light", bundle: .module)
@@ -99,6 +116,10 @@ enum Strings {
 
     static func messageModel(_ name: String) -> String {
         String(localized: "composer.placeholderModel", defaultValue: "Message \(name)", bundle: .module)
+    }
+
+    static func attachedFile(_ name: String) -> String {
+        String(localized: "message.attachedFile", defaultValue: "Attached file \(name)", bundle: .module)
     }
 
     static func thought(seconds: Int) -> String {

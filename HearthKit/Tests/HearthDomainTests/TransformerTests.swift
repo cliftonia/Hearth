@@ -85,6 +85,24 @@ struct MarkdownTransformerTests {
         #expect(kinds("Here:\n```\nollama p") == [.paragraph("Here:"), .code(language: nil, text: "ollama p")])
     }
 
+    @Test func `a table is read into its header and rows`() {
+        let markdown = "| Model | Size |\n|:--|--:|\n| gemma4 | 9 GB |\n| qwen | 23 GB |\nAfter"
+
+        #expect(kinds(markdown) == [
+            .table(header: ["Model", "Size"], rows: [["gemma4", "9 GB"], ["qwen", "23 GB"]]),
+            .paragraph("After")
+        ])
+    }
+
+    @Test func `a line of pipes without a row of dashes is ordinary text`() {
+        #expect(kinds("| not | a table |") == [.paragraph("| not | a table |")])
+    }
+
+    @Test(arguments: ["$$ E = mc^2 $$", "\\[ E = mc^2 \\]", "$$\nE = mc^2\n$$"])
+    func `display maths is its own block whichever way it is fenced`(markdown: String) {
+        #expect(kinds(markdown) == [.math("E = mc^2")])
+    }
+
     @Test func `block identifiers are stable positions`() {
         #expect(MarkdownTransformer().blocks(from: "one\n\ntwo").map(\.id) == [0, 1])
     }
@@ -96,7 +114,7 @@ struct PromptBuilderTests {
     @Test func `the system message comes first and history keeps its order`() {
         let history = [Message(role: .user, text: "Hello"), Message(role: .assistant, text: "Hi"), Message(role: .user, text: "Again")]
 
-        let messages = PromptBuilder().messages(history: history, sources: [], style: .chat, now: now)
+        let messages = PromptBuilder(instructions: "").messages(history: history, sources: [], style: .chat, now: now)
 
         #expect(messages.map(\.role) == [.system, .user, .assistant, .user])
         #expect(messages.dropFirst().map(\.text) == ["Hello", "Hi", "Again"])
@@ -105,7 +123,7 @@ struct PromptBuilderTests {
     @Test func `an empty reply left by a failed turn is not sent back`() {
         let history = [Message(role: .user, text: "Hello"), Message(role: .assistant, text: "")]
 
-        let messages = PromptBuilder().messages(history: history, sources: [], style: .chat, now: now)
+        let messages = PromptBuilder(instructions: "").messages(history: history, sources: [], style: .chat, now: now)
 
         #expect(messages.map(\.role) == [.system, .user])
     }
@@ -113,13 +131,13 @@ struct PromptBuilderTests {
     @Test func `sources are numbered in the system message`() throws {
         let source = SearchSource(title: "Ollama docs", url: try #require(URL(string: "https://docs.example.com/ps")), snippet: "Lists models.")
 
-        let system = try #require(PromptBuilder().messages(history: [], sources: [source], style: .chat, now: now).first)
+        let system = try #require(PromptBuilder(instructions: "").messages(history: [], sources: [source], style: .chat, now: now).first)
 
         #expect(system.text.contains("[1] Ollama docs\nhttps://docs.example.com/ps\nLists models."))
     }
 
     @Test func `a voice reply is asked for without markup`() throws {
-        let system = try #require(PromptBuilder().messages(history: [], sources: [], style: .voice, now: now).first)
+        let system = try #require(PromptBuilder(instructions: "").messages(history: [], sources: [], style: .voice, now: now).first)
 
         #expect(system.text.contains("spoken aloud"))
         #expect(!system.text.contains("Format replies in Markdown"))
@@ -128,16 +146,49 @@ struct PromptBuilderTests {
     @Test func `photos travel with the message they were attached to`() {
         let photo = Data([1, 2, 3])
 
-        let messages = PromptBuilder().messages(history: [Message(role: .user, text: "", imagesJPEG: [photo])], sources: [], style: .chat, now: now)
+        let history = [Message(role: .user, text: "", imagesJPEG: [photo])]
+
+        let messages = PromptBuilder(instructions: "").messages(history: history, sources: [], style: .chat, now: now)
 
         #expect(messages.last?.imagesJPEG == [photo])
+    }
+
+    private func systemMessage(instructions: String) -> PromptMessage? {
+        PromptBuilder(instructions: instructions).messages(history: [], sources: [], style: .chat, now: now).first
+    }
+
+    @Test func `standing instructions are given to the model and blank ones are not`() throws {
+        let with = try #require(systemMessage(instructions: "  Answer briefly.\n"))
+        let without = try #require(systemMessage(instructions: "  \n"))
+
+        #expect(with.text.contains("standing instructions. Follow them:\nAnswer briefly."))
+        #expect(!without.text.contains("standing instructions"))
+    }
+
+    @Test func `an attached file is read before what was typed, and a long one is cut short`() {
+        let long = String(repeating: "x", count: PromptBuilder.maximumDocumentLength + 50)
+        let message = Message(role: .user, text: "Summarise this.", documents: [AttachedDocument(name: "notes.md", text: long)])
+
+        let sent = PromptBuilder(instructions: "").messages(history: [message], sources: [], style: .chat, now: now).last?.text ?? ""
+
+        #expect(sent.hasPrefix("Attached file \"notes.md\":\nxxx"))
+        #expect(sent.hasSuffix("x\n\nSummarise this."))
+        #expect(sent.filter { $0 == "x" }.count == PromptBuilder.maximumDocumentLength)
+    }
+
+    @Test func `a message holding only a file is still sent`() {
+        let message = Message(role: .user, text: "", documents: [AttachedDocument(name: "a.txt", text: "hello")])
+
+        let messages = PromptBuilder(instructions: "").messages(history: [message], sources: [], style: .chat, now: now)
+
+        #expect(messages.count == 2)
     }
 
     @Test func `the search query is the latest user message on one line`() {
         let history = [Message(role: .user, text: "old"), Message(role: .assistant, text: "reply"), Message(role: .user, text: "new\nquestion")]
 
-        #expect(PromptBuilder().searchQuery(history: history) == "new question")
-        #expect(PromptBuilder().searchQuery(history: []) == nil)
+        #expect(PromptBuilder(instructions: "").searchQuery(history: history) == "new question")
+        #expect(PromptBuilder(instructions: "").searchQuery(history: []) == nil)
     }
 }
 
@@ -213,5 +264,56 @@ struct SearchSourceTests {
     ])
     func `only links to web pages are accepted`(address: String, isAccepted: Bool) throws {
         #expect(SearchSource.isWebLink(try #require(URL(string: address))) == isAccepted)
+    }
+}
+
+struct MathTransformerTests {
+    @Test(arguments: [
+        ("x^2 + y^{10}", "x² + y¹⁰"),
+        ("a_1 + a_{n+1}", "a₁ + aₙ₊₁"),
+        ("\\frac{a}{b}", "a/b"),
+        ("\\frac{a+1}{2b}", "(a+1)/2b"),
+        ("\\frac{1}{\\sqrt{2}}", "1/(√(2))"),
+        ("\\alpha \\leq \\beta \\times \\infty", "α ≤ β × ∞"),
+        ("\\left( x \\right) \\to \\text{done}", "( x ) → done"),
+        ("x^{ab}", "x^(ab)"),
+        ("x^y", "x^y"),
+        ("\\sum_{i=1}^{n} i", "∑ᵢ₌₁ⁿ i")
+    ])
+    func `LaTeX is rewritten as readable text`(latex: String, readable: String) {
+        #expect(MathTransformer().readable(latex) == readable)
+    }
+
+    @Test(arguments: [
+        ("The area is \\(\\pi r^2\\) exactly.", "The area is π r² exactly."),
+        ("So $x^2 = 4$ here.", "So x² = 4 here."),
+        ("Inline $$a \\neq b$$ too.", "Inline a ≠ b too."),
+        ("It costs $5 and $10.", "It costs $5 and $10."),
+        ("Pay $20 for x_1 or $30.", "Pay $20 for x_1 or $30."),
+        ("No maths here.", "No maths here.")
+    ])
+    func `only maths between its delimiters is rewritten`(text: String, expected: String) {
+        #expect(MathTransformer().readableInline(text) == expected)
+    }
+}
+
+struct ConversationExporterTests {
+    @Test func `a conversation is written out with a title, speakers, files and sources`() throws {
+        let source = SearchSource(title: "Docs", url: try #require(URL(string: "https://docs.example/ps")), snippet: "")
+        let conversation = Conversation(title: "Loaded models", messages: [
+            Message(role: .user, text: "What is loaded?", documents: [AttachedDocument(name: "log.txt", text: "…")]),
+            Message(role: .assistant, text: "Nothing.", sources: [source]),
+            Message(role: .assistant, text: "")
+        ])
+
+        let markdown = ConversationExporter(userLabel: "You", assistantLabel: "Hearth", untitled: "New chat").markdown(for: conversation)
+
+        #expect(markdown == "# Loaded models\n\n**You**\n\n_log.txt_\n\nWhat is loaded?\n\n**Hearth**\n\nNothing.\n\n1. [Docs](https://docs.example/ps)\n")
+    }
+
+    @Test func `a conversation without a title is given the fallback`() {
+        let markdown = ConversationExporter(userLabel: "You", assistantLabel: "Hearth", untitled: "New chat").markdown(for: Conversation())
+
+        #expect(markdown == "# New chat\n")
     }
 }

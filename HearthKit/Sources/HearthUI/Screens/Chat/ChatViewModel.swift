@@ -8,6 +8,9 @@ final class ChatViewModel {
     var conversation = Conversation()
     var draft = ""
     var pendingImagesJPEG: [Data] = []
+    var pendingDocuments: [AttachedDocument] = []
+    /// The sent message now back in the composer, if one is being edited.
+    var editingMessageID: Message.ID?
     var selectedModel: ChatModel?
     var isSearchEnabled = false
     var isStreaming = false
@@ -16,6 +19,6 @@ final class ChatViewModel {
     var error: ErrorViewConfiguration?
 
     var canSend: Bool {
-        !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !pendingImagesJPEG.isEmpty
+        !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !pendingImagesJPEG.isEmpty || !pendingDocuments.isEmpty
     }
 }

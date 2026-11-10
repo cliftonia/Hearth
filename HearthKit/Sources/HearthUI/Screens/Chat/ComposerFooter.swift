@@ -1,19 +1,24 @@
-import PhotosUI
+import HearthDomain
 import SwiftUI
 
-/// Where a message is written: text, photos, the search toggle, dictation and send.
+/// Where a message is written: text, attachments, the search toggle, dictation and send.
 struct ComposerFooter: View {
     let presenter: ChatPresenter
 
-    @State private var pickedItems: [PhotosPickerItem] = []
     @State private var sendCount = 0
     @FocusState private var isFocused: Bool
 
     var body: some View {
         @Bindable var viewModel = presenter.viewModel
         VStack(alignment: .leading, spacing: 10) {
+            if viewModel.editingMessageID != nil {
+                editingHeader
+            }
             if !viewModel.pendingImagesJPEG.isEmpty {
                 PhotoStrip(imagesJPEG: viewModel.pendingImagesJPEG, sideLength: 64, removeAction: presenter.removeImageAction(at:))
+            }
+            if !viewModel.pendingDocuments.isEmpty {
+                DocumentStrip(documents: viewModel.pendingDocuments, removeAction: presenter.removeDocumentAction)
             }
             TextField(placeholder, text: $viewModel.draft, axis: .vertical)
                 .lineLimit(1...6)
@@ -23,7 +28,7 @@ struct ComposerFooter: View {
                 .focused($isFocused)
                 .padding(.horizontal, 4)
             HStack(spacing: 8) {
-                attachButton
+                AttachmentMenu(presenter: presenter)
                 searchToggle
                     .opacity(presenter.isSearchAvailable ? 1 : 0)
                     .accessibilityHidden(!presenter.isSearchAvailable)
@@ -41,16 +46,13 @@ struct ComposerFooter: View {
         }
         .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 2)
         .padding(.horizontal, 12)
-        .padding(.top, 8)
-        .padding(.bottom, 8)
+        .padding(.vertical, 8)
         .sensoryFeedback(.impact(weight: .light), trigger: sendCount)
-        .onChange(of: pickedItems) {
-            let items = pickedItems
-            guard !items.isEmpty else {
-                return
+        .animation(.snappy, value: viewModel.editingMessageID)
+        .onChange(of: viewModel.editingMessageID) {
+            if viewModel.editingMessageID != nil {
+                isFocused = true
             }
-            pickedItems = []
-            Task { presenter.addImagesAction(await PhotoLoader.jpegData(from: items)) }
         }
     }
 
@@ -58,18 +60,26 @@ struct ComposerFooter: View {
         presenter.viewModel.selectedModel.map { Strings.messageModel($0.displayName) } ?? Strings.composerPlaceholder
     }
 
-    private var attachButton: some View {
-        let canSee = presenter.viewModel.selectedModel?.canSee == true
-        return PhotosPicker(selection: $pickedItems, maxSelectionCount: 4, matching: .images) {
-            Image(systemName: "plus")
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(HearthColor.mute)
-                .frame(width: 34, height: 32)
-                .overlay { Capsule().strokeBorder(HearthColor.line, lineWidth: 1) }
+    private var editingHeader: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "pencil")
+                .font(.footnote)
+                .foregroundStyle(HearthColor.pine)
+                .accessibilityHidden(true)
+            Text(Strings.editingMessage)
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(HearthColor.pine)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button(action: presenter.cancelEditAction) {
+                Image(systemName: "xmark")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(HearthColor.mute)
+                    .frame(width: 28, height: 24)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Strings.cancelEdit)
         }
-        .disabled(!canSee)
-        .opacity(canSee ? 1 : 0.4)
-        .accessibilityLabel(Strings.attach)
+        .padding(.horizontal, 4)
     }
 
     private var searchToggle: some View {
@@ -132,6 +142,47 @@ struct ComposerFooter: View {
         } else {
             isFocused = false
             presenter.voiceAction()
+        }
+    }
+}
+
+/// The files attached to a message, each a chip with its name.
+struct DocumentStrip: View {
+    let documents: [AttachedDocument]
+    let removeAction: ((AttachedDocument.ID) -> Void)?
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(documents) { document in
+                    HStack(spacing: 6) {
+                        Image(systemName: "doc.text")
+                            .font(.caption)
+                            .foregroundStyle(HearthColor.pine)
+                            .accessibilityHidden(true)
+                        Text(document.name)
+                            .font(.caption)
+                            .foregroundStyle(HearthColor.ink)
+                            .lineLimit(1)
+                        if let removeAction {
+                            Button(action: { removeAction(document.id) }, label: {
+                                Image(systemName: "xmark")
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundStyle(HearthColor.mute)
+                                    .frame(width: 20, height: 20)
+                            })
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(Strings.removeFile)
+                        }
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(HearthColor.paper, in: Capsule())
+                    .overlay { Capsule().strokeBorder(HearthColor.line, lineWidth: 1) }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(Strings.attachedFile(document.name))
+                }
+            }
         }
     }
 }

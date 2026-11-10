@@ -17,6 +17,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
     public let voice: String
     public let defaultModelID: ChatModel.ID?
     public let appearance: AppearanceKind
+    /// Standing instructions from the user, given to the model at the start of every conversation.
+    public let customInstructions: String
 
     public init(
         ollamaAddress: String = "",
@@ -24,7 +26,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         speechAddress: String = "",
         voice: String = ServerSettings.defaultVoice,
         defaultModelID: ChatModel.ID? = nil,
-        appearance: AppearanceKind = .system
+        appearance: AppearanceKind = .system,
+        customInstructions: String = ""
     ) {
         self.ollamaAddress = ollamaAddress
         self.searchAddress = searchAddress
@@ -32,6 +35,7 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         self.voice = voice
         self.defaultModelID = defaultModelID
         self.appearance = appearance
+        self.customInstructions = customInstructions
     }
 
     /// Settings saved before a field existed are read with that field's default, so nothing saved is lost.
@@ -43,7 +47,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             speechAddress: try container.decodeIfPresent(String.self, forKey: .speechAddress) ?? "",
             voice: try container.decodeIfPresent(String.self, forKey: .voice) ?? Self.defaultVoice,
             defaultModelID: try container.decodeIfPresent(ChatModel.ID.self, forKey: .defaultModelID),
-            appearance: try container.decodeIfPresent(AppearanceKind.self, forKey: .appearance) ?? .system
+            appearance: try container.decodeIfPresent(AppearanceKind.self, forKey: .appearance) ?? .system,
+            customInstructions: try container.decodeIfPresent(String.self, forKey: .customInstructions) ?? ""
         )
     }
 
@@ -61,7 +66,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             speechAddress: speechAddress,
             voice: voice,
             defaultModelID: defaultModelID ?? self.defaultModelID,
-            appearance: appearance ?? self.appearance
+            appearance: appearance ?? self.appearance,
+            customInstructions: customInstructions
         )
     }
 

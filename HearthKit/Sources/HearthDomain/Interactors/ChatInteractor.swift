@@ -37,7 +37,6 @@ public final class ChatInteractor: Sendable {
     private let chat: ChatDataProvider
     private let search: SearchDataProvider
     private let now: @Sendable () -> Date
-    private let promptBuilder = PromptBuilder()
 
     public init(chat: ChatDataProvider, search: SearchDataProvider, now: @escaping @Sendable () -> Date = { Date() }) {
         self.chat = chat
@@ -55,7 +54,8 @@ public final class ChatInteractor: Sendable {
                     let sources = await self.sources(for: turn) { continuation.yield($0) }
                     let request = ChatRequest(
                         model: turn.model,
-                        messages: self.promptBuilder.messages(history: turn.history, sources: sources, style: turn.style, now: self.now()),
+                        messages: PromptBuilder(instructions: turn.settings.customInstructions)
+                            .messages(history: turn.history, sources: sources, style: turn.style, now: self.now()),
                         isThinkingEnabled: turn.style == .chat
                     )
                     for try await delta in self.chat.streamChat(baseURL, request) {
@@ -92,7 +92,7 @@ public final class ChatInteractor: Sendable {
     private func sources(for turn: Turn, report: (Event) -> Void) async -> [SearchSource] {
         guard turn.isSearchEnabled,
               let searchURL = turn.settings.searchURL,
-              let query = promptBuilder.searchQuery(history: turn.history) else {
+              let query = PromptBuilder(instructions: "").searchQuery(history: turn.history) else {
             return []
         }
         do {

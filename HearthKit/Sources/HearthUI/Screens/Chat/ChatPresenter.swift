@@ -71,14 +71,21 @@ final class ChatPresenter {
             return
         }
         let text = viewModel.draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        let images = viewModel.pendingImagesJPEG
+        let message = Message(role: .user, text: text, imagesJPEG: viewModel.pendingImagesJPEG, documents: viewModel.pendingDocuments)
+        discardEditedMessages()
         viewModel.draft = ""
         viewModel.pendingImagesJPEG = []
-        await submit(text: text, imagesJPEG: images)
+        viewModel.pendingDocuments = []
+        await submit(message)
     }
 
-    /// Adds the user's message and streams the reply. `onDelta` receives each piece of reply text as it arrives.
-    func submit(text: String, imagesJPEG: [Data] = [], style: ReplyStyle = .chat, onDelta: (@MainActor (String) -> Void)? = nil) async {
+    /// Sends words alone, as a voice conversation does. `onDelta` receives each piece of reply text as it arrives.
+    func submit(text: String, style: ReplyStyle, onDelta: @escaping @MainActor (String) -> Void) async {
+        await submit(Message(role: .user, text: text), style: style, onDelta: onDelta)
+    }
+
+    /// Adds the user's message and streams the reply.
+    func submit(_ message: Message, style: ReplyStyle = .chat, onDelta: (@MainActor (String) -> Void)? = nil) async {
         guard let model = viewModel.selectedModel else {
             viewModel.error = ErrorViewConfiguration(from: ChatError.noModelSelected)
             return
@@ -86,10 +93,11 @@ final class ChatPresenter {
         await stopDictation()
         let conversation = viewModel.conversation
         let isFirstMessage = conversation.messages.isEmpty
+        let text = message.text.isEmpty ? (message.documents.first?.name ?? "") : message.text
         viewModel.conversation = conversation.updating(
             title: isFirstMessage ? String(text.prefix(48)) : nil,
             modelID: model.id,
-            messages: conversation.messages + [Message(role: .user, text: text, imagesJPEG: imagesJPEG)]
+            messages: conversation.messages + [message]
         )
         await reply(model: model, style: style, onDelta: onDelta)
         if isFirstMessage {
@@ -130,6 +138,7 @@ final class ChatPresenter {
     func newChatAction() async {
         await stopAction()
         await stopSpeaking()
+        cancelEditAction()
         viewModel.conversation = Conversation(modelID: viewModel.selectedModel?.id)
         viewModel.error = nil
     }
@@ -140,6 +149,7 @@ final class ChatPresenter {
         }
         await stopAction()
         await stopSpeaking()
+        cancelEditAction()
         viewModel.conversation = conversation
         viewModel.error = nil
         if let model = dependencies.modelStore.model(for: conversation.modelID) {

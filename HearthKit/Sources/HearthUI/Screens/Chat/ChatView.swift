@@ -43,6 +43,7 @@ struct ChatView: View {
                             isStreaming: viewModel.isStreaming && message.id == messages.last?.id,
                             isSpeaking: viewModel.speakingMessageID == message.id,
                             speakAction: presenter.isSpeechAvailable ? { Task { await presenter.speakAction(message.id) } } : nil,
+                            editAction: viewModel.isStreaming ? nil : { presenter.editAction(message.id) },
                             retryAction: message.id == messages.last?.id ? { Task { await presenter.regenerateAction() } } : nil
                         )
                         .id(message.id)

@@ -44,6 +44,16 @@ struct MarkdownSection: View {
                 .overlay(alignment: .leading) {
                     Rectangle().fill(HearthColor.line).frame(width: 3)
                 }
+        case .table(let header, let rows):
+            TableSection(header: header, rows: rows)
+        case .math(let latex):
+            ScrollView(.horizontal, showsIndicators: false) {
+                Text(MathTransformer().readable(latex))
+                    .font(HearthFont.math)
+                    .foregroundStyle(HearthColor.ink)
+                    .padding(.vertical, 4)
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
         case .rule:
             Rectangle().fill(HearthColor.line).frame(height: 1)
         }
@@ -52,7 +62,59 @@ struct MarkdownSection: View {
     /// Bold, italic, inline code and links; text that does not parse is shown as written.
     static func inline(_ text: String) -> AttributedString {
         let options = AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
-        return (try? AttributedString(markdown: text, options: options)) ?? AttributedString(text)
+        let readable = MathTransformer().readableInline(text)
+        return (try? AttributedString(markdown: readable, options: options)) ?? AttributedString(readable)
+    }
+}
+
+private struct TableSection: View {
+    private struct Cell: Identifiable {
+        let id: Int
+        let text: String
+    }
+
+    private struct Row: Identifiable {
+        let id: Int
+        let cells: [Cell]
+    }
+
+    let header: [String]
+    let rows: [[String]]
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 8) {
+                GridRow {
+                    ForEach(Self.cells(header)) { cell in
+                        Text(MarkdownSection.inline(cell.text))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(HearthColor.ink)
+                    }
+                }
+                ForEach(rows.enumerated().map { Row(id: $0.offset, cells: Self.cells($0.element)) }) { row in
+                    Rectangle()
+                        .fill(HearthColor.line)
+                        .frame(height: 1)
+                        .gridCellUnsizedAxes(.horizontal)
+                    GridRow {
+                        ForEach(row.cells) { cell in
+                            Text(MarkdownSection.inline(cell.text))
+                                .font(.subheadline)
+                                .foregroundStyle(HearthColor.ink)
+                        }
+                    }
+                }
+            }
+            .padding(12)
+        }
+        .background(HearthColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(HearthColor.line, lineWidth: 1)
+        }
+    }
+
+    private static func cells(_ texts: [String]) -> [Cell] {
+        texts.enumerated().map { Cell(id: $0.offset, text: $0.element) }
     }
 }
 

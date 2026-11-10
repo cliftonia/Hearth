@@ -26,6 +26,15 @@ struct SettingsView: View {
                 Section(Strings.voice) {
                     voiceControl(voice: $viewModel.voice, voices: viewModel.voices)
                 }
+                Section {
+                    TextField(Strings.instructionsPlaceholder, text: $viewModel.customInstructions, axis: .vertical)
+                        .lineLimit(3...10)
+                        .accessibilityLabel(Strings.instructions)
+                } header: {
+                    Text(Strings.instructions)
+                } footer: {
+                    Text(Strings.instructionsFooter)
+                }
                 Section(Strings.theme) {
                     Picker(Strings.theme, selection: $viewModel.appearance) {
                         ForEach(AppearanceKind.allCases, id: \.self) { appearance in

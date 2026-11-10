@@ -37,6 +37,7 @@ targets:
           UIColorName: LaunchBackground
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        NSCameraUsageDescription: Hearth uses the camera when you take a photo to attach to a message.
         NSMicrophoneUsageDescription: Hearth listens when you dictate a message or hold a voice conversation.
         NSSpeechRecognitionUsageDescription: Hearth turns what you say into text for your message.
         NSAppTransportSecurity:

@@ -60,6 +60,13 @@ public final class AppCoordinator {
         voicePresenter.delegate = self
     }
 
+    /// Goes straight to a voice conversation, as a shortcut or the Action button asks.
+    public func startVoice() {
+        router.isSidebarOpen = false
+        router.isSettingsPresented = false
+        router.isVoicePresented = true
+    }
+
     /// The root of the app's interface.
     public func start() -> some View {
         RootView(coordinator: self)
@@ -91,6 +98,10 @@ extension AppCoordinator: SidebarPresenterDelegate {
             return
         }
         Task { await chatPresenter.newChatAction() }
+    }
+
+    func sidebarPresenter(_ presenter: SidebarPresenter, didRename id: Conversation.ID, to title: String) {
+        chatPresenter.conversationWasRenamed(id, to: title)
     }
 
     func sidebarPresenterDidRequestNewChat(_ presenter: SidebarPresenter) {

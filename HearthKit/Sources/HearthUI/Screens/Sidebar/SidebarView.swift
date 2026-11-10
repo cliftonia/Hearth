@@ -32,6 +32,11 @@ struct SidebarView: View {
             statusFooter
         }
         .background(HearthColor.paper.ignoresSafeArea())
+        .alert(Strings.renameChat, isPresented: $viewModel.isRenaming) {
+            TextField(Strings.chatTitle, text: $viewModel.renameDraft)
+            Button(Strings.cancel, role: .cancel) {}
+            Button(Strings.save) { Task { await presenter.commitRenameAction() } }
+        }
     }
 
     private func searchField(text: Binding<String>) -> some View {
@@ -119,6 +124,12 @@ struct SidebarView: View {
             Button(action: { Task { await presenter.pinAction(row) } }, label: {
                 Label(row.isPinned ? Strings.unpin : Strings.pin, systemImage: row.isPinned ? "pin.slash" : "pin")
             })
+            Button(action: { presenter.renameAction(row) }, label: {
+                Label(Strings.rename, systemImage: "pencil")
+            })
+            ShareLink(item: presenter.exportText(for: row.id)) {
+                Label(Strings.share, systemImage: "square.and.arrow.up")
+            }
             Button(role: .destructive, action: { Task { await presenter.deleteAction(row.id) } }, label: {
                 Label(Strings.delete, systemImage: "trash")
             })

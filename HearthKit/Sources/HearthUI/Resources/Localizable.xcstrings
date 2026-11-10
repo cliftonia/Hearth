@@ -150,7 +150,29 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Attach photos"
+            "value": "Attach"
+          }
+        }
+      }
+    },
+    "composer.cancelEdit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel editing"
+          }
+        }
+      }
+    },
+    "composer.chooseFile": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose file"
           }
         }
       }
@@ -162,6 +184,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dictate"
+          }
+        }
+      }
+    },
+    "composer.editing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editing message"
+          }
+        }
+      }
+    },
+    "composer.filesUnreadable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some files could not be read. PDFs and text files are supported."
+          }
+        }
+      }
+    },
+    "composer.photoLibrary": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo library"
           }
         }
       }
@@ -184,6 +239,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Message %@"
+          }
+        }
+      }
+    },
+    "composer.removeFile": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove file"
           }
         }
       }
@@ -250,6 +316,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stop dictation"
+          }
+        }
+      }
+    },
+    "composer.takePhoto": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take photo"
           }
         }
       }
@@ -386,6 +463,28 @@
         }
       }
     },
+    "export.user": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You"
+          }
+        }
+      }
+    },
+    "message.attachedFile": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attached file %@"
+          }
+        }
+      }
+    },
     "message.attachedPhoto": {
       "extractionState": "manual",
       "localizations": {
@@ -430,6 +529,17 @@
         }
       }
     },
+    "message.edit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        }
+      }
+    },
     "message.retry": {
       "extractionState": "manual",
       "localizations": {
@@ -437,6 +547,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Try again"
+          }
+        }
+      }
+    },
+    "message.share": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share"
           }
         }
       }
@@ -558,6 +679,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Done"
+          }
+        }
+      }
+    },
+    "settings.instructions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom instructions"
+          }
+        }
+      }
+    },
+    "settings.instructionsFooter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Given to the model at the start of every conversation."
+          }
+        }
+      }
+    },
+    "settings.instructionsPlaceholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For example: answer briefly. I live in Brisbane."
           }
         }
       }
@@ -716,6 +870,17 @@
         }
       }
     },
+    "sidebar.chatTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title"
+          }
+        }
+      }
+    },
     "sidebar.connected": {
       "extractionState": "manual",
       "localizations": {
@@ -811,6 +976,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Previous 7 days"
+          }
+        }
+      }
+    },
+    "sidebar.rename": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename"
+          }
+        }
+      }
+    },
+    "sidebar.renameChat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename chat"
+          }
+        }
+      }
+    },
+    "sidebar.save": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
           }
         }
       }

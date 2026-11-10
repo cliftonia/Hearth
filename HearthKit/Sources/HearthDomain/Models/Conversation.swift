@@ -27,6 +27,21 @@ public struct SearchSource: Identifiable, Hashable, Codable, Sendable {
     }
 }
 
+/// A file attached to a message, reduced to the text read from it.
+public struct AttachedDocument: Identifiable, Hashable, Codable, Sendable {
+    public typealias ID = Tagged<AttachedDocument, UUID>
+
+    public let id: ID
+    public let name: String
+    public let text: String
+
+    public init(id: ID = ID(UUID()), name: String, text: String) {
+        self.id = id
+        self.name = name
+        self.text = text
+    }
+}
+
 public struct Message: Identifiable, Hashable, Codable, Sendable {
     public typealias ID = Tagged<Message, UUID>
 
@@ -37,6 +52,7 @@ public struct Message: Identifiable, Hashable, Codable, Sendable {
     public let thinkingSeconds: Int?
     public let sources: [SearchSource]
     public let imagesJPEG: [Data]
+    public let documents: [AttachedDocument]
     public let createdAt: Date
 
     public init(
@@ -47,6 +63,7 @@ public struct Message: Identifiable, Hashable, Codable, Sendable {
         thinkingSeconds: Int? = nil,
         sources: [SearchSource] = [],
         imagesJPEG: [Data] = [],
+        documents: [AttachedDocument] = [],
         createdAt: Date = Date()
     ) {
         self.id = id
@@ -56,7 +73,29 @@ public struct Message: Identifiable, Hashable, Codable, Sendable {
         self.thinkingSeconds = thinkingSeconds
         self.sources = sources
         self.imagesJPEG = imagesJPEG
+        self.documents = documents
         self.createdAt = createdAt
+    }
+
+    /// Messages saved before a field existed are read with that field's default.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            id: try container.decode(ID.self, forKey: .id),
+            role: try container.decode(MessageRole.self, forKey: .role),
+            text: try container.decode(String.self, forKey: .text),
+            thinking: try container.decodeIfPresent(String.self, forKey: .thinking) ?? "",
+            thinkingSeconds: try container.decodeIfPresent(Int.self, forKey: .thinkingSeconds),
+            sources: try container.decodeIfPresent([SearchSource].self, forKey: .sources) ?? [],
+            imagesJPEG: try container.decodeIfPresent([Data].self, forKey: .imagesJPEG) ?? [],
+            documents: try container.decodeIfPresent([AttachedDocument].self, forKey: .documents) ?? [],
+            createdAt: try container.decode(Date.self, forKey: .createdAt)
+        )
+    }
+
+    /// Whether there is anything in the message to send or show.
+    public var isEmpty: Bool {
+        text.isEmpty && imagesJPEG.isEmpty && documents.isEmpty
     }
 
     /// A copy with the parts that grow while a reply streams in replaced.
@@ -69,6 +108,7 @@ public struct Message: Identifiable, Hashable, Codable, Sendable {
             thinkingSeconds: thinkingSeconds ?? self.thinkingSeconds,
             sources: sources ?? self.sources,
             imagesJPEG: imagesJPEG,
+            documents: documents,
             createdAt: createdAt
         )
     }

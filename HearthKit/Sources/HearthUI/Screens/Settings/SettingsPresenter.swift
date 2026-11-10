@@ -25,6 +25,7 @@ final class SettingsViewModel {
     var voice = ServerSettings.defaultVoice
     var voices: [String] = []
     var appearance: AppearanceKind = .system
+    var customInstructions = ""
     var connectionCheck: ConnectionCheckKind = .idle
 }
 
@@ -52,6 +53,7 @@ final class SettingsPresenter {
         viewModel.speechAddress = settings.speechAddress
         viewModel.voice = settings.voice
         viewModel.appearance = settings.appearance
+        viewModel.customInstructions = settings.customInstructions
         viewModel.connectionCheck = .idle
         await loadVoicesAction()
     }
@@ -109,7 +111,8 @@ final class SettingsPresenter {
             speechAddress: viewModel.speechAddress.trimmingCharacters(in: .whitespaces),
             voice: viewModel.voice.trimmingCharacters(in: .whitespaces),
             defaultModelID: settingsStore.settings.defaultModelID,
-            appearance: viewModel.appearance
+            appearance: viewModel.appearance,
+            customInstructions: viewModel.customInstructions.trimmingCharacters(in: .whitespacesAndNewlines)
         )
     }
 }

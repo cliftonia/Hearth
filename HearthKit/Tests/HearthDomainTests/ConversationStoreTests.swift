@@ -54,6 +54,26 @@ struct ConversationStoreTests {
         #expect(fixture.saved.values.last?.isPinned == true)
     }
 
+    @Test func `renaming is written to disk and leaves the order alone`() async throws {
+        let fixture = makeTestSubject(stored: [older, newer])
+        try await fixture.subject.load()
+
+        try await fixture.subject.rename(older.id, to: "Renamed")
+
+        #expect(fixture.subject.conversations.map(\.title) == ["Newer", "Renamed"])
+        #expect(fixture.saved.values.map(\.title) == ["Renamed"])
+    }
+
+    @Test func `a message saved before attachments existed still loads`() throws {
+        let json = #"{"id":"\#(UUID().uuidString)","role":"user","text":"Hello","createdAt":0}"#
+
+        let message = try JSONDecoder().decode(Message.self, from: Data(json.utf8))
+
+        #expect(message.text == "Hello")
+        #expect(message.documents.isEmpty)
+        #expect(message.imagesJPEG.isEmpty)
+    }
+
     @Test func `a conversation saved before pinning existed is read as not pinned`() throws {
         let id = UUID()
         let json = #"{"id":"\#(id.uuidString)","title":"Legacy","messages":[],"createdAt":0,"updatedAt":0}"#
