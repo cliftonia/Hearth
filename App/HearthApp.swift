@@ -19,7 +19,8 @@ private extension AppDefaults {
         AppDefaults(
             ollamaAddress: infoValue("HearthDefaultOllamaAddress"),
             searchAddress: infoValue("HearthDefaultSearchAddress"),
-            speechAddress: infoValue("HearthDefaultSpeechAddress")
+            speechAddress: infoValue("HearthDefaultSpeechAddress"),
+            modelName: infoValue("HearthDefaultModel")
         )
     }
 

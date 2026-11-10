@@ -14,7 +14,9 @@ public final class SettingsStore {
     ///   - load: Reads the saved settings, if any.
     ///   - save: Writes the settings.
     public init(defaults: ServerSettings, load: () -> Data?, save: @escaping (Data) -> Void) {
-        self.settings = load().flatMap { try? JSONDecoder().decode(ServerSettings.self, from: $0) } ?? defaults
+        let saved = load().flatMap { try? JSONDecoder().decode(ServerSettings.self, from: $0) }
+        // Settings saved before the user chose a model take the model the app was built to start with.
+        self.settings = saved.map { $0.defaultModelID == nil ? $0.updating(defaultModelID: defaults.defaultModelID) : $0 } ?? defaults
         self.save = save
     }
 

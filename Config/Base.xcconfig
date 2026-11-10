@@ -8,4 +8,7 @@ HEARTH_OLLAMA_ADDRESS =
 HEARTH_SEARCH_ADDRESS =
 HEARTH_SPEECH_ADDRESS =
 
+// The model the app starts with, by its name on the server. Left empty, the first model is used.
+HEARTH_DEFAULT_MODEL =
+
 #include? "Local.xcconfig"

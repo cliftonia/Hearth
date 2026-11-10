@@ -27,6 +27,10 @@ targets:
         SWIFT_VERSION: "5.0"
         SWIFT_STRICT_CONCURRENCY: complete
         TARGETED_DEVICE_FAMILY: "1,2"
+        # The same app runs on the Mac through Mac Catalyst.
+        SUPPORTS_MACCATALYST: YES
+        DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: NO
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
     info:
@@ -55,6 +59,7 @@ targets:
         HearthDefaultOllamaAddress: $(HEARTH_OLLAMA_ADDRESS)
         HearthDefaultSearchAddress: $(HEARTH_SEARCH_ADDRESS)
         HearthDefaultSpeechAddress: $(HEARTH_SPEECH_ADDRESS)
+        HearthDefaultModel: $(HEARTH_DEFAULT_MODEL)
 schemes:
   Hearth:
     build:

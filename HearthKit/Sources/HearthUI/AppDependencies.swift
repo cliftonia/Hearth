@@ -6,11 +6,14 @@ public struct AppDefaults: Sendable {
     public let ollamaAddress: String
     public let searchAddress: String
     public let speechAddress: String
+    /// The model the app starts with, by its name on the server. Empty means the first one the server offers.
+    public let modelName: String
 
-    public init(ollamaAddress: String = "", searchAddress: String = "", speechAddress: String = "") {
+    public init(ollamaAddress: String = "", searchAddress: String = "", speechAddress: String = "", modelName: String = "") {
         self.ollamaAddress = ollamaAddress
         self.searchAddress = searchAddress
         self.speechAddress = speechAddress
+        self.modelName = modelName
     }
 }
 
@@ -32,7 +35,8 @@ public struct AppDependencies {
         let settings = ServerSettings(
             ollamaAddress: defaults.ollamaAddress,
             searchAddress: defaults.searchAddress,
-            speechAddress: defaults.speechAddress
+            speechAddress: defaults.speechAddress,
+            defaultModelID: defaults.modelName.isEmpty ? nil : ChatModel.ID(defaults.modelName)
         )
         return AppDependencies(
             chat: ChatInteractor(chat: chatProvider, search: .live()),

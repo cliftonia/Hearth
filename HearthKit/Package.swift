@@ -9,7 +9,7 @@ let settings: [SwiftSetting] = [
 let package = Package(
     name: "HearthKit",
     defaultLocalization: "en",
-    platforms: [.iOS(.v17)],
+    platforms: [.iOS(.v17), .macCatalyst(.v17)],
     products: [
         .library(name: "HearthUI", targets: ["HearthUI"])
     ],
