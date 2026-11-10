@@ -26,21 +26,110 @@ public struct OllamaModelDTO: Decodable, Sendable {
     }
 }
 
+/// What a model was asked to look up when it called the web search tool.
+public struct OllamaToolArgumentsDTO: Codable, Sendable, Equatable {
+    public let query: String?
+
+    public init(query: String?) {
+        self.query = query
+    }
+}
+
+public struct OllamaToolFunctionDTO: Codable, Sendable, Equatable {
+    public let name: String
+    public let arguments: OllamaToolArgumentsDTO
+
+    public init(name: String, arguments: OllamaToolArgumentsDTO) {
+        self.name = name
+        self.arguments = arguments
+    }
+}
+
+public struct OllamaToolCallDTO: Codable, Sendable, Equatable {
+    public let function: OllamaToolFunctionDTO
+
+    public init(function: OllamaToolFunctionDTO) {
+        self.function = function
+    }
+}
+
+public struct OllamaToolPropertyDTO: Encodable, Sendable, Equatable {
+    public let type: String
+    public let description: String
+}
+
+public struct OllamaToolParametersDTO: Encodable, Sendable, Equatable {
+    public let type: String
+    public let properties: [String: OllamaToolPropertyDTO]
+    public let required: [String]
+}
+
+public struct OllamaToolSpecDTO: Encodable, Sendable, Equatable {
+    public let name: String
+    public let description: String
+    public let parameters: OllamaToolParametersDTO
+}
+
+/// A tool offered to the model. The app offers one: a web search.
+public struct OllamaToolDTO: Encodable, Sendable, Equatable {
+    public static let webSearchName = "web_search"
+
+    public let type: String
+    public let function: OllamaToolSpecDTO
+
+    public static let webSearch = OllamaToolDTO(
+        type: "function",
+        function: OllamaToolSpecDTO(
+            name: webSearchName,
+            description: "Search the web for current or factual information.",
+            parameters: OllamaToolParametersDTO(
+                type: "object",
+                properties: ["query": OllamaToolPropertyDTO(type: "string", description: "What to search for")],
+                required: ["query"]
+            )
+        )
+    )
+}
+
 public struct OllamaMessageDTO: Encodable, Sendable, Equatable {
     public let role: String
     public let content: String
     public let imagesBase64: [String]?
+    /// On an assistant message: the tool calls the model made in that turn.
+    public let toolCalls: [OllamaToolCallDTO]?
+    /// On a tool message: the tool whose result this is.
+    public let toolName: String?
 
-    public init(role: String, content: String, imagesBase64: [String]? = nil) {
+    public init(role: String, content: String, imagesBase64: [String]? = nil, toolCalls: [OllamaToolCallDTO]? = nil, toolName: String? = nil) {
         self.role = role
         self.content = content
         self.imagesBase64 = imagesBase64
+        self.toolCalls = toolCalls
+        self.toolName = toolName
     }
 
     enum CodingKeys: String, CodingKey {
         case role
         case content
         case imagesBase64 = "images"
+        case toolCalls = "tool_calls"
+        case toolName = "tool_name"
+    }
+}
+
+/// How hard a thinking model should think: on or off, or a named level for models that grade it.
+public enum OllamaThinkDTO: Encodable, Sendable, Equatable {
+    case enabled(Bool)
+    case level(String)
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .enabled(let isEnabled):
+            try container.encode(isEnabled)
+        case .level(let level):
+            try container.encode(level)
+        }
     }
 }
 
@@ -49,23 +138,33 @@ public struct OllamaChatRequestDTO: Encodable, Sendable, Equatable {
     public let messages: [OllamaMessageDTO]
     public let stream: Bool
     /// Left out entirely for models that cannot think; Ollama rejects the field for those.
-    public let think: Bool?
+    public let think: OllamaThinkDTO?
+    /// Left out unless the model may call tools in this request.
+    public let tools: [OllamaToolDTO]?
 
-    public init(model: String, messages: [OllamaMessageDTO], stream: Bool, think: Bool?) {
+    public init(model: String, messages: [OllamaMessageDTO], stream: Bool, think: OllamaThinkDTO?, tools: [OllamaToolDTO]? = nil) {
         self.model = model
         self.messages = messages
         self.stream = stream
         self.think = think
+        self.tools = tools
+    }
+}
+
+public struct OllamaChunkMessageDTO: Decodable, Sendable, Equatable {
+    public let content: String?
+    public let thinking: String?
+    public let toolCalls: [OllamaToolCallDTO]?
+
+    enum CodingKeys: String, CodingKey {
+        case content
+        case thinking
+        case toolCalls = "tool_calls"
     }
 }
 
 public struct OllamaChatChunkDTO: Decodable, Sendable, Equatable {
-    public struct Message: Decodable, Sendable, Equatable {
-        public let content: String?
-        public let thinking: String?
-    }
-
-    public let message: Message?
+    public let message: OllamaChunkMessageDTO?
     public let done: Bool?
     public let error: String?
 

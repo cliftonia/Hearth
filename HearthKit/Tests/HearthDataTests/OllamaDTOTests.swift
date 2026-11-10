@@ -25,21 +25,55 @@ struct OllamaDTOTests {
         }
     }
 
-    @Test(arguments: [(true, true), (false, true), (nil, false)] as [(Bool?, Bool)])
-    func `think is sent only when it has a value`(think: Bool?, isPresent: Bool) throws {
-        let request = OllamaChatRequestDTO(model: "m", messages: [], stream: true, think: think)
+    private func json(_ value: some Encodable) throws -> [String: Any] {
+        try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(value)) as? [String: Any])
+    }
 
-        let json = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as? [String: Any])
+    @Test func `think is sent as a switch or a level, and left out when it has no value`() throws {
+        let off = try json(OllamaChatRequestDTO(model: "m", messages: [], stream: true, think: .enabled(false)))
+        let high = try json(OllamaChatRequestDTO(model: "m", messages: [], stream: true, think: .level("high")))
+        let none = try json(OllamaChatRequestDTO(model: "m", messages: [], stream: true, think: nil))
 
-        #expect((json["think"] != nil) == isPresent)
+        #expect(off["think"] as? Bool == false)
+        #expect(high["think"] as? String == "high")
+        #expect(none["think"] == nil)
+    }
+
+    @Test func `the web search tool is offered with its query parameter, and left out otherwise`() throws {
+        let offered = try json(OllamaChatRequestDTO(model: "m", messages: [], stream: true, think: nil, tools: [.webSearch]))
+        let plain = try json(OllamaChatRequestDTO(model: "m", messages: [], stream: true, think: nil))
+
+        let function = try #require((offered["tools"] as? [[String: Any]])?.first?["function"] as? [String: Any])
+        let parameters = try #require(function["parameters"] as? [String: Any])
+        #expect(function["name"] as? String == "web_search")
+        #expect(parameters["required"] as? [String] == ["query"])
+        #expect(plain["tools"] == nil)
+    }
+
+    @Test func `a streamed tool call carries the query the model asked for`() throws {
+        let call = #"{"id":"call_1","function":{"index":0,"name":"web_search","arguments":{"query":"latest Swift"}}}"#
+        let line = #"{"message":{"role":"assistant","content":"","tool_calls":[\#(call)]},"done":false}"#
+
+        let decoded = try #require(try OllamaChatChunkDTO(line: line).message?.toolCalls?.first)
+
+        #expect(decoded.function.name == "web_search")
+        #expect(decoded.function.arguments.query == "latest Swift")
+    }
+
+    @Test func `a tool call and its result are sent back under the keys Ollama expects`() throws {
+        let call = OllamaToolCallDTO(function: OllamaToolFunctionDTO(name: "web_search", arguments: OllamaToolArgumentsDTO(query: "q")))
+        let asked = try json(OllamaMessageDTO(role: "assistant", content: "", toolCalls: [call]))
+        let result = try json(OllamaMessageDTO(role: "tool", content: "[1] …", toolName: "web_search"))
+
+        #expect((asked["tool_calls"] as? [[String: Any]])?.count == 1)
+        #expect(result["tool_name"] as? String == "web_search")
+        #expect(result["tool_calls"] == nil)
     }
 
     @Test func `images are sent under the key Ollama expects`() throws {
         let message = OllamaMessageDTO(role: "user", content: "Look", imagesBase64: ["QUJD"])
 
-        let json = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(message)) as? [String: Any])
-
-        #expect(json["images"] as? [String] == ["QUJD"])
+        #expect(try json(message)["images"] as? [String] == ["QUJD"])
     }
 
     @Test func `a model listing reads capabilities and its remote host`() throws {

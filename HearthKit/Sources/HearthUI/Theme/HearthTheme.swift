@@ -27,6 +27,21 @@ extension AppearanceKind {
     }
 }
 
+extension ThinkingLevelKind {
+    var title: String {
+        switch self {
+        case .off:
+            Strings.thinkingOff
+        case .low:
+            Strings.thinkingLight
+        case .medium:
+            Strings.thinkingMedium
+        case .high:
+            Strings.thinkingHigh
+        }
+    }
+}
+
 extension Color {
     /// A colour that follows the light or dark appearance.
     init(lightHex: UInt32, darkHex: UInt32) {

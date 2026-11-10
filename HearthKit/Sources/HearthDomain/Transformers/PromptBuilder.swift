@@ -18,8 +18,14 @@ public struct PromptBuilder: Sendable {
         self.instructions = instructions.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    public func messages(history: [Message], sources: [SearchSource], style: ReplyStyle, now: Date) -> [PromptMessage] {
-        let system = PromptMessage(role: .system, text: systemText(sources: sources, style: style, now: now))
+    /// - Parameter offersSearch: Whether the model is being given a web search tool to call when it needs one.
+    public func messages(history: [Message], sources: [SearchSource], style: ReplyStyle, now: Date, offersSearch: Bool = false) -> [PromptMessage] {
+        var systemText = systemText(sources: sources, style: style, now: now)
+        if offersSearch {
+            systemText += "\n\nYou can search the web with the web_search tool. Use it when a question needs current "
+                + "information or facts you are not sure of. Answer directly, without searching, when you already know."
+        }
+        let system = PromptMessage(role: .system, text: systemText)
         let turns = history
             .filter { !$0.isEmpty }
             .map { message in
@@ -38,6 +44,17 @@ public struct PromptBuilder: Sendable {
             "Attached file \"\(document.name)\":\n\(document.text.prefix(Self.maximumDocumentLength))"
         }
         return (files + [message.text]).filter { !$0.isEmpty }.joined(separator: "\n\n")
+    }
+
+    /// Search results as the model reads them after asking for a search, numbered so that it can cite them.
+    public func searchResultsText(_ sources: [SearchSource], numberedFrom first: Int) -> String {
+        guard !sources.isEmpty else {
+            return "The search returned no results. Say so if you cannot answer without them."
+        }
+        let listing = sources.enumerated()
+            .map { index, source in "[\(first + index)] \(source.title)\n\(source.url.absoluteString)\n\(source.snippet)" }
+            .joined(separator: "\n\n")
+        return "\(listing)\n\nCite the results you use as [1], [2]. Say so if they do not answer the question."
     }
 
     /// The text to search the web for: the user's latest message, kept to a searchable length.

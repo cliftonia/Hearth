@@ -12,7 +12,8 @@ extension ChatModel {
             isCloud: dto.remoteHost != nil,
             parameterSize: dto.details?.parameterSize,
             canThink: capabilities.contains("thinking"),
-            canSee: capabilities.contains("vision")
+            canSee: capabilities.contains("vision"),
+            canUseTools: capabilities.contains("tools")
         )
     }
 }

@@ -17,6 +17,8 @@ final class ChatViewModel {
     var isDictating = false
     var speakingMessageID: Message.ID?
     var error: ErrorViewConfiguration?
+    /// What the web is being searched for right now, while a reply is on its way.
+    var searchingQuery: String?
     /// Questions suggested under the latest reply.
     var followUps: [String] = []
 

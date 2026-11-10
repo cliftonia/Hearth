@@ -220,6 +220,17 @@ struct ServerSettingsTests {
         #expect(!settings.isAutoReadEnabled)
         #expect(!settings.isLockEnabled)
         #expect(settings.isFollowUpsEnabled)
+        #expect(settings.thinkingLevel == .medium)
+    }
+
+    @Test(arguments: ThinkingLevelKind.allCases)
+    func `the thinking level survives a round trip and other updates`(level: ThinkingLevelKind) throws {
+        let settings = ServerSettings(ollamaAddress: "https://a.example").updating(thinkingLevel: level)
+
+        let decoded = try JSONDecoder().decode(ServerSettings.self, from: JSONEncoder().encode(settings)).updating(isAutoReadEnabled: true)
+
+        #expect(decoded.thinkingLevel == level)
+        #expect(decoded.ollamaAddress == "https://a.example")
     }
 
     @Test func `switching reading aloud leaves the other settings as they were`() {

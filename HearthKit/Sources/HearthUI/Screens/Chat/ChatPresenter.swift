@@ -213,7 +213,7 @@ private extension ChatPresenter {
             history: viewModel.conversation.messages,
             model: model,
             settings: settings,
-            isSearchEnabled: viewModel.isSearchEnabled && isSearchAvailable,
+            searchMode: searchMode(for: model),
             style: style
         )
         viewModel.conversation = viewModel.conversation.updating(messages: viewModel.conversation.messages + [reply], updatedAt: Date())
@@ -224,6 +224,7 @@ private extension ChatPresenter {
         let task = Task {
             await self.consume(events, replyID: reply.id, onDelta: onDelta)
             self.viewModel.isStreaming = false
+            self.viewModel.searchingQuery = nil
             await self.save(self.discardingEmptyReply(reply.id))
         }
         turnTask = task
@@ -265,9 +266,14 @@ private extension ChatPresenter {
         }
         let updated: Message
         switch event {
+        case .searching(let query):
+            viewModel.searchingQuery = query
+            return
         case .sources(let sources):
+            viewModel.searchingQuery = nil
             updated = message.updating(sources: sources)
         case .searchFailed:
+            viewModel.searchingQuery = nil
             viewModel.error = ErrorViewConfiguration(title: Strings.searchLabel, message: Strings.searchFailed, retryActionLabel: nil)
             return
         case .thinking(let delta):

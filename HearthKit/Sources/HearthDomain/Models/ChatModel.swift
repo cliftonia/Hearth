@@ -10,13 +10,23 @@ public struct ChatModel: Identifiable, Hashable, Codable, Sendable {
     public let parameterSize: String?
     public let canThink: Bool
     public let canSee: Bool
+    /// Whether the model can call tools, and so decide for itself when to search the web.
+    public let canUseTools: Bool
 
-    public init(id: ID, isCloud: Bool = false, parameterSize: String? = nil, canThink: Bool = false, canSee: Bool = false) {
+    public init(
+        id: ID,
+        isCloud: Bool = false,
+        parameterSize: String? = nil,
+        canThink: Bool = false,
+        canSee: Bool = false,
+        canUseTools: Bool = false
+    ) {
         self.id = id
         self.isCloud = isCloud
         self.parameterSize = parameterSize
         self.canThink = canThink
         self.canSee = canSee
+        self.canUseTools = canUseTools
     }
 
     /// The name without the tags that say nothing to a reader, such as `:latest`.

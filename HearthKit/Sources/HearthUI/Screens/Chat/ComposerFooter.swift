@@ -29,12 +29,15 @@ struct ComposerFooter: View {
                 .padding(.horizontal, 4)
             HStack(spacing: 8) {
                 AttachmentMenu(presenter: presenter)
-                searchToggle
-                    .opacity(presenter.isSearchAvailable ? 1 : 0)
-                    .accessibilityHidden(!presenter.isSearchAvailable)
-                readAloudToggle
-                    .opacity(presenter.isSpeechAvailable ? 1 : 0)
-                    .accessibilityHidden(!presenter.isSpeechAvailable)
+                if presenter.isSearchToggleVisible {
+                    searchToggle
+                }
+                if presenter.viewModel.selectedModel?.canThink == true {
+                    thinkingMenu
+                }
+                if presenter.isSpeechAvailable {
+                    readAloudToggle
+                }
                 hideKeyboardButton
                     .opacity(isFocused ? 1 : 0)
                     .accessibilityHidden(!isFocused)
@@ -91,33 +94,49 @@ struct ComposerFooter: View {
     private var searchToggle: some View {
         let isOn = presenter.viewModel.isSearchEnabled
         return Button(action: presenter.toggleSearchAction) {
-            HStack(spacing: 5) {
-                Image(systemName: "globe")
-                    .font(.footnote.weight(.medium))
-                Text(Strings.search)
-                    .font(.footnote.weight(isOn ? .semibold : .regular))
-            }
-            .foregroundStyle(isOn ? HearthColor.pine : HearthColor.mute)
-            .padding(.horizontal, 11)
-            .frame(height: 32)
-            .background(isOn ? HearthColor.pineSoft : .clear, in: Capsule())
-            .overlay { Capsule().strokeBorder(isOn ? .clear : HearthColor.line, lineWidth: 1) }
+            chip(systemImage: "globe", isOn: isOn)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Strings.searchLabel)
         .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 
+    /// How hard the model should think: off, light, medium or high.
+    private var thinkingMenu: some View {
+        let level = presenter.thinkingLevel
+        return Menu {
+            Picker(Strings.thinkingLevel, selection: thinkingSelection) {
+                ForEach(ThinkingLevelKind.allCases, id: \.self) { option in
+                    Text(option.title).tag(option)
+                }
+            }
+        } label: {
+            chip(systemImage: level == .off ? "lightbulb.slash" : "lightbulb", isOn: level != .off)
+        }
+        .accessibilityLabel(Strings.thinkingLevel)
+        .accessibilityValue(level.title)
+    }
+
+    /// The menu's picker reads the level from the settings and writes a choice back through the presenter.
+    private var thinkingSelection: Binding<ThinkingLevelKind> {
+        Binding(get: { presenter.thinkingLevel }, set: { presenter.selectThinkingLevelAction($0) })
+    }
+
+    /// An icon-only capsule, filled when its switch is on.
+    private func chip(systemImage: String, isOn: Bool) -> some View {
+        Image(systemName: systemImage)
+            .font(.footnote.weight(.medium))
+            .foregroundStyle(isOn ? HearthColor.pine : HearthColor.mute)
+            .frame(width: 38, height: 32)
+            .background(isOn ? HearthColor.pineSoft : .clear, in: Capsule())
+            .overlay { Capsule().strokeBorder(isOn ? .clear : HearthColor.line, lineWidth: 1) }
+    }
+
     /// When on, every reply is read aloud as soon as it is finished.
     private var readAloudToggle: some View {
         let isOn = presenter.isAutoReadEnabled
         return Button(action: { Task { await presenter.toggleAutoReadAction() } }, label: {
-            Image(systemName: isOn ? "speaker.wave.2.fill" : "speaker.wave.2")
-                .font(.footnote.weight(.medium))
-                .foregroundStyle(isOn ? HearthColor.pine : HearthColor.mute)
-                .frame(width: 38, height: 32)
-                .background(isOn ? HearthColor.pineSoft : .clear, in: Capsule())
-                .overlay { Capsule().strokeBorder(isOn ? .clear : HearthColor.line, lineWidth: 1) }
+            chip(systemImage: isOn ? "speaker.wave.2.fill" : "speaker.wave.2", isOn: isOn)
         })
         .buttonStyle(.plain)
         .accessibilityLabel(Strings.readRepliesAloud)

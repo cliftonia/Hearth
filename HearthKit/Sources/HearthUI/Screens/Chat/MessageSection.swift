@@ -7,6 +7,8 @@ struct MessageSection: View {
     let message: Message
     let isStreaming: Bool
     let isSpeaking: Bool
+    /// What the web is being searched for while this reply is on its way.
+    let searchingQuery: String?
     let speakAction: (() -> Void)?
     let editAction: (() -> Void)?
     let retryAction: (() -> Void)?
@@ -50,8 +52,14 @@ struct MessageSection: View {
             if !message.thinking.isEmpty {
                 ThinkingSection(thinking: message.thinking, seconds: message.thinkingSeconds, isActive: isStreaming && message.text.isEmpty)
             }
-            if message.text.isEmpty, message.thinking.isEmpty, isStreaming {
+            if message.text.isEmpty, message.thinking.isEmpty, isStreaming, searchingQuery == nil {
                 WritingIndicator()
+            }
+            if let searchingQuery, isStreaming {
+                Label(Strings.searching(for: searchingQuery), systemImage: "globe")
+                    .font(.footnote)
+                    .foregroundStyle(HearthColor.mute)
+                    .lineLimit(2)
             }
             if !message.text.isEmpty {
                 MarkdownSection(markdown: message.text)

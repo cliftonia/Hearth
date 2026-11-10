@@ -28,8 +28,9 @@ and your conversations stay on the device.
 - **Any model on the server**, chosen from a picker that groups local and cloud models
 - **Streamed Markdown**: headings, lists, quotes, tables and code blocks you can copy
 - **Maths** written in LaTeX shown as readable text, `x² ≤ a/b`, on one line rather than typeset
-- **Thinking** folded away under "Thought for N seconds" for models that reason
-- **Web search** per message: SearXNG results go to the model and appear as source links
+- **Thinking** folded away under "Thought for N seconds", with a level of Off, Light, Medium or High for models that reason
+- **Web search when it is needed**: a model that can call tools searches SearXNG on its own and cites its sources;
+  for one that cannot, a toggle searches before it replies
 - **Suggested follow-up questions** under each reply; tap one to ask it
 - **Attachments**: photos from the library or camera for models that can see, PDFs and text files for any model
 - **Edit and resend** a message you already sent
@@ -132,4 +133,7 @@ zero-warning SwiftLint bar.
 - **The voice conversation stops listening while a reply is spoken**, so it cannot hear itself.
 - **Follow-up questions and chat titles each cost one short extra request** to the same model.
   Follow-ups can be turned off in Settings.
+- **Thinking levels are a request.** Ollama accepts them for every thinking model, but some models think
+  as much as they please whatever the level.
+- **A model may search the web up to twice in one turn** before it must answer.
 - The app icon is drawn by `python3 Tools/make_icon.py` (needs Pillow).

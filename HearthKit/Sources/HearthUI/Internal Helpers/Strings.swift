@@ -25,6 +25,11 @@ enum Strings {
     static let photoLibrary = String(localized: "composer.photoLibrary", defaultValue: "Photo library", bundle: .module)
     static let removeFile = String(localized: "composer.removeFile", defaultValue: "Remove file", bundle: .module)
     static let filesUnreadable = String(localized: "composer.filesUnreadable", defaultValue: "Some files could not be read. PDFs and text files are supported.", bundle: .module)
+    static let thinkingLevel = String(localized: "composer.thinking", defaultValue: "Thinking", bundle: .module)
+    static let thinkingOff = String(localized: "composer.thinkingOff", defaultValue: "Off", bundle: .module)
+    static let thinkingLight = String(localized: "composer.thinkingLight", defaultValue: "Light", bundle: .module)
+    static let thinkingMedium = String(localized: "composer.thinkingMedium", defaultValue: "Medium", bundle: .module)
+    static let thinkingHigh = String(localized: "composer.thinkingHigh", defaultValue: "High", bundle: .module)
     static let hideKeyboard = String(localized: "composer.hideKeyboard", defaultValue: "Hide keyboard", bundle: .module)
     static let followUps = String(localized: "chat.followUps", defaultValue: "Suggested questions", bundle: .module)
     static let followUpHint = String(localized: "chat.followUpHint", defaultValue: "Asks this question", bundle: .module)
@@ -131,6 +136,10 @@ enum Strings {
 
     static func attachedFile(_ name: String) -> String {
         String(localized: "message.attachedFile", defaultValue: "Attached file \(name)", bundle: .module)
+    }
+
+    static func searching(for query: String) -> String {
+        String(localized: "message.searching", defaultValue: "Searching the web for \(query)", bundle: .module)
     }
 
     static func thought(seconds: Int) -> String {

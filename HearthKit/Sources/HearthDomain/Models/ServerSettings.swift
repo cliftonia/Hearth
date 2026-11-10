@@ -7,6 +7,14 @@ public enum AppearanceKind: String, Codable, Sendable, CaseIterable {
     case dark
 }
 
+/// How hard a model that reasons should think before it replies.
+public enum ThinkingLevelKind: String, Codable, Sendable, CaseIterable {
+    case off
+    case low
+    case medium
+    case high
+}
+
 /// Where the user's services live, how replies should sound and how the app should look.
 public struct ServerSettings: Hashable, Codable, Sendable {
     public static let defaultVoice = "bf_emma"
@@ -25,6 +33,7 @@ public struct ServerSettings: Hashable, Codable, Sendable {
     public let isLockEnabled: Bool
     /// Whether questions the user might ask next are suggested under each reply.
     public let isFollowUpsEnabled: Bool
+    public let thinkingLevel: ThinkingLevelKind
 
     public init(
         ollamaAddress: String = "",
@@ -36,7 +45,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         customInstructions: String = "",
         isAutoReadEnabled: Bool = false,
         isLockEnabled: Bool = false,
-        isFollowUpsEnabled: Bool = true
+        isFollowUpsEnabled: Bool = true,
+        thinkingLevel: ThinkingLevelKind = .medium
     ) {
         self.ollamaAddress = ollamaAddress
         self.searchAddress = searchAddress
@@ -48,6 +58,7 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         self.isAutoReadEnabled = isAutoReadEnabled
         self.isLockEnabled = isLockEnabled
         self.isFollowUpsEnabled = isFollowUpsEnabled
+        self.thinkingLevel = thinkingLevel
     }
 
     /// Settings saved before a field existed are read with that field's default, so nothing saved is lost.
@@ -63,7 +74,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             customInstructions: try container.decodeIfPresent(String.self, forKey: .customInstructions) ?? "",
             isAutoReadEnabled: try container.decodeIfPresent(Bool.self, forKey: .isAutoReadEnabled) ?? false,
             isLockEnabled: try container.decodeIfPresent(Bool.self, forKey: .isLockEnabled) ?? false,
-            isFollowUpsEnabled: try container.decodeIfPresent(Bool.self, forKey: .isFollowUpsEnabled) ?? true
+            isFollowUpsEnabled: try container.decodeIfPresent(Bool.self, forKey: .isFollowUpsEnabled) ?? true,
+            thinkingLevel: try container.decodeIfPresent(ThinkingLevelKind.self, forKey: .thinkingLevel) ?? .medium
         )
     }
 
@@ -74,7 +86,12 @@ public struct ServerSettings: Hashable, Codable, Sendable {
     /// The host of the chat server, for display.
     public var ollamaHost: String? { ollamaURL?.host() }
 
-    public func updating(defaultModelID: ChatModel.ID? = nil, appearance: AppearanceKind? = nil, isAutoReadEnabled: Bool? = nil) -> ServerSettings {
+    public func updating(
+        defaultModelID: ChatModel.ID? = nil,
+        appearance: AppearanceKind? = nil,
+        isAutoReadEnabled: Bool? = nil,
+        thinkingLevel: ThinkingLevelKind? = nil
+    ) -> ServerSettings {
         ServerSettings(
             ollamaAddress: ollamaAddress,
             searchAddress: searchAddress,
@@ -85,7 +102,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             customInstructions: customInstructions,
             isAutoReadEnabled: isAutoReadEnabled ?? self.isAutoReadEnabled,
             isLockEnabled: isLockEnabled,
-            isFollowUpsEnabled: isFollowUpsEnabled
+            isFollowUpsEnabled: isFollowUpsEnabled,
+            thinkingLevel: thinkingLevel ?? self.thinkingLevel
         )
     }
 

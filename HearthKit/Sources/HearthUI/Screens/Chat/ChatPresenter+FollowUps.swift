@@ -1,9 +1,34 @@
 import Foundation
 import HearthDomain
 
-// Suggested follow-up questions, and the switch that reads every reply aloud.
+// Suggested follow-up questions, and the composer's switches for reading aloud, thinking and search.
 extension ChatPresenter {
     var isAutoReadEnabled: Bool { settings.isAutoReadEnabled }
+    var thinkingLevel: ThinkingLevelKind { settings.thinkingLevel }
+
+    /// The search toggle is only needed for models that cannot ask for a search themselves.
+    var isSearchToggleVisible: Bool {
+        isSearchAvailable && viewModel.selectedModel?.canUseTools == false
+    }
+
+    /// A model that can call tools searches when it judges it should; any other searches when the toggle is on.
+    func searchMode(for model: ChatModel) -> SearchModeKind {
+        guard isSearchAvailable else {
+            return .off
+        }
+        if model.canUseTools {
+            return .automatic
+        }
+        return viewModel.isSearchEnabled ? .always : .off
+    }
+
+    func selectThinkingLevelAction(_ level: ThinkingLevelKind) {
+        do {
+            try dependencies.settingsStore.update(settings.updating(thinkingLevel: level))
+        } catch {
+            logger.error("Saving the thinking level failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
 
     /// Turns reading every reply aloud on or off. Turning it off also silences a reply being read.
     func toggleAutoReadAction() async {
