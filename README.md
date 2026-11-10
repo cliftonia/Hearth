@@ -1,41 +1,67 @@
 # Hearth
 
-A native iOS chat app for your own [Ollama](https://ollama.com) server. Pick any model the server offers, chat with streamed replies, search the web through your own SearXNG, and talk hands-free with replies spoken by your own Kokoro voice. Conversations stay on the phone.
+![Platform](https://img.shields.io/badge/platform-iOS%2017%2B%20%C2%B7%20iPadOS-2C6B5A)
+![Swift](https://img.shields.io/badge/Swift-5.9%2B-2C6B5A)
+![Dependencies](https://img.shields.io/badge/dependencies-none-2C6B5A)
 
-<p>
-  <img src="docs/chat.jpg" alt="A chat with a streamed reply, folded thinking, a code block and web sources" width="260">
-  <img src="docs/voice.jpg" alt="The hands-free voice screen, listening" width="260">
+A native iPhone and iPad chat app for your own [Ollama](https://ollama.com) server. Pick any model
+the server offers, chat with streamed replies, search the web through your own SearXNG, and talk
+hands-free with replies spoken by your own Kokoro voice. Nothing goes through anyone else's cloud,
+and your conversations stay on the device.
+
+<p align="center">
+  <img src="docs/chat.png" alt="A reply with folded thinking, web sources and suggested follow-up questions" width="24%">
+  <img src="docs/drawer.png" alt="The drawer of conversations, with a pinned chat and chats grouped by day" width="24%">
+  <img src="docs/table.png" alt="A reply with a table and a formula, in the dark theme" width="24%">
+  <img src="docs/voice.png" alt="The hands-free voice conversation screen, listening" width="24%">
 </p>
 
-## Features
+- **Platform**: iOS and iPadOS 17+, SwiftUI, Swift 5.9+ with strict concurrency checking
+- **Dependencies**: none. SwiftUI, Speech, AVFoundation, PDFKit, LocalAuthentication and App Intents only
+- **Talks to**: Ollama for chat, [SearXNG](https://github.com/searxng/searxng) for web search and
+  [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) for speech; the last two are optional
 
-- **Chat** with any model on the server, chosen from a picker that groups local and cloud models. Replies stream in as Markdown with headings, lists, quotes, tables and copyable code blocks.
-- **Maths** written in LaTeX is shown as readable Unicode text (`x² ≤ a/b`). It is an approximation on one line, not typesetting.
-- **Thinking** from models that reason is folded away under a "Thought for N seconds" line.
-- **Attachments**: photos from the library or the camera for models that can see, and PDFs or text files for any model.
-- **Edit and resend** a message you already sent; the replies after it are replaced.
-- **Custom instructions** in Settings are given to the model at the start of every conversation.
-- **Web search** per message: results from SearXNG are handed to the model and shown as source links under the reply.
-- **Dictation** into the message field, recognised on the device where the phone supports it.
-- **Read aloud**: any reply spoken through a Kokoro (OpenAI-compatible) speech server.
-- **Voice conversation**: speak, pause, hear the answer, speak again. Tap the orb to interrupt. A "Start Voice Conversation" shortcut opens it from Siri, Shortcuts, Spotlight or the Action button.
-- **History** in a drawer, grouped by day, searchable and titled by the model. Chats can be pinned, renamed, shared as Markdown and deleted.
-- **Theme**: follow the system, or keep to light or dark.
-- **Read every reply aloud**, if you turn it on in Settings.
-- **Lock** behind Face ID, Touch ID or the passcode, with conversations hidden in the app switcher.
-- **iPad**: the conversations stay beside the chat on a wide screen.
-- Dynamic Type and VoiceOver labels throughout.
+## What it does
 
-## Requirements
+### Chat
 
-- Xcode 16 or later, iOS 17 or later
-- [XcodeGen](https://github.com/yonaskolb/XcodeGen) to generate the project (`brew install xcodegen`)
-- An Ollama server the phone can reach. A private network such as Tailscale is the intended setup.
-- Optional: a [SearXNG](https://github.com/searxng/searxng) instance with the `json` format enabled, and a [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) server for speech.
+- **Any model on the server**, chosen from a picker that groups local and cloud models
+- **Streamed Markdown**: headings, lists, quotes, tables and code blocks you can copy
+- **Maths** written in LaTeX shown as readable text, `x² ≤ a/b`, on one line rather than typeset
+- **Thinking** folded away under "Thought for N seconds" for models that reason
+- **Web search** per message: SearXNG results go to the model and appear as source links
+- **Suggested follow-up questions** under each reply; tap one to ask it
+- **Attachments**: photos from the library or camera for models that can see, PDFs and text files for any model
+- **Edit and resend** a message you already sent
+- **Custom instructions** given to the model at the start of every conversation
 
-There are no third-party Swift dependencies.
+### Voice
 
-## Setup
+- **Voice conversation**: speak, pause, hear the answer, speak again; tap the orb to interrupt
+- **Read aloud**: one reply at a time, or every reply with the speaker toggle in the composer
+- **Dictation** into the message field, recognised on the device where the phone supports it
+- **Shortcut**: "Start Voice Conversation" from Siri, Shortcuts, Spotlight or the Action button
+
+### Your conversations
+
+- **History** in a drawer, grouped by day, searchable and titled by the model
+- **Pin, rename, share as Markdown, delete** from a long press
+- **Lock** behind Face ID, Touch ID or the passcode; the lock covers the app switcher and every sheet
+- **On the device only**: JSON files in the app's own folder, synced nowhere
+
+### Look
+
+- **Theme**: follow the system, or keep to light or dark
+- **iPad**: conversations stay beside the chat on a wide screen
+- Dynamic Type and VoiceOver labels throughout
+
+<p align="center">
+  <img src="docs/ipad.png" alt="Hearth on iPad, with the conversations beside a chat about Swift actors" width="78%">
+</p>
+
+## Setting up
+
+You need Xcode 16 or later and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
 
 ```sh
 cp Config/Local.example.xcconfig Config/Local.xcconfig   # then fill it in
@@ -43,21 +69,30 @@ xcodegen generate
 open Hearth.xcodeproj
 ```
 
-`Config/Local.xcconfig` holds your bundle identifier, signing team and the server addresses the app starts with. It is ignored by git, so none of them reach the repository. Leave the addresses empty and the app asks for them in Settings on first launch; they can be changed there at any time.
+`Config/Local.xcconfig` holds your bundle identifier, signing team and the server addresses the app
+starts with. It is ignored by git, so none of them reach the repository. Leave the addresses empty
+and the app asks for them in Settings on first launch; they can be changed there at any time.
+
+<p align="center">
+  <img src="docs/settings.png" alt="Settings: server addresses, voice, custom instructions and follow-up questions" width="30%">
+</p>
 
 ### Addresses and HTTPS
 
-iOS only allows plain `http://` to hosts on the local network and, in this app, to `*.ts.net` names (Tailscale already encrypts that traffic). Anything else must be `https://`. A bare IP address over plain HTTP is refused by the system, so address a tailnet machine by its MagicDNS name:
+iOS only allows plain `http://` to hosts on the local network and, in this app, to `*.ts.net` names
+(Tailscale already encrypts that traffic). Anything else must be `https://`. A bare IP address over
+plain HTTP is refused by the system, so address a tailnet machine by its MagicDNS name.
 
-| Service | Example |
-|---------|---------|
-| Ollama  | `https://my-server.example.ts.net` (through `tailscale serve`) |
-| Search  | `https://my-server.example.ts.net:8888` |
-| Speech  | `http://my-server.example.ts.net:8880` |
+| Service | Example | On the server |
+|---|---|---|
+| Ollama | `https://my-server.example.ts.net` | `tailscale serve --bg http://localhost:11434` |
+| Search | `https://my-server.example.ts.net:8888` | SearXNG with `json` among its `search.formats` |
+| Speech | `http://my-server.example.ts.net:8880` | Kokoro-FastAPI listening on the tailnet |
 
 ## Architecture
 
-The app target is a thin shell around a local Swift package, `HearthKit`, split into four modules that only depend downwards:
+The app target is a thin shell around a local Swift package, `HearthKit`, split into four modules
+that only depend downwards:
 
 ```
 HearthUI      Coordinator, Presenters, ViewModels, SwiftUI views       (@MainActor)
@@ -66,22 +101,35 @@ HearthData    Services and DTOs: Ollama, SearXNG, Kokoro, files, audio  (Sendabl
 HearthCore    Tagged identifiers, logging
 ```
 
-- **MVVMP+C**: each screen has a View, an `@Observable` ViewModel and a Presenter that owns it. Presenters ask the `AppCoordinator` for navigation through delegates.
-- **Dependencies are closures**: data providers are structs of `@Sendable` functions with a `.live` implementation, so tests pass in their own.
-- **Errors** are thrown raw by the data layer, given meaning in the domain (`ChatError`) and caught in the Presenter, which shows them in a banner.
-- **Strings** live in `Localizable.xcstrings`, generated from `Strings.swift` by `python3 Tools/sync_strings.py`.
+- **MVVMP+C**: each screen has a View, an `@Observable` ViewModel and a Presenter that owns it.
+  Presenters ask the `AppCoordinator` for navigation through delegates.
+- **Dependencies are closures**: data providers are structs of `@Sendable` functions with a `.live`
+  implementation, so tests pass in their own.
+- **Errors** are thrown raw by the data layer, given meaning in the domain (`ChatError`) and caught
+  in the Presenter, which shows them in a banner.
+- **Untrusted text**: a model's reply and a search result are treated as untrusted. Only `http` and
+  `https` links open when tapped.
+- **Strings** live in `Localizable.xcstrings`, rebuilt from `Strings.swift` by `python3 Tools/sync_strings.py`.
 
 ## Tests and linting
 
 ```sh
-xcodebuild test -project Hearth.xcodeproj -scheme Hearth -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max'
+xcodebuild test -project Hearth.xcodeproj -scheme Hearth \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max'
 swiftlint lint
 ```
 
-Tests are written with Swift Testing and cover the stream decoding, prompt building, sentence chunking for speech, Markdown and maths parsing, export, the chat interactor, the conversation store, file storage, the app lock and the drawer's grouping.
+Tests are written with Swift Testing: the stream decoding, prompt building, sentence chunking for
+speech, Markdown and maths parsing, follow-up questions, export, the chat interactor, the
+conversation store, file storage, the app lock and the drawer's grouping. The codebase holds a
+zero-warning SwiftLint bar.
 
-## Notes
+## Good to know
 
-- Conversations are stored as JSON files in the app's Application Support folder and are not synced anywhere.
-- The voice conversation stops listening while a reply is spoken, so it cannot hear itself. Interrupt by tapping the orb.
+- **Maths is an approximation.** Fractions are written on one line and constructs with no plain-text
+  form, such as matrices, stay close to how the model wrote them.
+- **Files are read as text.** PDFs need a text layer, and each file is cut at 60,000 characters.
+- **The voice conversation stops listening while a reply is spoken**, so it cannot hear itself.
+- **Follow-up questions and chat titles each cost one short extra request** to the same model.
+  Follow-ups can be turned off in Settings.
 - The app icon is drawn by `python3 Tools/make_icon.py` (needs Pillow).
