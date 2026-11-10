@@ -219,6 +219,18 @@ struct ServerSettingsTests {
         #expect(settings.customInstructions.isEmpty)
         #expect(!settings.isAutoReadEnabled)
         #expect(!settings.isLockEnabled)
+        #expect(settings.isFollowUpsEnabled)
+    }
+
+    @Test func `switching reading aloud leaves the other settings as they were`() {
+        let settings = ServerSettings(ollamaAddress: "https://a.example", isLockEnabled: true, isFollowUpsEnabled: false)
+
+        let reading = settings.updating(isAutoReadEnabled: true)
+
+        #expect(reading.isAutoReadEnabled)
+        #expect(reading.isLockEnabled)
+        #expect(!reading.isFollowUpsEnabled)
+        #expect(reading.ollamaAddress == "https://a.example")
     }
 
     @Test func `the lock and reading aloud survive a round trip and a change of theme`() throws {
@@ -328,5 +340,44 @@ struct ConversationExporterTests {
         let markdown = ConversationExporter(userLabel: "You", assistantLabel: "Hearth", untitled: "New chat").markdown(for: Conversation())
 
         #expect(markdown == "# New chat\n")
+    }
+}
+
+struct FollowUpTransformerTests {
+    @Test func `questions are read one per line without their list markers or quotes`() {
+        let answer = """
+        Here are some ideas:
+        1. How do I unload a model?
+        - "What does the UNTIL column mean?"
+        * **Can I keep a model loaded for longer?**
+        Does it show GPU memory?
+        """
+
+        #expect(FollowUpTransformer().questions(from: answer) == [
+            "How do I unload a model?",
+            "What does the UNTIL column mean?",
+            "Can I keep a model loaded for longer?"
+        ])
+    }
+
+    @Test(arguments: ["", "I have no suggestions.", "Why?", "Sure!\n\nOkay."])
+    func `an answer holding no real questions gives none`(answer: String) {
+        #expect(FollowUpTransformer().questions(from: answer).isEmpty)
+    }
+
+    @Test func `the request quotes the latest question and reply, and is not made before there is a reply`() throws {
+        let history = [
+            Message(role: .user, text: "Old question"),
+            Message(role: .assistant, text: "Old reply"),
+            Message(role: .user, text: "What is loaded?"),
+            Message(role: .assistant, text: "Nothing is loaded.")
+        ]
+
+        let prompt = try #require(FollowUpTransformer().prompt(history: history))
+
+        #expect(prompt.contains("User: What is loaded?"))
+        #expect(prompt.contains("Assistant: Nothing is loaded."))
+        #expect(!prompt.contains("Old"))
+        #expect(FollowUpTransformer().prompt(history: [Message(role: .user, text: "Hello")]) == nil)
     }
 }

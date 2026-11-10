@@ -105,6 +105,9 @@ final class ChatPresenter {
         if isFirstMessage {
             await nameConversation(conversation.id, from: text, model: model)
         }
+        if style == .chat {
+            await suggestFollowUps(model: model)
+        }
     }
 
     func stopAction() async {
@@ -135,12 +138,14 @@ final class ChatPresenter {
         }
         viewModel.conversation = viewModel.conversation.updating(messages: messages)
         await reply(model: model, style: .chat, onDelta: nil)
+        await suggestFollowUps(model: model)
     }
 
     func newChatAction() async {
         await stopAction()
         await stopSpeaking()
         cancelEditAction()
+        viewModel.followUps = []
         viewModel.conversation = Conversation(modelID: viewModel.selectedModel?.id)
         viewModel.error = nil
     }
@@ -152,6 +157,7 @@ final class ChatPresenter {
         await stopAction()
         await stopSpeaking()
         cancelEditAction()
+        viewModel.followUps = []
         viewModel.conversation = conversation
         viewModel.error = nil
         if let model = dependencies.modelStore.model(for: conversation.modelID) {
@@ -212,6 +218,7 @@ private extension ChatPresenter {
         )
         viewModel.conversation = viewModel.conversation.updating(messages: viewModel.conversation.messages + [reply], updatedAt: Date())
         viewModel.error = nil
+        viewModel.followUps = []
         viewModel.isStreaming = true
         let events = dependencies.chat.run(turn)
         let task = Task {

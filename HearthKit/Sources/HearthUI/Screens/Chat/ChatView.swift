@@ -17,6 +17,9 @@ struct ChatView: View {
                     .accessibilityHidden(!viewModel.conversation.messages.isEmpty)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // A tap anywhere in the conversation puts the keyboard away, without taking the tap from what was tapped.
+            .contentShape(Rectangle())
+            .simultaneousGesture(TapGesture().onEnded { Keyboard.dismiss() })
             if let error = viewModel.error {
                 ErrorBannerSection(
                     configuration: error,
@@ -36,6 +39,7 @@ struct ChatView: View {
 
     /// The widest a line of chat grows, so that it stays readable on a large screen.
     private static let readingWidth: CGFloat = 780
+    private static let followUpsID = "followUps"
 
     private func messageList(viewModel: ChatViewModel) -> some View {
         let messages = viewModel.conversation.messages
@@ -53,7 +57,15 @@ struct ChatView: View {
                         )
                         .id(message.id)
                     }
+                    if !viewModel.followUps.isEmpty, !viewModel.isStreaming {
+                        FollowUpSection(questions: viewModel.followUps) { question in
+                            Task { await presenter.followUpAction(question) }
+                        }
+                        .id(Self.followUpsID)
+                        .transition(.opacity)
+                    }
                 }
+                .animation(.snappy, value: viewModel.followUps)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .frame(maxWidth: Self.readingWidth)
@@ -66,7 +78,45 @@ struct ChatView: View {
                     proxy.scrollTo(messages.last?.id, anchor: .bottom)
                 }
             }
+            .onChange(of: viewModel.followUps) {
+                withAnimation(.snappy) {
+                    proxy.scrollTo(Self.followUpsID, anchor: .bottom)
+                }
+            }
         }
+    }
+}
+
+/// Questions the user might ask next; tapping one sends it.
+private struct FollowUpSection: View {
+    let questions: [String]
+    let action: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(questions, id: \.self) { question in
+                Rectangle().fill(HearthColor.line).frame(height: 1)
+                Button(action: { action(question) }, label: {
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Text(question)
+                            .font(.subheadline)
+                            .foregroundStyle(HearthColor.ink)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Image(systemName: "arrow.turn.down.right")
+                            .font(.footnote)
+                            .foregroundStyle(HearthColor.pine)
+                            .accessibilityHidden(true)
+                    }
+                    .padding(.vertical, 11)
+                    .contentShape(Rectangle())
+                })
+                .buttonStyle(.plain)
+                .accessibilityHint(Strings.followUpHint)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Strings.followUps)
     }
 }
 

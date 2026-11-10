@@ -31,6 +31,7 @@ struct SettingsView: View {
                     TextField(Strings.instructionsPlaceholder, text: $viewModel.customInstructions, axis: .vertical)
                         .lineLimit(3...10)
                         .accessibilityLabel(Strings.instructions)
+                    Toggle(Strings.suggestFollowUps, isOn: $viewModel.isFollowUpsEnabled)
                 } header: {
                     Text(Strings.instructions)
                 } footer: {

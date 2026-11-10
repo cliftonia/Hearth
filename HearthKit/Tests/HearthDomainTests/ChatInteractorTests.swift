@@ -120,6 +120,18 @@ struct ChatInteractorTests {
         }
     }
 
+    @Test func `follow-up questions are asked for without thinking, and only once there is a reply`() async throws {
+        let fixture = makeTestSubject()
+        let history = [Message(role: .user, text: "What is loaded?"), Message(role: .assistant, text: "Nothing.")]
+
+        _ = try await fixture.subject.followUps(history: history, model: Self.model, settings: Self.settings)
+        let none = try await fixture.subject.followUps(history: [], model: Self.model, settings: Self.settings)
+
+        #expect(fixture.requests.values.count == 1)
+        #expect(fixture.requests.values.first?.isThinkingEnabled == false)
+        #expect(none.isEmpty)
+    }
+
     @Test func `a title is one clean line`() async throws {
         let fixture = makeTestSubject()
 

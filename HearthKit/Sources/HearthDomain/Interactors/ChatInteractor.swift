@@ -88,6 +88,16 @@ public final class ChatInteractor: Sendable {
         return String(title.trimmingCharacters(in: CharacterSet(charactersIn: "\"'*#. ")).prefix(60))
     }
 
+    /// Questions the user might ask next, written by the model. Empty when there is nothing to go on.
+    public func followUps(history: [Message], model: ChatModel, settings: ServerSettings) async throws -> [String] {
+        let transformer = FollowUpTransformer()
+        guard let baseURL = settings.ollamaURL, let prompt = transformer.prompt(history: history) else {
+            return []
+        }
+        let request = ChatRequest(model: model, messages: [PromptMessage(role: .user, text: prompt)], isThinkingEnabled: false)
+        return transformer.questions(from: try await chat.complete(baseURL, request))
+    }
+
     /// A failed search is reported and the turn carries on without sources: the reply matters more.
     private func sources(for turn: Turn, report: (Event) -> Void) async -> [SearchSource] {
         guard turn.isSearchEnabled,

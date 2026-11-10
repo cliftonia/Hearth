@@ -32,8 +32,14 @@ struct ComposerFooter: View {
                 searchToggle
                     .opacity(presenter.isSearchAvailable ? 1 : 0)
                     .accessibilityHidden(!presenter.isSearchAvailable)
-                dictationButton
+                readAloudToggle
+                    .opacity(presenter.isSpeechAvailable ? 1 : 0)
+                    .accessibilityHidden(!presenter.isSpeechAvailable)
+                hideKeyboardButton
+                    .opacity(isFocused ? 1 : 0)
+                    .accessibilityHidden(!isFocused)
                     .frame(maxWidth: .infinity, alignment: .trailing)
+                dictationButton
                 primaryButton
             }
         }
@@ -100,6 +106,34 @@ struct ComposerFooter: View {
         .buttonStyle(.plain)
         .accessibilityLabel(Strings.searchLabel)
         .accessibilityAddTraits(isOn ? .isSelected : [])
+    }
+
+    /// When on, every reply is read aloud as soon as it is finished.
+    private var readAloudToggle: some View {
+        let isOn = presenter.isAutoReadEnabled
+        return Button(action: { Task { await presenter.toggleAutoReadAction() } }, label: {
+            Image(systemName: isOn ? "speaker.wave.2.fill" : "speaker.wave.2")
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(isOn ? HearthColor.pine : HearthColor.mute)
+                .frame(width: 38, height: 32)
+                .background(isOn ? HearthColor.pineSoft : .clear, in: Capsule())
+                .overlay { Capsule().strokeBorder(isOn ? .clear : HearthColor.line, lineWidth: 1) }
+        })
+        .buttonStyle(.plain)
+        .accessibilityLabel(Strings.readRepliesAloud)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
+    }
+
+    private var hideKeyboardButton: some View {
+        Button(action: { isFocused = false }, label: {
+            Image(systemName: "keyboard.chevron.compact.down")
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(HearthColor.mute)
+                .frame(width: 38, height: 32)
+                .contentShape(Rectangle())
+        })
+        .buttonStyle(.plain)
+        .accessibilityLabel(Strings.hideKeyboard)
     }
 
     private var dictationButton: some View {

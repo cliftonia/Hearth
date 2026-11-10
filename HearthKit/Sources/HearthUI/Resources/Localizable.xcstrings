@@ -67,6 +67,28 @@
         }
       }
     },
+    "chat.followUpHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asks this question"
+          }
+        }
+      }
+    },
+    "chat.followUps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggested questions"
+          }
+        }
+      }
+    },
     "chat.localModels": {
       "extractionState": "manual",
       "localizations": {
@@ -206,6 +228,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Some files could not be read. PDFs and text files are supported."
+          }
+        }
+      }
+    },
+    "composer.hideKeyboard": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide keyboard"
           }
         }
       }
@@ -716,6 +749,17 @@
         }
       }
     },
+    "settings.followUps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggest follow-up questions"
+          }
+        }
+      }
+    },
     "settings.instructions": {
       "extractionState": "manual",
       "localizations": {
@@ -733,7 +777,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Given to the model at the start of every conversation."
+            "value": "Instructions are given to the model at the start of every conversation. Suggestions cost one extra short request per reply."
           }
         }
       }

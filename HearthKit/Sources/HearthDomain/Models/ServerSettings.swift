@@ -23,6 +23,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
     public let isAutoReadEnabled: Bool
     /// Whether the app asks for Face ID, Touch ID or the passcode when it is opened.
     public let isLockEnabled: Bool
+    /// Whether questions the user might ask next are suggested under each reply.
+    public let isFollowUpsEnabled: Bool
 
     public init(
         ollamaAddress: String = "",
@@ -33,7 +35,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         appearance: AppearanceKind = .system,
         customInstructions: String = "",
         isAutoReadEnabled: Bool = false,
-        isLockEnabled: Bool = false
+        isLockEnabled: Bool = false,
+        isFollowUpsEnabled: Bool = true
     ) {
         self.ollamaAddress = ollamaAddress
         self.searchAddress = searchAddress
@@ -44,6 +47,7 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         self.customInstructions = customInstructions
         self.isAutoReadEnabled = isAutoReadEnabled
         self.isLockEnabled = isLockEnabled
+        self.isFollowUpsEnabled = isFollowUpsEnabled
     }
 
     /// Settings saved before a field existed are read with that field's default, so nothing saved is lost.
@@ -58,7 +62,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             appearance: try container.decodeIfPresent(AppearanceKind.self, forKey: .appearance) ?? .system,
             customInstructions: try container.decodeIfPresent(String.self, forKey: .customInstructions) ?? "",
             isAutoReadEnabled: try container.decodeIfPresent(Bool.self, forKey: .isAutoReadEnabled) ?? false,
-            isLockEnabled: try container.decodeIfPresent(Bool.self, forKey: .isLockEnabled) ?? false
+            isLockEnabled: try container.decodeIfPresent(Bool.self, forKey: .isLockEnabled) ?? false,
+            isFollowUpsEnabled: try container.decodeIfPresent(Bool.self, forKey: .isFollowUpsEnabled) ?? true
         )
     }
 
@@ -69,7 +74,7 @@ public struct ServerSettings: Hashable, Codable, Sendable {
     /// The host of the chat server, for display.
     public var ollamaHost: String? { ollamaURL?.host() }
 
-    public func updating(defaultModelID: ChatModel.ID? = nil, appearance: AppearanceKind? = nil) -> ServerSettings {
+    public func updating(defaultModelID: ChatModel.ID? = nil, appearance: AppearanceKind? = nil, isAutoReadEnabled: Bool? = nil) -> ServerSettings {
         ServerSettings(
             ollamaAddress: ollamaAddress,
             searchAddress: searchAddress,
@@ -78,8 +83,9 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             defaultModelID: defaultModelID ?? self.defaultModelID,
             appearance: appearance ?? self.appearance,
             customInstructions: customInstructions,
-            isAutoReadEnabled: isAutoReadEnabled,
-            isLockEnabled: isLockEnabled
+            isAutoReadEnabled: isAutoReadEnabled ?? self.isAutoReadEnabled,
+            isLockEnabled: isLockEnabled,
+            isFollowUpsEnabled: isFollowUpsEnabled
         )
     }
 

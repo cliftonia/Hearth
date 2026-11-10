@@ -28,6 +28,7 @@ final class SettingsViewModel {
     var customInstructions = ""
     var isAutoReadEnabled = false
     var isLockEnabled = false
+    var isFollowUpsEnabled = true
     var connectionCheck: ConnectionCheckKind = .idle
 }
 
@@ -65,6 +66,7 @@ final class SettingsPresenter {
         viewModel.customInstructions = settings.customInstructions
         viewModel.isAutoReadEnabled = settings.isAutoReadEnabled
         viewModel.isLockEnabled = settings.isLockEnabled
+        viewModel.isFollowUpsEnabled = settings.isFollowUpsEnabled
         viewModel.connectionCheck = .idle
         await loadVoicesAction()
     }
@@ -135,7 +137,8 @@ final class SettingsPresenter {
             appearance: viewModel.appearance,
             customInstructions: viewModel.customInstructions.trimmingCharacters(in: .whitespacesAndNewlines),
             isAutoReadEnabled: viewModel.isAutoReadEnabled,
-            isLockEnabled: viewModel.isLockEnabled
+            isLockEnabled: viewModel.isLockEnabled,
+            isFollowUpsEnabled: viewModel.isFollowUpsEnabled
         )
     }
 }
