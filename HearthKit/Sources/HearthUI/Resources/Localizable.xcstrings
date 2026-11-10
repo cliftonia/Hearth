@@ -617,6 +617,149 @@
         }
       }
     },
+    "memory.add": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add memory"
+          }
+        }
+      }
+    },
+    "memory.clear": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget everything"
+          }
+        }
+      }
+    },
+    "memory.clearQuestion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget every saved memory?"
+          }
+        }
+      }
+    },
+    "memory.footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lasting facts you tell a model, or ask it to remember, are kept on this device and given to every conversation. Models that cannot call tools can read memories but not add to them."
+          }
+        }
+      }
+    },
+    "memory.listFooter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up to 50 short memories. Swipe one to delete it, or tell the model to forget it."
+          }
+        }
+      }
+    },
+    "memory.none": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is remembered yet."
+          }
+        }
+      }
+    },
+    "memory.noticeForgotten": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forgotten: %@"
+          }
+        }
+      }
+    },
+    "memory.noticeSaved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remembered: %@"
+          }
+        }
+      }
+    },
+    "memory.noticeUpdated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memory updated: %@"
+          }
+        }
+      }
+    },
+    "memory.placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For example: I live in Brisbane"
+          }
+        }
+      }
+    },
+    "memory.saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved memories"
+          }
+        }
+      }
+    },
+    "memory.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memory"
+          }
+        }
+      }
+    },
+    "memory.toggle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remember things about me"
+          }
+        }
+      }
+    },
     "message.attachedFile": {
       "extractionState": "manual",
       "localizations": {

@@ -113,6 +113,16 @@ enum Strings {
     static let unlock = String(localized: "lock.unlock", defaultValue: "Unlock", bundle: .module)
     static let readPages = String(localized: "settings.readPages", defaultValue: "Read the pages a search finds", bundle: .module)
     static let readPagesFooter = String(localized: "settings.readPagesFooter", defaultValue: "Gives the model the text of the top results, not just a snippet. Your phone fetches those pages itself, so the sites see your phone's address rather than your server's.", bundle: .module)
+    static let memory = String(localized: "memory.title", defaultValue: "Memory", bundle: .module)
+    static let memoryToggle = String(localized: "memory.toggle", defaultValue: "Remember things about me", bundle: .module)
+    static let savedMemories = String(localized: "memory.saved", defaultValue: "Saved memories", bundle: .module)
+    static let memoryFooter = String(localized: "memory.footer", defaultValue: "Lasting facts you tell a model, or ask it to remember, are kept on this device and given to every conversation. Models that cannot call tools can read memories but not add to them.", bundle: .module)
+    static let memoryPlaceholder = String(localized: "memory.placeholder", defaultValue: "For example: I live in Brisbane", bundle: .module)
+    static let addMemory = String(localized: "memory.add", defaultValue: "Add memory", bundle: .module)
+    static let memoryListFooter = String(localized: "memory.listFooter", defaultValue: "Up to 50 short memories. Swipe one to delete it, or tell the model to forget it.", bundle: .module)
+    static let noMemories = String(localized: "memory.none", defaultValue: "Nothing is remembered yet.", bundle: .module)
+    static let clearMemories = String(localized: "memory.clear", defaultValue: "Forget everything", bundle: .module)
+    static let clearMemoriesQuestion = String(localized: "memory.clearQuestion", defaultValue: "Forget every saved memory?", bundle: .module)
     static let theme = String(localized: "settings.theme", defaultValue: "Theme", bundle: .module)
     static let themeSystem = String(localized: "settings.themeSystem", defaultValue: "System", bundle: .module)
     static let themeLight = String(localized: "settings.themeLight", defaultValue: "Light", bundle: .module)
@@ -140,6 +150,18 @@ enum Strings {
 
     static func attachedFile(_ name: String) -> String {
         String(localized: "message.attachedFile", defaultValue: "Attached file \(name)", bundle: .module)
+    }
+
+    static func memorySaved(_ text: String) -> String {
+        String(localized: "memory.noticeSaved", defaultValue: "Remembered: \(text)", bundle: .module)
+    }
+
+    static func memoryUpdated(_ text: String) -> String {
+        String(localized: "memory.noticeUpdated", defaultValue: "Memory updated: \(text)", bundle: .module)
+    }
+
+    static func memoryForgotten(_ text: String) -> String {
+        String(localized: "memory.noticeForgotten", defaultValue: "Forgotten: \(text)", bundle: .module)
     }
 
     static func searching(for query: String) -> String {

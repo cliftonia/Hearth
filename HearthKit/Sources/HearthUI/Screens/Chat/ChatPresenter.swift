@@ -19,6 +19,7 @@ final class ChatPresenter {
         let settingsStore: SettingsStore
         let modelStore: ModelStore
         let conversationStore: ConversationStore
+        let memoryStore: MemoryStore
         /// Whether the app is locked, in which case nothing is read aloud.
         let isLocked: @MainActor () -> Bool
     }
@@ -50,6 +51,11 @@ final class ChatPresenter {
             try await dependencies.conversationStore.load()
         } catch {
             logger.error("Loading conversations failed: \(error.localizedDescription, privacy: .public)")
+        }
+        do {
+            try await dependencies.memoryStore.load()
+        } catch {
+            logger.error("Loading memories failed: \(error.localizedDescription, privacy: .public)")
         }
         await refreshModelsAction()
     }
@@ -147,6 +153,7 @@ final class ChatPresenter {
         await stopSpeaking()
         cancelEditAction()
         viewModel.followUps = []
+        viewModel.memoryNotice = nil
         viewModel.conversation = Conversation(modelID: viewModel.selectedModel?.id)
         viewModel.error = nil
     }
@@ -159,6 +166,7 @@ final class ChatPresenter {
         await stopSpeaking()
         cancelEditAction()
         viewModel.followUps = []
+        viewModel.memoryNotice = nil
         viewModel.conversation = conversation
         viewModel.error = nil
         if let model = dependencies.modelStore.model(for: conversation.modelID) {
@@ -215,11 +223,14 @@ private extension ChatPresenter {
             model: model,
             settings: settings,
             searchMode: searchMode(for: model),
-            style: style
+            style: style,
+            memories: settings.isMemoryEnabled ? dependencies.memoryStore.memories : [],
+            remember: settings.isMemoryEnabled ? rememberClosure : nil
         )
         viewModel.conversation = viewModel.conversation.updating(messages: viewModel.conversation.messages + [reply], updatedAt: Date())
         viewModel.error = nil
         viewModel.followUps = []
+        viewModel.memoryNotice = nil
         viewModel.isStreaming = true
         let events = dependencies.chat.run(turn)
         // A reply should outlive a glance at another app, for as long as iOS allows.
@@ -279,6 +290,9 @@ private extension ChatPresenter {
         case .sources(let sources):
             viewModel.searchingQuery = nil
             updated = message.updating(sources: sources)
+        case .memory(let outcome):
+            viewModel.memoryNotice = Self.notice(for: outcome) ?? viewModel.memoryNotice
+            return
         case .searchFailed:
             viewModel.searchingQuery = nil
             viewModel.error = ErrorViewConfiguration(title: Strings.searchLabel, message: Strings.searchFailed, retryActionLabel: nil)

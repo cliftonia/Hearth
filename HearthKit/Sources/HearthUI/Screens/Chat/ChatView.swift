@@ -58,6 +58,9 @@ struct ChatView: View {
                         )
                         .id(message.id)
                     }
+                    if let notice = viewModel.memoryNotice {
+                        MemoryNoticeSection(notice: notice)
+                    }
                     if !viewModel.followUps.isEmpty, !viewModel.isStreaming {
                         FollowUpSection(questions: viewModel.followUps) { question in
                             Task { await presenter.followUpAction(question) }
@@ -67,6 +70,7 @@ struct ChatView: View {
                     }
                 }
                 .animation(.snappy, value: viewModel.followUps)
+                .animation(.snappy, value: viewModel.memoryNotice)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .frame(maxWidth: Self.readingWidth)
@@ -85,6 +89,21 @@ struct ChatView: View {
                 }
             }
         }
+    }
+}
+
+/// Says what was just remembered, changed or forgotten.
+private struct MemoryNoticeSection: View {
+    let notice: String
+
+    var body: some View {
+        Label(notice, systemImage: "bookmark.fill")
+            .font(.footnote)
+            .foregroundStyle(HearthColor.pine)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(HearthColor.pineSoft, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .transition(.opacity)
     }
 }
 

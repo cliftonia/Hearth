@@ -19,6 +19,8 @@ final class ChatViewModel {
     var error: ErrorViewConfiguration?
     /// What the web is being searched for right now, while a reply is on its way.
     var searchingQuery: String?
+    /// What was just remembered, changed or forgotten, shown under the latest reply.
+    var memoryNotice: String?
     /// Questions suggested under the latest reply.
     var followUps: [String] = []
 

@@ -25,6 +25,7 @@ public struct AppDependencies {
     let settingsStore: SettingsStore
     let modelStore: ModelStore
     let conversationStore: ConversationStore
+    let memoryStore: MemoryStore
 
     public static func live(defaults: AppDefaults) -> AppDependencies {
         let chatProvider = ChatDataProvider.live()
@@ -41,7 +42,8 @@ public struct AppDependencies {
             fetchModels: chatProvider.fetchModels,
             settingsStore: .live(defaults: settings),
             modelStore: ModelStore(fetchModels: chatProvider.fetchModels),
-            conversationStore: ConversationStore(provider: .live())
+            conversationStore: ConversationStore(provider: .live()),
+            memoryStore: MemoryStore(provider: .live())
         )
     }
 }

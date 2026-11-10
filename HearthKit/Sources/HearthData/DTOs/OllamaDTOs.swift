@@ -31,10 +31,16 @@ public struct OllamaToolArgumentsDTO: Codable, Sendable, Equatable {
     public let query: String?
     /// "news" when the model wants current events rather than the general web.
     public let category: String?
+    /// The fact to remember, for the memory tools.
+    public let text: String?
+    /// Which saved memory to change or forget, for the memory tools.
+    public let id: String?
 
-    public init(query: String?, category: String? = nil) {
+    public init(query: String? = nil, category: String? = nil, text: String? = nil, id: String? = nil) {
         self.query = query
         self.category = category
+        self.text = text
+        self.id = id
     }
 }
 
@@ -94,6 +100,36 @@ public struct OllamaToolDTO: Encodable, Sendable, Equatable {
 
     public let type: String
     public let function: OllamaToolSpecDTO
+
+    public static let saveMemoryName = "save_memory"
+    public static let updateMemoryName = "update_memory"
+    public static let deleteMemoryName = "delete_memory"
+
+    /// The three tools with which a model keeps what it remembers about the user.
+    public static let memory: [OllamaToolDTO] = [
+        tool(saveMemoryName, "Remember a lasting fact about the user for future conversations.", ["text": "The fact, as one short sentence"]),
+        tool(
+            updateMemoryName,
+            "Replace a saved memory that has changed or was wrong.",
+            ["id": "The id of the memory, such as m3", "text": "The corrected fact"]
+        ),
+        tool(deleteMemoryName, "Forget a saved memory.", ["id": "The id of the memory, such as m3"])
+    ]
+
+    private static func tool(_ name: String, _ description: String, _ properties: [String: String]) -> OllamaToolDTO {
+        OllamaToolDTO(
+            type: "function",
+            function: OllamaToolSpecDTO(
+                name: name,
+                description: description,
+                parameters: OllamaToolParametersDTO(
+                    type: "object",
+                    properties: properties.mapValues { OllamaToolPropertyDTO(type: "string", description: $0) },
+                    required: properties.keys.sorted()
+                )
+            )
+        )
+    }
 
     public static let webSearch = OllamaToolDTO(
         type: "function",

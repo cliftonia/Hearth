@@ -73,6 +73,26 @@ struct OllamaDTOTests {
         #expect(result["tool_calls"] == nil)
     }
 
+    @Test func `the memory tools are three, each naming what it needs`() throws {
+        let request = try json(OllamaChatRequestDTO(model: "m", messages: [], stream: true, think: nil, tools: OllamaToolDTO.memory))
+
+        let functions = try #require(request["tools"] as? [[String: Any]]).compactMap { $0["function"] as? [String: Any] }
+        let required = functions.compactMap { ($0["parameters"] as? [String: Any])?["required"] as? [String] }
+        #expect(functions.compactMap { $0["name"] as? String } == ["save_memory", "update_memory", "delete_memory"])
+        #expect(required == [["text"], ["id", "text"], ["id"]])
+    }
+
+    @Test func `a memory tool call carries its text and id`() throws {
+        let line = #"{"message":{"content":"","tool_calls":[{"function":{"name":"update_memory","arguments":{"id":"m3","text":"Lives in Sydney."}}}]}}"#
+
+        let call = try #require(try OllamaChatChunkDTO(line: line).message?.toolCalls?.first)
+
+        #expect(call.function.name == "update_memory")
+        #expect(call.function.arguments.id == "m3")
+        #expect(call.function.arguments.text == "Lives in Sydney.")
+        #expect(call.function.arguments.query == nil)
+    }
+
     @Test func `images are sent under the key Ollama expects`() throws {
         let message = OllamaMessageDTO(role: "user", content: "Look", imagesBase64: ["QUJD"])
 

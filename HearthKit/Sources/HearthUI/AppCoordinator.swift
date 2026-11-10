@@ -35,6 +35,7 @@ public final class AppCoordinator {
             settingsStore: dependencies.settingsStore,
             modelStore: dependencies.modelStore,
             conversationStore: dependencies.conversationStore,
+            memoryStore: dependencies.memoryStore,
             isLocked: { lockPresenter.viewModel.isLocked }
         ))
         let fetchModels = dependencies.fetchModels
@@ -50,7 +51,8 @@ public final class AppCoordinator {
         self.settingsPresenter = SettingsPresenter(
             settingsStore: settingsStore,
             speech: dependencies.speech,
-            authentication: dependencies.authentication
+            authentication: dependencies.authentication,
+            memoryStore: dependencies.memoryStore
         ) { settings in
             guard let baseURL = settings.ollamaURL else {
                 throw ChatError.serverNotConfigured

@@ -36,6 +36,8 @@ and your conversations stay on the device.
 - **Attachments**: photos from the library or camera for models that can see, PDFs and text files for any model
 - **Edit and resend** a message you already sent
 - **Custom instructions** given to the model at the start of every conversation
+- **Memory**: lasting facts you tell a model, or ask it to remember, are kept on the device and carried into every
+  conversation. A notice shows whenever something is remembered, and the list can be read, added to and cleared in Settings
 
 ### Voice
 
@@ -126,7 +128,7 @@ swiftlint lint
 ```
 
 Tests are written with Swift Testing: the stream decoding, prompt building, sentence chunking for
-speech, Markdown, maths and web page parsing, follow-up questions, export, the chat interactor, the
+speech, Markdown, maths and web page parsing, memory and its limits, follow-up questions, export, the chat interactor, the
 conversation store, file storage, which addresses a page may be read from, the app lock and the drawer's grouping. The codebase holds a
 zero-warning SwiftLint bar.
 
@@ -138,6 +140,9 @@ zero-warning SwiftLint bar.
 - **The voice conversation stops listening while a reply is spoken**, so it cannot hear itself.
 - **Follow-up questions and chat titles each cost one short extra request** to the same model.
   Follow-ups can be turned off in Settings.
+- **Memory is deliberately cautious.** At most 50 short memories and two changes a turn. Nothing can be remembered in
+  a turn that has searched the web or carries a file, so a page or a document cannot plant a memory. Models that
+  cannot call tools read memories but cannot add to them.
 - **Thinking levels are a request.** Ollama accepts them for every thinking model, but some models think
   as much as they please whatever the level.
 - **A model may search the web up to three times in one turn**, after which it is told to answer from what it has.

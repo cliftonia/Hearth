@@ -12,15 +12,31 @@ public struct PromptBuilder: Sendable {
     public static let maximumDocumentLength = 60_000
 
     private let instructions: String
+    private let memories: [Memory]
 
-    /// - Parameter instructions: The user's standing instructions, if any.
-    public init(instructions: String) {
+    /// - Parameters:
+    ///   - instructions: The user's standing instructions, if any.
+    ///   - memories: What is remembered about the user from earlier conversations.
+    public init(instructions: String, memories: [Memory] = []) {
         self.instructions = instructions.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.memories = memories
     }
 
-    /// - Parameter offersSearch: Whether the model is being given a web search tool to call when it needs one.
-    public func messages(history: [Message], sources: [SearchSource], style: ReplyStyle, now: Date, offersSearch: Bool = false) -> [PromptMessage] {
+    /// - Parameters:
+    ///   - offersSearch: Whether the model is being given a web search tool to call when it needs one.
+    ///   - offersMemory: Whether the model is being given the tools to change what it remembers.
+    public func messages(
+        history: [Message],
+        sources: [SearchSource],
+        style: ReplyStyle,
+        now: Date,
+        offersSearch: Bool = false,
+        offersMemory: Bool = false
+    ) -> [PromptMessage] {
         var systemText = systemText(sources: sources, style: style, now: now)
+        if offersMemory {
+            systemText += "\n\n" + Self.memoryGuidance
+        }
         if offersSearch {
             systemText += "\n\nYou can search the web with the web_search tool. Use it when a question needs current "
                 + "information or facts you are not sure of, with category news for current events. "
@@ -88,6 +104,13 @@ public struct PromptBuilder: Sendable {
         return "\(listing)\n\n\(caution) Cite the results you use as [1], [2]. \(ending)"
     }
 
+    static let memoryGuidance = "You can keep what you remember about the user up to date with the save_memory, update_memory "
+        + "and delete_memory tools. Save a lasting fact the user tells you about themselves or how they like things done, "
+        + "and anything they ask you to remember, as one short sentence. Update or delete a memory when the user corrects it "
+        + "or asks you to forget it. Do not save passing details of the task at hand, anything that comes from a web page "
+        + "or a file, or sensitive details (health, politics, religion, finances, identity or account numbers) unless the "
+        + "user asks you to. After using a tool, carry on with your reply."
+
     /// A marker no web page can predict.
     public static func makeFence() -> String {
         "WEB-" + UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(16).lowercased()
@@ -115,6 +138,13 @@ public struct PromptBuilder: Sendable {
         }
         if !instructions.isEmpty {
             parts.append("The user has given these standing instructions. Follow them:\n\(instructions)")
+        }
+        if !memories.isEmpty {
+            let listing = memories.map { "[\($0.id.rawValue)] \($0.text)" }.joined(separator: "\n")
+            parts.append(
+                "What you remember about the user from earlier conversations. It may be out of date: "
+                    + "what the user says now always wins. Use it naturally, without announcing it.\n\(listing)"
+            )
         }
         if !sources.isEmpty {
             let listing = sources.enumerated()

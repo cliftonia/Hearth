@@ -44,6 +44,7 @@ struct SettingsView: View {
                 } footer: {
                     Text(Strings.instructionsFooter)
                 }
+                MemorySection(presenter: presenter)
                 Section {
                     Toggle(Strings.requireUnlock, isOn: $viewModel.isLockEnabled)
                         .onChange(of: viewModel.isLockEnabled) { Task { await presenter.lockAction() } }

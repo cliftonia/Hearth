@@ -22,6 +22,28 @@ extension ChatPresenter {
         return viewModel.isSearchEnabled ? .always : .off
     }
 
+    /// Lets a model change what is remembered; the change is made here, on the store the settings also show.
+    var rememberClosure: @Sendable (MemoryRequest) async -> MemoryOutcome {
+        let store = dependencies.memoryStore
+        return { request in
+            await store.apply(request, isFromUser: false)
+        }
+    }
+
+    /// The line shown to the user when something is remembered, changed or forgotten. Refusals are not shown.
+    static func notice(for outcome: MemoryOutcome) -> String? {
+        switch outcome {
+        case .saved(let memory):
+            Strings.memorySaved(memory.text)
+        case .updated(let memory):
+            Strings.memoryUpdated(memory.text)
+        case .deleted(let memory):
+            Strings.memoryForgotten(memory.text)
+        case .refused:
+            nil
+        }
+    }
+
     func selectThinkingLevelAction(_ level: ThinkingLevelKind) {
         do {
             try dependencies.settingsStore.update(settings.updating(thinkingLevel: level))

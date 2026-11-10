@@ -30,6 +30,9 @@ final class SettingsViewModel {
     var isLockEnabled = false
     var isFollowUpsEnabled = true
     var isPageReadingEnabled = true
+    var isMemoryEnabled = true
+    var newMemoryText = ""
+    var isConfirmingClearMemories = false
     var connectionCheck: ConnectionCheckKind = .idle
 }
 
@@ -42,6 +45,7 @@ final class SettingsPresenter {
     private let speech: SpeechInteractor
     private let fetchModels: @Sendable (ServerSettings) async throws -> Int
     private let authentication: AuthenticationProvider
+    private let memoryStore: MemoryStore
     private let logger = Logger(for: SettingsPresenter.self)
 
     /// - Parameter fetchModels: Counts the models the given settings can reach, without changing any shared state.
@@ -49,11 +53,13 @@ final class SettingsPresenter {
         settingsStore: SettingsStore,
         speech: SpeechInteractor,
         authentication: AuthenticationProvider,
+        memoryStore: MemoryStore,
         fetchModels: @escaping @Sendable (ServerSettings) async throws -> Int
     ) {
         self.settingsStore = settingsStore
         self.speech = speech
         self.authentication = authentication
+        self.memoryStore = memoryStore
         self.fetchModels = fetchModels
     }
 
@@ -69,6 +75,8 @@ final class SettingsPresenter {
         viewModel.isLockEnabled = settings.isLockEnabled
         viewModel.isFollowUpsEnabled = settings.isFollowUpsEnabled
         viewModel.isPageReadingEnabled = settings.isPageReadingEnabled
+        viewModel.isMemoryEnabled = settings.isMemoryEnabled
+        viewModel.newMemoryText = ""
         viewModel.connectionCheck = .idle
         await loadVoicesAction()
     }
@@ -115,6 +123,30 @@ final class SettingsPresenter {
         }
     }
 
+    // MARK: Memory
+
+    var memories: [Memory] { memoryStore.memories }
+
+    /// Adds a memory written by hand. Changes to memory take effect at once, without waiting for Done.
+    func addMemoryAction() async {
+        let outcome = await memoryStore.apply(.save(viewModel.newMemoryText), isFromUser: true)
+        if case .saved = outcome {
+            viewModel.newMemoryText = ""
+        }
+    }
+
+    func deleteMemoryAction(_ id: Memory.ID) async {
+        await memoryStore.apply(.delete(id), isFromUser: true)
+    }
+
+    func clearMemoriesAction() async {
+        do {
+            try await memoryStore.clear()
+        } catch {
+            logger.error("Clearing memories failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
     func saveAction() {
         do {
             try settingsStore.update(draft)
@@ -142,7 +174,8 @@ final class SettingsPresenter {
             isLockEnabled: viewModel.isLockEnabled,
             isFollowUpsEnabled: viewModel.isFollowUpsEnabled,
             thinkingLevel: settingsStore.settings.thinkingLevel,
-            isPageReadingEnabled: viewModel.isPageReadingEnabled
+            isPageReadingEnabled: viewModel.isPageReadingEnabled,
+            isMemoryEnabled: viewModel.isMemoryEnabled
         )
     }
 }

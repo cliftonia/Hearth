@@ -25,6 +25,8 @@ public final class ChatInteractor: Sendable {
         /// Every source found so far in this turn.
         case sources([SearchSource])
         case searchFailed
+        /// What became of a change the model asked to make to its memory.
+        case memory(MemoryOutcome)
         case thinking(String)
         case text(String)
     }
@@ -35,13 +37,27 @@ public final class ChatInteractor: Sendable {
         public let settings: ServerSettings
         public let searchMode: SearchModeKind
         public let style: ReplyStyle
+        /// What is remembered about the user, to be carried into this turn.
+        public let memories: [Memory]
+        /// Makes a change to what is remembered. `nil` when the model may not change it.
+        public let remember: (@Sendable (MemoryRequest) async -> MemoryOutcome)?
 
-        public init(history: [Message], model: ChatModel, settings: ServerSettings, searchMode: SearchModeKind, style: ReplyStyle) {
+        public init(
+            history: [Message],
+            model: ChatModel,
+            settings: ServerSettings,
+            searchMode: SearchModeKind,
+            style: ReplyStyle,
+            memories: [Memory] = [],
+            remember: (@Sendable (MemoryRequest) async -> MemoryOutcome)? = nil
+        ) {
             self.history = history
             self.model = model
             self.settings = settings
             self.searchMode = searchMode
             self.style = style
+            self.memories = memories
+            self.remember = remember
         }
     }
 
@@ -51,6 +67,10 @@ public final class ChatInteractor: Sendable {
     /// How many of a search's results have their pages read, and how much of each page is kept.
     private static let maximumPagesRead = 3
     private static let pageExcerptLength = 2500
+    /// How many changes to its memory the model may make in one turn.
+    private static let maximumMemoryWrites = 2
+    /// How many times the model is called in one turn, whatever it keeps asking for.
+    private static let maximumRequests = 7
 
     private let chat: ChatDataProvider
     private let search: SearchDataProvider
@@ -101,67 +121,149 @@ public final class ChatInteractor: Sendable {
 }
 
 private extension ChatInteractor {
-    /// Streams the reply. In automatic mode the model may stop to ask for a search; the results are
-    /// handed back and it carries on, until it answers or has used its rounds.
+    /// Where and how a turn searches the web.
+    struct SearchSetup {
+        let url: URL
+        let isReadingPages: Bool
+        let builder: PromptBuilder
+    }
+
+    /// How far a turn has got: what has been said to the model, what has been found, and what allowance is used.
+    struct Progress {
+        var messages: [PromptMessage]
+        var sources: [SearchSource]
+        var searchRounds = 0
+        var memoryWrites = 0
+    }
+
+    /// Streams the reply. Along the way the model may stop to ask for a web search or to change what it
+    /// remembers; each request is carried out, its result handed back, and the model carries on until it
+    /// answers or has used its allowance.
     func stream(_ turn: Turn, report: (Event) -> Void) async throws {
         guard let baseURL = turn.settings.ollamaURL else {
             throw ChatError.serverNotConfigured
         }
         let searchURL = turn.settings.searchURL
         let isAutomatic = turn.searchMode == .automatic && searchURL != nil && turn.model.canUseTools
-        let builder = PromptBuilder(instructions: turn.settings.customInstructions)
+        // Memory is never written from a turn that carries a file: only what the user says may be remembered.
+        let canRemember = turn.remember != nil && turn.model.canUseTools && turn.history.last?.documents.isEmpty != false
+        let builder = PromptBuilder(instructions: turn.settings.customInstructions, memories: turn.memories)
         var sources: [SearchSource] = []
         if turn.searchMode == .always, let searchURL, let query = builder.searchQuery(history: turn.history) {
             sources = await found(for: SearchRequest(query: query), at: searchURL, excluding: [], report: report)
             report(.sources(sources))
         }
-        var messages = builder.messages(history: turn.history, sources: sources, style: turn.style, now: now(), offersSearch: isAutomatic)
-        var round = 0
-        while true {
-            let offersSearch = isAutomatic && round < Self.maximumSearchRounds
+        let messages = builder.messages(
+            history: turn.history,
+            sources: sources,
+            style: turn.style,
+            now: now(),
+            offersSearch: isAutomatic,
+            offersMemory: canRemember && sources.isEmpty
+        )
+        var progress = Progress(messages: messages, sources: sources)
+        for _ in 0..<Self.maximumRequests {
+            let offersSearch = isAutomatic && progress.searchRounds < Self.maximumSearchRounds
+            // Once anything from the web is in the turn, memory is closed: a web page must not be able to plant a memory.
+            let offersMemory = canRemember && progress.sources.isEmpty && progress.memoryWrites < Self.maximumMemoryWrites
             let request = ChatRequest(
                 model: turn.model,
-                messages: messages,
+                messages: progress.messages,
                 thinking: turn.style == .chat ? turn.settings.thinkingLevel : .off,
-                isWebSearchOffered: offersSearch
+                isWebSearchOffered: offersSearch,
+                isMemoryOffered: offersMemory
             )
-            let requests = try await reply(to: request, at: baseURL, report: report)
-            guard offersSearch, let searchURL, !requests.isEmpty else {
+            let asked = try await reply(to: request, at: baseURL, report: report)
+            var hasActed = false
+            if offersMemory, let remember = turn.remember, !asked.memoryChanges.isEmpty {
+                await apply(asked.memoryChanges, using: remember, to: &progress, report: report)
+                hasActed = true
+            }
+            if offersSearch, let searchURL, !asked.searches.isEmpty {
+                let setup = SearchSetup(url: searchURL, isReadingPages: turn.settings.isPageReadingEnabled, builder: builder)
+                await run(asked.searches, with: setup, progress: &progress, report: report)
+                hasActed = true
+            }
+            guard hasActed else {
                 return
             }
-            round += 1
-            var fresh: [SearchSource] = []
-            for request in requests {
-                fresh += await found(for: request, at: searchURL, excluding: sources + fresh, report: report)
-            }
-            let pages = turn.settings.isPageReadingEnabled ? await pageTexts(for: fresh) : [:]
-            let results = builder.searchResultsText(
-                fresh,
-                numberedFrom: sources.count + 1,
-                pages: pages,
-                isLastSearch: round >= Self.maximumSearchRounds
-            )
-            messages.append(PromptMessage(role: .assistant, text: "", searchQueries: requests.map(\.query)))
-            messages.append(PromptMessage(role: .tool, text: results))
-            sources += fresh
-            report(.sources(sources))
         }
     }
 
-    /// Streams one reply from the model and returns the searches it asked for, if any.
-    func reply(to request: ChatRequest, at baseURL: URL, report: (Event) -> Void) async throws -> [SearchRequest] {
-        var queries: [SearchRequest] = []
+    /// Makes the memory changes the model asked for, within the turn's allowance, and tells it what became of each.
+    func apply(
+        _ changes: [MemoryRequest],
+        using remember: @Sendable (MemoryRequest) async -> MemoryOutcome,
+        to progress: inout Progress,
+        report: (Event) -> Void
+    ) async {
+        for change in changes.prefix(Self.maximumMemoryWrites - progress.memoryWrites) {
+            let outcome = await remember(change)
+            progress.memoryWrites += 1
+            report(.memory(outcome))
+            progress.messages.append(PromptMessage(role: .assistant, text: "", memoryRequest: change))
+            progress.messages.append(PromptMessage(role: .tool, text: Self.resultText(for: outcome), memoryRequest: change))
+        }
+    }
+
+    /// Runs the searches the model asked for and hands it the results, with the text of the leading pages.
+    func run(_ searches: [SearchRequest], with setup: SearchSetup, progress: inout Progress, report: (Event) -> Void) async {
+        progress.searchRounds += 1
+        var fresh: [SearchSource] = []
+        for search in searches {
+            fresh += await found(for: search, at: setup.url, excluding: progress.sources + fresh, report: report)
+        }
+        let results = setup.builder.searchResultsText(
+            fresh,
+            numberedFrom: progress.sources.count + 1,
+            pages: setup.isReadingPages ? await pageTexts(for: fresh) : [:],
+            isLastSearch: progress.searchRounds >= Self.maximumSearchRounds
+        )
+        progress.messages.append(PromptMessage(role: .assistant, text: "", searchQueries: searches.map(\.query)))
+        progress.messages.append(PromptMessage(role: .tool, text: results))
+        progress.sources += fresh
+        report(.sources(progress.sources))
+    }
+
+    /// What the model is told became of its request, so that it can carry on.
+    static func resultText(for outcome: MemoryOutcome) -> String {
+        switch outcome {
+        case .saved(let memory):
+            "Saved as \(memory.id.rawValue). Carry on with your reply."
+        case .updated(let memory):
+            "Updated \(memory.id.rawValue). Carry on with your reply."
+        case .deleted(let memory):
+            "Forgot \(memory.id.rawValue). Carry on with your reply."
+        case .refused(.empty):
+            "Nothing was saved: the memory was empty."
+        case .refused(.alreadySaved):
+            "That is already remembered. Carry on with your reply."
+        case .refused(.full):
+            "Memory is full. Update or delete an entry instead, or carry on."
+        case .refused(.notFound):
+            "There is no memory with that id. Carry on with your reply."
+        case .refused(.notStored):
+            "The memory could not be stored just now. Carry on with your reply."
+        }
+    }
+
+    /// Streams one reply from the model and returns what it asked for along the way.
+    func reply(to request: ChatRequest, at baseURL: URL, report: (Event) -> Void) async throws -> (searches: [SearchRequest], memoryChanges: [MemoryRequest]) {
+        var searches: [SearchRequest] = []
+        var memoryChanges: [MemoryRequest] = []
         for try await delta in chat.streamChat(baseURL, request) {
             switch delta {
             case .thinking(let text):
                 report(.thinking(text))
             case .text(let text):
                 report(.text(text))
-            case .searchRequested(let query):
-                queries.append(query)
+            case .searchRequested(let search):
+                searches.append(search)
+            case .memoryRequested(let change):
+                memoryChanges.append(change)
             }
         }
-        return queries
+        return (searches, memoryChanges)
     }
 
     /// Searches the web. A failed search is reported and the turn carries on without it: the reply matters more.
