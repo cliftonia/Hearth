@@ -1,0 +1,11 @@
+// Defaults for every build. Override any of these in Config/Local.xcconfig, which is not committed.
+
+HEARTH_BUNDLE_ID = app.hearth.Hearth
+HEARTH_DEVELOPMENT_TEAM =
+
+// The addresses the app starts with. Left empty, the app asks for them in Settings on first launch.
+HEARTH_OLLAMA_ADDRESS =
+HEARTH_SEARCH_ADDRESS =
+HEARTH_SPEECH_ADDRESS =
+
+#include? "Local.xcconfig"

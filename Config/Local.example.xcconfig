@@ -1,0 +1,10 @@
+// Copy this file to Config/Local.xcconfig and fill it in. Local.xcconfig is ignored by git.
+//
+// An xcconfig treats `//` as the start of a comment, so write the slashes of a URL as `/$()/`.
+
+HEARTH_BUNDLE_ID = com.example.Hearth
+HEARTH_DEVELOPMENT_TEAM = ABCDE12345
+
+HEARTH_OLLAMA_ADDRESS = https:/$()/my-server.example.ts.net
+HEARTH_SEARCH_ADDRESS = https:/$()/my-server.example.ts.net:8888
+HEARTH_SPEECH_ADDRESS = http:/$()/my-server.example.ts.net:8880

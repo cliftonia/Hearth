@@ -1,0 +1,28 @@
+# Xcode
+build/
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/xcuserdata/
+xcuserdata/
+App/Info.plist
+
+# SwiftPM
+.build/
+.swiftpm/
+Package.resolved
+
+# Local settings: bundle identifier, signing team and server addresses
+Config/Local.xcconfig
+
+# macOS
+.DS_Store
+*.swp
+
+# Local tooling state
+.claude/
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+.cursor/
+.cursorrules
+.superpowers/

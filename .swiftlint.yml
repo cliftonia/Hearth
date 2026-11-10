@@ -1,0 +1,48 @@
+included:
+  - App
+  - HearthKit/Sources
+  - HearthKit/Tests
+
+excluded:
+  - HearthKit/.build
+
+line_length:
+  warning: 160
+  ignores_urls: true
+
+file_length:
+  warning: 400
+
+function_body_length:
+  warning: 50
+
+type_body_length:
+  warning: 250
+
+function_parameter_count:
+  warning: 5
+
+type_name:
+  excluded:
+    - ID
+
+custom_rules:
+  todo_format:
+    name: "TODO format"
+    regex: 'TODO(?!: [A-Z]+-\d+ • )'
+    match_kinds:
+      - comment
+    message: "Write TODOs as `TODO: JIRA-1234 • Description`."
+    severity: warning
+  no_print:
+    name: "No print"
+    regex: '\bprint\('
+    match_kinds:
+      - identifier
+    message: "Log through os.Logger, never print()."
+    severity: warning
+
+# identifier_name rejects the backtick names Swift Testing functions are written with.
+disabled_rules:
+  - todo
+  - identifier_name
