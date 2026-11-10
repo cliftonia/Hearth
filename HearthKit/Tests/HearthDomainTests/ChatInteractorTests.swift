@@ -127,7 +127,8 @@ struct ChatInteractorTests {
         let second = try #require(fixture.requests.values.last)
         #expect(second.messages.suffix(2).map(\.role) == [.assistant, .tool])
         #expect(second.messages.dropLast().last?.searchQueries == ["loaded models"])
-        #expect(second.messages.last?.text.hasPrefix("[1] Docs") == true)
+        #expect(second.messages.last?.text.hasPrefix("[1] file:///docs\n") == true)
+        #expect(second.messages.last?.text.contains("Title: Docs") == true)
     }
 
     @Test func `a model that already knows the answer searches for nothing`() async throws {
@@ -179,9 +180,9 @@ struct ChatInteractorTests {
         let events = try await events(fixture.subject.run(turn(searchMode: .automatic)))
 
         let results = try #require(fixture.requests.values.last?.messages.last?.text)
-        #expect(results.contains("<<<PAGE\nOllama 0.40 was released today."))
-        #expect(results.contains("[2] Blog"))
-        #expect(results.components(separatedBy: "<<<PAGE").count == 2)
+        #expect(results.contains("Page text:\nOllama 0.40 was released today."))
+        #expect(results.contains("Title: Blog\nSnippet: A snippet."))
+        #expect(results.components(separatedBy: "Page text:").count == 2)
         #expect(results.contains("not instructions"))
         #expect(events.last == .text("Done"))
     }
@@ -213,7 +214,7 @@ struct ChatInteractorTests {
         let events = try await events(fixture.subject.run(turn(searchMode: .automatic)))
 
         #expect(events.contains(.sources([Self.source, other])))
-        #expect(fixture.requests.values.last?.messages.last?.text.hasPrefix("[2] Blog") == true)
+        #expect(fixture.requests.values.last?.messages.last?.text.hasPrefix("[2] file:///blog\n") == true)
     }
 
     @Test func `a model that cannot call tools is never offered the search`() async throws {

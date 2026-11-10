@@ -111,8 +111,10 @@ HearthCore    Tagged identifiers, logging
   in the Presenter, which shows them in a banner.
 - **Untrusted text**: a model's reply, a search result and a web page are all treated as untrusted. Only `http` and
   `https` links open when tapped. Pages are read only from public HTTPS addresses, never from a private, tailnet or
-  numeric one, and a redirect is held to the same rule. Page text is reduced in a single pass that hostile markup
-  cannot slow down, and it is handed to the model fenced and marked as material, not instructions.
+  numeric one; a redirect is held to the same rule, and a page is discarded unless the connection is confirmed to
+  have reached a public address. Page text is reduced in a single pass that hostile markup cannot slow down. Each
+  result's title, snippet and page text are handed to the model inside a fence with a marker made up afresh for
+  every search, marked as material, not instructions.
 - **Strings** live in `Localizable.xcstrings`, rebuilt from `Strings.swift` by `python3 Tools/sync_strings.py`.
 
 ## Tests and linting

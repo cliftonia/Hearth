@@ -23,8 +23,9 @@ public struct PageService: Sendable {
         }
         var request = URLRequest(url: url)
         request.setValue("text/html,application/xhtml+xml", forHTTPHeaderField: "Accept")
+        let fetchGuard = PageFetchGuard()
         // A refused redirect leaves the redirect response itself, which fails the status check below.
-        let (bytes, response) = try await session.bytes(for: request, delegate: RedirectGuard())
+        let (bytes, response) = try await session.bytes(for: request, delegate: fetchGuard)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             throw HTTPError.invalidResponse
         }
@@ -38,12 +39,21 @@ public struct PageService: Sendable {
                 break
             }
         }
+        // The name was checked before connecting, but a name can be made to answer differently a moment
+        // later. What counts is where the connection actually went: unless every hop is known to have
+        // reached a public address, what came back is thrown away unread.
+        guard await fetchGuard.connectedOnlyToPublicAddresses() else {
+            throw PageError.addressNotAllowed
+        }
         return String(decoding: data, as: UTF8.self)
     }
 }
 
-/// Follows a redirect only to another public web page, so a public address cannot lead the phone to a private one.
-private final class RedirectGuard: NSObject, URLSessionTaskDelegate {
+/// Watches one page fetch: follows a redirect only to another public web page, and records where each connection went.
+private final class PageFetchGuard: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+    private let lock = NSLock()
+    private var remoteAddresses: [String?]?
+
     func urlSession(
         _ session: URLSession,
         task: URLSessionTask,
@@ -54,6 +64,25 @@ private final class RedirectGuard: NSObject, URLSessionTaskDelegate {
             return nil
         }
         return request
+    }
+
+    func urlSession(_ session: URLSession, task: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics) {
+        let addresses = metrics.transactionMetrics.map(\.remoteAddress)
+        lock.withLock { remoteAddresses = addresses }
+    }
+
+    /// Whether every connection of the fetch is known to have reached a public address.
+    /// The record arrives as the fetch ends; if it has not come within a second, the answer is no.
+    func connectedOnlyToPublicAddresses() async -> Bool {
+        for _ in 0..<20 {
+            if let addresses = lock.withLock({ remoteAddresses }) {
+                return !addresses.isEmpty && addresses.allSatisfy { address in
+                    address.map(PageAddressPolicy.isPublic(addressText:)) ?? false
+                }
+            }
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+        return false
     }
 }
 

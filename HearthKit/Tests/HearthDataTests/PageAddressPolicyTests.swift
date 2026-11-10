@@ -50,20 +50,37 @@ struct PageAddressPolicyTests {
         leading + Array(repeating: 0, count: 16 - leading.count - last.count) + last
     }
 
-    @Test func `IPv6 addresses are judged by their range, and a carried IPv4 address by its own`() {
+    @Test func `only ordinary global IPv6 addresses are public`() {
         #expect(PageAddressPolicy.isPublic(address: ipv6([0x26, 0x06, 0x47, 0x00], last: [0x11, 0x11])))
-        #expect(!PageAddressPolicy.isPublic(address: ipv6([], last: [1])))
-        #expect(!PageAddressPolicy.isPublic(address: ipv6([])))
-        #expect(!PageAddressPolicy.isPublic(address: ipv6([0xFD, 0x7A, 0x11, 0x5C])))
-        #expect(!PageAddressPolicy.isPublic(address: ipv6([0xFE, 0x80])))
-        #expect(!PageAddressPolicy.isPublic(address: ipv6([0xFF, 0x02])))
-        // IPv4-mapped and NAT64 forms carry an IPv4 address in their last four bytes.
+        #expect(PageAddressPolicy.isPublic(address: ipv6([0x2A, 0x00, 0x14, 0x50], last: [0x20, 0x0E])))
+        let refused: [[UInt8]] = [
+            ipv6([], last: [1]), ipv6([]),
+            ipv6([0xFD, 0x7A, 0x11, 0x5C]), ipv6([0xFC]), ipv6([0xFE, 0x80]), ipv6([0xFE, 0xC0]), ipv6([0xFF, 0x02]),
+            ipv6([0x20, 0x02, 0xC0, 0xA8, 0x01, 0x01]), ipv6([0x20, 0x01, 0, 0, 0x41, 0x36]), ipv6([0x20, 0x01, 0x0D, 0xB8]),
+            ipv6([0, 0x64, 0xFF, 0x9B, 0, 1], last: [10, 0, 0, 1]), ipv6([], last: [192, 168, 1, 1]), ipv6([0x40])
+        ]
+        for address in refused {
+            #expect(!PageAddressPolicy.isPublic(address: address), "\(address)")
+        }
+    }
+
+    @Test func `an IPv4 address carried in the mapped or NAT64 form is judged by its own range`() {
         let mapped: [UInt8] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF]
         let translated: [UInt8] = [0, 0x64, 0xFF, 0x9B, 0, 0, 0, 0, 0, 0, 0, 0]
         #expect(!PageAddressPolicy.isPublic(address: mapped + [192, 168, 1, 1]))
         #expect(PageAddressPolicy.isPublic(address: mapped + [8, 8, 8, 8]))
         #expect(!PageAddressPolicy.isPublic(address: translated + [10, 0, 0, 1]))
+        #expect(!PageAddressPolicy.isPublic(address: translated + [100, 74, 3, 68]))
         #expect(PageAddressPolicy.isPublic(address: translated + [8, 8, 8, 8]))
+    }
+
+    @Test(arguments: [
+        ("8.8.8.8", true), ("2606:4700::1111", true), ("64:ff9b::808:808", true),
+        ("192.168.1.1", false), ("100.74.3.68", false), ("127.0.0.1", false), ("::1", false), ("fd7a:115c:a1e0::1", false),
+        ("fe80::1%en0", false), ("::ffff:10.0.0.1", false), ("2002:c0a8:101::", false), ("not an address", false), ("", false)
+    ])
+    func `the address a connection reports is judged as text`(address: String, isPublic: Bool) {
+        #expect(PageAddressPolicy.isPublic(addressText: address) == isPublic)
     }
 
     @Test func `an address of the wrong length is not public`() {

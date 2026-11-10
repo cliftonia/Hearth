@@ -33,18 +33,40 @@ public enum PageAddressPolicy {
         case 16:
             let mappedPrefix: [UInt8] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF]
             let translatedPrefix: [UInt8] = [0, 0x64, 0xFF, 0x9B, 0, 0, 0, 0, 0, 0, 0, 0]
-            // An IPv4 address carried inside an IPv6 one is judged as the IPv4 address it is.
+            // An IPv4 address carried in the mapped or NAT64 form is judged as the IPv4 address it is.
+            // NAT64 is how a phone on an IPv6-only mobile network reaches the IPv4 web.
             if Array(bytes.prefix(12)) == mappedPrefix || Array(bytes.prefix(12)) == translatedPrefix {
                 return isPublicIPv4(Array(bytes.suffix(4)))
             }
-            let isUnspecifiedOrLoopback = bytes.dropLast().allSatisfy { $0 == 0 } && bytes[15] <= 1
-            let isUniqueLocal = bytes[0] & 0xFE == 0xFC
-            let isLinkLocal = bytes[0] == 0xFE && bytes[1] & 0xC0 == 0x80
-            let isMulticast = bytes[0] == 0xFF
-            return !(isUnspecifiedOrLoopback || isUniqueLocal || isLinkLocal || isMulticast)
+            // Everything else must be ordinary global unicast, 2000::/3. That alone rules out loopback,
+            // unique-local, link-local, site-local, multicast and every other carried-IPv4 form.
+            guard bytes[0] & 0xE0 == 0x20 else {
+                return false
+            }
+            let isSixToFour = bytes[0] == 0x20 && bytes[1] == 0x02
+            let isTeredo = bytes[0] == 0x20 && bytes[1] == 0x01 && bytes[2] == 0 && bytes[3] == 0
+            let isDocumentation = bytes[0] == 0x20 && bytes[1] == 0x01 && bytes[2] == 0x0D && bytes[3] == 0xB8
+            return !(isSixToFour || isTeredo || isDocumentation)
         default:
             return false
         }
+    }
+
+    /// Whether an address written out as text, as a connection reports it, is out on the public internet.
+    public static func isPublic(addressText: String) -> Bool {
+        // A scoped address such as fe80::1%en0 is local by definition.
+        guard !addressText.contains("%") else {
+            return false
+        }
+        var ipv4 = in_addr()
+        if inet_pton(AF_INET, addressText, &ipv4) == 1 {
+            return isPublic(address: withUnsafeBytes(of: ipv4) { Array($0) })
+        }
+        var ipv6 = in6_addr()
+        if inet_pton(AF_INET6, addressText, &ipv6) == 1 {
+            return isPublic(address: withUnsafeBytes(of: ipv6) { Array($0) })
+        }
+        return false
     }
 
     private static func isPublicIPv4(_ bytes: [UInt8]) -> Bool {
