@@ -14,13 +14,23 @@ struct RootView: View {
         // Sheets are separate presentations, so each is given the chosen theme as well as the root.
         let colorScheme = coordinator.settingsStore.settings.appearance.colorScheme
         let lock = coordinator.lockPresenter.viewModel
+        let isCovered = lock.isLocked || lock.isObscured
         layout(isSidebarOpen: $router.isSidebarOpen)
+        // This overlay covers the chat from the first frame; the lock window covers everything presented above it.
         .overlay {
-            if lock.isLocked || lock.isObscured {
+            if isCovered {
                 LockView(presenter: coordinator.lockPresenter)
             }
         }
-        .task(id: scenePhase) { await coordinator.lockPresenter.sceneAction(scenePhase) }
+        .onChange(of: scenePhase, initial: true) {
+            let shouldPrompt = coordinator.lockPresenter.sceneChanged(to: scenePhase)
+            coordinator.showLockWindow(colorScheme: colorScheme)
+            if shouldPrompt {
+                Task { await coordinator.lockPresenter.unlockAction() }
+            }
+        }
+        .onChange(of: isCovered) { coordinator.showLockWindow(colorScheme: colorScheme) }
+        .onChange(of: colorScheme) { coordinator.showLockWindow(colorScheme: colorScheme) }
         .sheet(isPresented: $router.isSettingsPresented) {
             SettingsView(presenter: coordinator.settingsPresenter)
                 .preferredColorScheme(colorScheme)

@@ -40,23 +40,32 @@ final class LockPresenter {
     }
 
     func sceneAction(_ phase: ScenePhase) async {
+        if sceneChanged(to: phase) {
+            await unlockAction()
+        }
+    }
+
+    /// Hides or locks at once, before the system pictures the app for its switcher.
+    /// Returns whether the owner should now be asked to unlock.
+    func sceneChanged(to phase: ScenePhase) -> Bool {
         guard isEnabled() else {
             viewModel.isLocked = false
             viewModel.isObscured = false
-            return
+            return false
         }
         switch phase {
         case .background:
             lock()
+            return false
         case .inactive:
             viewModel.isObscured = true
+            return false
         case .active:
             viewModel.isObscured = false
-            if viewModel.isLocked, promptsWhenActive {
-                await unlockAction()
-            }
+            return viewModel.isLocked && promptsWhenActive
         @unknown default:
             lock()
+            return false
         }
     }
 

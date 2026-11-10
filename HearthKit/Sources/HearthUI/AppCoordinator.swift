@@ -23,17 +23,20 @@ public final class AppCoordinator {
     let lockPresenter: LockPresenter
     /// A voice conversation asked for while locked, begun once the owner is in.
     private var isVoicePending = false
+    private let lockWindowController = LockWindowController()
 
     public init(dependencies: AppDependencies) {
+        let settingsStore = dependencies.settingsStore
+        let lockPresenter = LockPresenter(authentication: dependencies.authentication) { settingsStore.settings.isLockEnabled }
         let chatPresenter = ChatPresenter(dependencies: ChatPresenter.Dependencies(
             chat: dependencies.chat,
             speech: dependencies.speech,
             dictation: dependencies.dictation,
             settingsStore: dependencies.settingsStore,
             modelStore: dependencies.modelStore,
-            conversationStore: dependencies.conversationStore
+            conversationStore: dependencies.conversationStore,
+            isLocked: { lockPresenter.viewModel.isLocked }
         ))
-        let settingsStore = dependencies.settingsStore
         let fetchModels = dependencies.fetchModels
         self.settingsStore = settingsStore
         self.chatPresenter = chatPresenter
@@ -43,7 +46,7 @@ public final class AppCoordinator {
             settingsStore: settingsStore,
             selectedConversationID: { chatPresenter.viewModel.conversation.id }
         )
-        self.lockPresenter = LockPresenter(authentication: dependencies.authentication) { settingsStore.settings.isLockEnabled }
+        self.lockPresenter = lockPresenter
         self.settingsPresenter = SettingsPresenter(
             settingsStore: settingsStore,
             speech: dependencies.speech,
@@ -78,6 +81,12 @@ public final class AppCoordinator {
         router.isSidebarOpen = false
         router.isSettingsPresented = false
         router.isVoicePresented = true
+    }
+
+    /// Raises or removes the lock window to match whether the conversations should be hidden.
+    func showLockWindow(colorScheme: ColorScheme?) {
+        let lock = lockPresenter.viewModel
+        lockWindowController.setCovered(lock.isLocked || lock.isObscured, presenter: lockPresenter, colorScheme: colorScheme)
     }
 
     /// The root of the app's interface.
@@ -143,11 +152,19 @@ extension AppCoordinator: VoicePresenterDelegate {
 }
 
 extension AppCoordinator: LockPresenterDelegate {
-    /// Sheets sit above the lock screen, so they are closed when the app locks.
+    /// A locked app shows nothing, says nothing and listens to nothing: sheets close and voice and speech stop.
     func lockPresenterDidLock(_ presenter: LockPresenter) {
+        let wasInVoice = router.isVoicePresented
         router.isSettingsPresented = false
-        if router.isVoicePresented {
-            Task { await voicePresenter.endAction() }
+        router.isVoicePresented = false
+        router.isSidebarOpen = false
+        sidebarPresenter.viewModel.isRenaming = false
+        Task {
+            if wasInVoice {
+                await voicePresenter.endAction()
+            }
+            await chatPresenter.stopSpeaking()
+            await chatPresenter.stopDictation()
         }
     }
 

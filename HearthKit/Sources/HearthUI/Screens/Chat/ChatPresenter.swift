@@ -19,6 +19,8 @@ final class ChatPresenter {
         let settingsStore: SettingsStore
         let modelStore: ModelStore
         let conversationStore: ConversationStore
+        /// Whether the app is locked, in which case nothing is read aloud.
+        let isLocked: @MainActor () -> Bool
     }
 
     let viewModel = ChatViewModel()
@@ -227,7 +229,7 @@ private extension ChatPresenter {
     /// Speaks a finished reply when the user has asked for every reply to be read.
     func readAloudIfWanted(_ replyID: Message.ID) {
         let isFinished = viewModel.conversation.messages.contains { $0.id == replyID && !$0.text.isEmpty }
-        guard settings.isAutoReadEnabled, isSpeechAvailable, isFinished else {
+        guard settings.isAutoReadEnabled, isSpeechAvailable, isFinished, !dependencies.isLocked() else {
             return
         }
         Task { await self.speakAction(replyID) }
