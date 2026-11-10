@@ -135,3 +135,39 @@ struct MemoryPromptTests {
         #expect(!plain.text.contains("What you remember"))
     }
 }
+
+struct MemoryAccessTests {
+    @Test func `a private chat tells the model that nothing will be remembered, and carries no memories`() async throws {
+        let fixture = InteractorHarness.makeTestSubject()
+        let turn = ChatInteractor.Turn(
+            history: [Message(role: .user, text: "Remember that I like green.")],
+            model: InteractorHarness.model,
+            settings: InteractorHarness.settings,
+            searchMode: .off,
+            style: .chat,
+            isPrivate: true
+        )
+
+        _ = try await InteractorHarness.events(fixture.subject.run(turn))
+
+        let request = try #require(fixture.requests.values.first)
+        let system = try #require(request.messages.first?.text)
+        #expect(system.contains("This is a private conversation"))
+        #expect(system.contains("never say that you have noted or saved it"))
+        #expect(!system.contains("What you remember"))
+        #expect(!request.isMemoryOffered)
+    }
+
+    @Test func `an ordinary chat is not told it is private`() throws {
+        let system = try #require(PromptBuilder(instructions: "").messages(history: [], sources: [], style: .chat, now: Date()).first)
+
+        #expect(!system.text.contains("private conversation"))
+    }
+
+    @Test(arguments: [(true, false, true), (true, true, false), (false, false, false), (false, true, false)])
+    func `memory is used only when it is on and the chat is not private`(isEnabled: Bool, isPrivate: Bool, isAllowed: Bool) {
+        let settings = ServerSettings(isMemoryEnabled: isEnabled)
+
+        #expect(settings.allowsMemory(in: Conversation(isPrivate: isPrivate)) == isAllowed)
+    }
+}

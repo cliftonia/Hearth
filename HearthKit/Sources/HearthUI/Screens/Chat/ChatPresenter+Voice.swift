@@ -65,6 +65,32 @@ extension ChatPresenter {
         }
     }
 
+    /// Begins reading a reply aloud while it is still being written, a sentence at a time, when the user has
+    /// asked for every reply to be read. Returns the feed the reply's text is poured into, or `nil` when not reading.
+    func beginNarration(of replyID: Message.ID) -> SpokenReplyFeed? {
+        guard settings.isAutoReadEnabled, isSpeechAvailable, !dependencies.isLocked() else {
+            return nil
+        }
+        let (sentences, continuation) = AsyncStream.makeStream(of: String.self)
+        let speech = dependencies.speech
+        let settings = settings
+        viewModel.speakingMessageID = replyID
+        speakTask = Task {
+            do {
+                try await speech.speak(sentences: sentences, settings: settings)
+            } catch is CancellationError {
+                // Stopped by the user.
+            } catch {
+                self.logger.error("Reading aloud failed: \(error.localizedDescription, privacy: .public)")
+                self.viewModel.error = ErrorViewConfiguration(from: error)
+            }
+            if self.viewModel.speakingMessageID == replyID {
+                self.viewModel.speakingMessageID = nil
+            }
+        }
+        return SpokenReplyFeed(continuation: continuation)
+    }
+
     func stopSpeaking() async {
         guard viewModel.speakingMessageID != nil else {
             return

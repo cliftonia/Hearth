@@ -82,10 +82,12 @@ struct ConversationStoreTests {
 
         #expect(conversation.title == "Legacy")
         #expect(conversation.isPinned == false)
+        #expect(conversation.isPrivate == false)
     }
 
-    @Test func `the pin survives a round trip through JSON`() throws {
-        let pinned = Conversation(title: "Kept", isPinned: true)
+    @Test func `the pin and the private mark survive a round trip through JSON and other updates`() throws {
+        let pinned = Conversation(title: "Kept", isPinned: true, isPrivate: true)
+        #expect(pinned.updating(title: "Renamed").isPrivate)
 
         let decoded = try JSONDecoder().decode(Conversation.self, from: JSONEncoder().encode(pinned))
 

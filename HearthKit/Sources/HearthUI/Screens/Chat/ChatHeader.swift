@@ -32,6 +32,12 @@ struct ChatHeader: View {
             modelSection(title: Strings.cloudModels, models: presenter.models.filter(\.isCloud))
         } label: {
             HStack(spacing: 6) {
+                if presenter.viewModel.conversation.isPrivate {
+                    Image(systemName: "eye.slash.fill")
+                        .font(.caption)
+                        .foregroundStyle(HearthColor.pine)
+                        .accessibilityLabel(Strings.privateChat)
+                }
                 Text(selected?.displayName ?? Strings.noModel)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(HearthColor.ink)

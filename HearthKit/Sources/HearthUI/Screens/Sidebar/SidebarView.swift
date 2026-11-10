@@ -105,6 +105,12 @@ struct SidebarView: View {
                     .foregroundStyle(HearthColor.ink)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "eye.slash")
+                    .font(.caption2)
+                    .foregroundStyle(HearthColor.mute)
+                    .opacity(row.isPrivate ? 1 : 0)
+                    .frame(width: row.isPrivate ? nil : 0)
+                    .accessibilityHidden(true)
                 Image(systemName: "pin.fill")
                     .font(.caption2)
                     .foregroundStyle(HearthColor.pine)
@@ -119,7 +125,7 @@ struct SidebarView: View {
         .buttonStyle(.plain)
         .padding(.horizontal, 8)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .accessibilityValue(row.isPinned ? Strings.pinned : "")
+        .accessibilityValue(Self.spokenMarks(for: row))
         .contextMenu {
             Button(action: { Task { await presenter.pinAction(row) } }, label: {
                 Label(row.isPinned ? Strings.unpin : Strings.pin, systemImage: row.isPinned ? "pin.slash" : "pin")
@@ -134,6 +140,11 @@ struct SidebarView: View {
                 Label(Strings.delete, systemImage: "trash")
             })
         }
+    }
+
+    /// What VoiceOver adds after a chat's title: whether it is pinned, private, or both.
+    private static func spokenMarks(for row: SidebarRowViewConfiguration) -> String {
+        [row.isPinned ? Strings.pinned : "", row.isPrivate ? Strings.privateChat : ""].filter { !$0.isEmpty }.joined(separator: ", ")
     }
 
     private var statusFooter: some View {

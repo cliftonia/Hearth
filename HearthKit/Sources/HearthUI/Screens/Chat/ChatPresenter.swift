@@ -117,9 +117,23 @@ final class ChatPresenter {
         }
     }
 
+    /// Stops a reply on its way, and with it any reading of that reply aloud.
     func stopAction() async {
+        guard turnTask != nil else {
+            return
+        }
         turnTask?.cancel()
         await turnTask?.value
+        turnTask = nil
+        await stopSpeaking()
+    }
+
+    /// Makes a chat that has not yet begun private, or ordinary again. A private chat neither uses nor adds to memory.
+    func togglePrivateAction() {
+        guard viewModel.conversation.messages.isEmpty else {
+            return
+        }
+        viewModel.conversation = viewModel.conversation.updating(isPrivate: !viewModel.conversation.isPrivate)
     }
 
     /// Repeats what failed: fetching the models if there are none, otherwise the last reply.
@@ -218,14 +232,16 @@ final class ChatPresenter {
 private extension ChatPresenter {
     func reply(model: ChatModel, style: ReplyStyle, onDelta: (@MainActor (String) -> Void)?) async {
         let reply = Message(role: .assistant, text: "")
+        let usesMemory = settings.allowsMemory(in: viewModel.conversation)
         let turn = ChatInteractor.Turn(
             history: viewModel.conversation.messages,
             model: model,
             settings: settings,
             searchMode: searchMode(for: model),
             style: style,
-            memories: settings.isMemoryEnabled ? dependencies.memoryStore.memories : [],
-            remember: settings.isMemoryEnabled ? rememberClosure : nil
+            memories: usesMemory ? dependencies.memoryStore.memories : [],
+            remember: usesMemory ? rememberClosure : nil,
+            isPrivate: viewModel.conversation.isPrivate
         )
         viewModel.conversation = viewModel.conversation.updating(messages: viewModel.conversation.messages + [reply], updatedAt: Date())
         viewModel.error = nil
@@ -235,8 +251,14 @@ private extension ChatPresenter {
         let events = dependencies.chat.run(turn)
         // A reply should outlive a glance at another app, for as long as iOS allows.
         backgroundActivity.begin(named: "Reply")
+        await stopSpeaking()
+        let narration = style == .chat ? beginNarration(of: reply.id) : nil
         let task = Task {
-            await self.consume(events, replyID: reply.id, onDelta: onDelta)
+            await self.consume(events, replyID: reply.id) { delta in
+                onDelta?(delta)
+                narration?.append(delta)
+            }
+            narration?.finish()
             self.viewModel.isStreaming = false
             self.viewModel.searchingQuery = nil
             await self.save(self.discardingEmptyReply(reply.id))
@@ -244,18 +266,6 @@ private extension ChatPresenter {
         turnTask = task
         await task.value
         backgroundActivity.end()
-        if style == .chat, !task.isCancelled {
-            readAloudIfWanted(reply.id)
-        }
-    }
-
-    /// Speaks a finished reply when the user has asked for every reply to be read.
-    func readAloudIfWanted(_ replyID: Message.ID) {
-        let isFinished = viewModel.conversation.messages.contains { $0.id == replyID && !$0.text.isEmpty }
-        guard settings.isAutoReadEnabled, isSpeechAvailable, isFinished, !dependencies.isLocked() else {
-            return
-        }
-        Task { await self.speakAction(replyID) }
     }
 
     func consume(_ events: AsyncThrowingStream<ChatInteractor.Event, any Error>, replyID: Message.ID, onDelta: (@MainActor (String) -> Void)?) async {

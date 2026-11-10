@@ -122,6 +122,8 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
     public let modelID: ChatModel.ID?
     public let messages: [Message]
     public let isPinned: Bool
+    /// A private conversation is given no memories and writes none.
+    public let isPrivate: Bool
     public let createdAt: Date
     public let updatedAt: Date
 
@@ -131,6 +133,7 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
         modelID: ChatModel.ID? = nil,
         messages: [Message] = [],
         isPinned: Bool = false,
+        isPrivate: Bool = false,
         createdAt: Date = Date(),
         updatedAt: Date = Date()
     ) {
@@ -139,6 +142,7 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
         self.modelID = modelID
         self.messages = messages
         self.isPinned = isPinned
+        self.isPrivate = isPrivate
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
@@ -152,6 +156,7 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
             modelID: try container.decodeIfPresent(ChatModel.ID.self, forKey: .modelID),
             messages: try container.decode([Message].self, forKey: .messages),
             isPinned: try container.decodeIfPresent(Bool.self, forKey: .isPinned) ?? false,
+            isPrivate: try container.decodeIfPresent(Bool.self, forKey: .isPrivate) ?? false,
             createdAt: try container.decode(Date.self, forKey: .createdAt),
             updatedAt: try container.decode(Date.self, forKey: .updatedAt)
         )
@@ -162,6 +167,7 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
         modelID: ChatModel.ID? = nil,
         messages: [Message]? = nil,
         isPinned: Bool? = nil,
+        isPrivate: Bool? = nil,
         updatedAt: Date? = nil
     ) -> Conversation {
         Conversation(
@@ -170,6 +176,7 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
             modelID: modelID ?? self.modelID,
             messages: messages ?? self.messages,
             isPinned: isPinned ?? self.isPinned,
+            isPrivate: isPrivate ?? self.isPrivate,
             createdAt: createdAt,
             updatedAt: updatedAt ?? self.updatedAt
         )

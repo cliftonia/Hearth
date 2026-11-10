@@ -119,6 +119,11 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         )
     }
 
+    /// Whether a conversation may read and write memory: memory must be on, and the conversation not private.
+    public func allowsMemory(in conversation: Conversation) -> Bool {
+        isMemoryEnabled && !conversation.isPrivate
+    }
+
     /// Accepts an address typed with or without a scheme; a bare host is taken to be HTTPS.
     static func url(from address: String) -> URL? {
         let trimmed = address.trimmingCharacters(in: .whitespacesAndNewlines)

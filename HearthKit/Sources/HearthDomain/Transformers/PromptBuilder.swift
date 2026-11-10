@@ -13,13 +13,16 @@ public struct PromptBuilder: Sendable {
 
     private let instructions: String
     private let memories: [Memory]
+    private let isPrivate: Bool
 
     /// - Parameters:
     ///   - instructions: The user's standing instructions, if any.
     ///   - memories: What is remembered about the user from earlier conversations.
-    public init(instructions: String, memories: [Memory] = []) {
+    ///   - isPrivate: Whether the conversation is private, with no memory to read or write.
+    public init(instructions: String, memories: [Memory] = [], isPrivate: Bool = false) {
         self.instructions = instructions.trimmingCharacters(in: .whitespacesAndNewlines)
         self.memories = memories
+        self.isPrivate = isPrivate
     }
 
     /// - Parameters:
@@ -138,6 +141,13 @@ public struct PromptBuilder: Sendable {
         }
         if !instructions.isEmpty {
             parts.append("The user has given these standing instructions. Follow them:\n\(instructions)")
+        }
+        if isPrivate {
+            parts.append(
+                "This is a private conversation. You have no memory of earlier conversations here and cannot save anything "
+                    + "for later ones. If the user asks you to remember something, tell them plainly that this chat is private "
+                    + "and it will not be kept; never say that you have noted or saved it."
+            )
         }
         if !memories.isEmpty {
             let listing = memories.map { "[\($0.id.rawValue)] \($0.text)" }.joined(separator: "\n")

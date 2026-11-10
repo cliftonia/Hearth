@@ -41,6 +41,8 @@ public final class ChatInteractor: Sendable {
         public let memories: [Memory]
         /// Makes a change to what is remembered. `nil` when the model may not change it.
         public let remember: (@Sendable (MemoryRequest) async -> MemoryOutcome)?
+        /// Whether the conversation is private; the model is then told that nothing here will be remembered.
+        public let isPrivate: Bool
 
         public init(
             history: [Message],
@@ -49,7 +51,8 @@ public final class ChatInteractor: Sendable {
             searchMode: SearchModeKind,
             style: ReplyStyle,
             memories: [Memory] = [],
-            remember: (@Sendable (MemoryRequest) async -> MemoryOutcome)? = nil
+            remember: (@Sendable (MemoryRequest) async -> MemoryOutcome)? = nil,
+            isPrivate: Bool = false
         ) {
             self.history = history
             self.model = model
@@ -58,6 +61,7 @@ public final class ChatInteractor: Sendable {
             self.style = style
             self.memories = memories
             self.remember = remember
+            self.isPrivate = isPrivate
         }
     }
 
@@ -150,7 +154,7 @@ private extension ChatInteractor {
         // only while the conversation holds nothing but plain typed text and replies to it.
         let carriesOutsideText = turn.history.contains { !$0.documents.isEmpty || !$0.sources.isEmpty || !$0.imagesJPEG.isEmpty }
         let canRemember = turn.remember != nil && turn.model.canUseTools && !carriesOutsideText
-        let builder = PromptBuilder(instructions: turn.settings.customInstructions, memories: turn.memories)
+        let builder = PromptBuilder(instructions: turn.settings.customInstructions, memories: turn.memories, isPrivate: turn.isPrivate)
         var sources: [SearchSource] = []
         if turn.searchMode == .always, let searchURL, let query = builder.searchQuery(history: turn.history) {
             sources = await found(for: SearchRequest(query: query), at: searchURL, excluding: [], report: report)

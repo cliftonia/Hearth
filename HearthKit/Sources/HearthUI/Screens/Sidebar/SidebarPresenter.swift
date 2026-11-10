@@ -26,6 +26,7 @@ struct SidebarRowViewConfiguration: Hashable, Identifiable {
     let id: Conversation.ID
     let title: String
     let isPinned: Bool
+    let isPrivate: Bool
 }
 
 enum SidebarGroupKind: Hashable, CaseIterable {
@@ -168,7 +169,8 @@ struct ConversationGrouper {
                 SidebarRowViewConfiguration(
                     id: conversation.id,
                     title: conversation.title.isEmpty ? Strings.newChat : conversation.title,
-                    isPinned: conversation.isPinned
+                    isPinned: conversation.isPinned,
+                    isPrivate: conversation.isPrivate
                 )
             }
             return SidebarGroupViewConfiguration(id: kind, title: title(for: kind), rows: rows)

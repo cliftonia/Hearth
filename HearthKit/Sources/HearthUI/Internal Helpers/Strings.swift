@@ -13,6 +13,8 @@ enum Strings {
     static let cloudModels = String(localized: "chat.cloudModels", defaultValue: "Cloud", bundle: .module)
     static let localTag = String(localized: "chat.localTag", defaultValue: "local", bundle: .module)
     static let cloudTag = String(localized: "chat.cloudTag", defaultValue: "cloud", bundle: .module)
+    static let privateChat = String(localized: "chat.private", defaultValue: "Private chat", bundle: .module)
+    static let privateChatNote = String(localized: "chat.privateNote", defaultValue: "This chat uses no memories and adds none.", bundle: .module)
     static let emptyTitle = String(localized: "chat.emptyTitle", defaultValue: "What shall we talk about?", bundle: .module)
     static let connectTitle = String(localized: "chat.connectTitle", defaultValue: "Connect to your server", bundle: .module)
     static let connectMessage = String(localized: "chat.connectMessage", defaultValue: "Add the address of your Ollama server to begin.", bundle: .module)

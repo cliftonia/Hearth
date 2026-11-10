@@ -38,11 +38,13 @@ and your conversations stay on the device.
 - **Custom instructions** given to the model at the start of every conversation
 - **Memory**: lasting facts you tell a model, or ask it to remember, are kept on the device and carried into every
   conversation. A notice shows whenever something is remembered, and the list can be read, added to and cleared in Settings
+- **Private chat**: a new chat can be made private, so it uses no memories and adds none
 
 ### Voice
 
 - **Voice conversation**: speak, pause, hear the answer, speak again; tap the orb to interrupt
-- **Read aloud**: one reply at a time, or every reply with the speaker toggle in the composer
+- **Read aloud**: one reply at a time, or every reply with the speaker toggle in the composer, spoken sentence by
+  sentence while it is still being written
 - **Dictation** into the message field, recognised on the device where the phone supports it
 - **Shortcut**: "Start Voice Conversation" from Siri, Shortcuts, Spotlight or the Action button
 

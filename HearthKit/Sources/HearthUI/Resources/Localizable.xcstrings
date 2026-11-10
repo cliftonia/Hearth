@@ -166,6 +166,28 @@
         }
       }
     },
+    "chat.private": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private chat"
+          }
+        }
+      }
+    },
+    "chat.privateNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This chat uses no memories and adds none."
+          }
+        }
+      }
+    },
     "composer.attach": {
       "extractionState": "manual",
       "localizations": {
