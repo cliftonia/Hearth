@@ -474,6 +474,39 @@
         }
       }
     },
+    "lock.enableReason": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm it is you to turn on the lock."
+          }
+        }
+      }
+    },
+    "lock.reason": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock your conversations."
+          }
+        }
+      }
+    },
+    "lock.unlock": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock"
+          }
+        }
+      }
+    },
     "message.attachedFile": {
       "extractionState": "manual",
       "localizations": {
@@ -734,6 +767,50 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ollama address"
+          }
+        }
+      }
+    },
+    "settings.privacy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy"
+          }
+        }
+      }
+    },
+    "settings.readReplies": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read replies aloud"
+          }
+        }
+      }
+    },
+    "settings.requireUnlock": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Require Face ID or passcode"
+          }
+        }
+      }
+    },
+    "settings.requireUnlockFooter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asked for each time Hearth is opened. Your conversations are hidden in the app switcher."
           }
         }
       }

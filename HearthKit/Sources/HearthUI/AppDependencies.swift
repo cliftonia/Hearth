@@ -20,6 +20,7 @@ public struct AppDependencies {
     let chat: ChatInteractor
     let speech: SpeechInteractor
     let dictation: DictationProvider
+    let authentication: AuthenticationProvider
     let fetchModels: @Sendable (URL) async throws -> [ChatModel]
     let settingsStore: SettingsStore
     let modelStore: ModelStore
@@ -36,6 +37,7 @@ public struct AppDependencies {
             chat: ChatInteractor(chat: chatProvider, search: .live()),
             speech: SpeechInteractor(speech: .live(), playback: .live()),
             dictation: .live(),
+            authentication: .live(),
             fetchModels: chatProvider.fetchModels,
             settingsStore: .live(defaults: settings),
             modelStore: ModelStore(fetchModels: chatProvider.fetchModels),

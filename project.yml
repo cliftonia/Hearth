@@ -26,7 +26,7 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"
         SWIFT_STRICT_CONCURRENCY: complete
-        TARGETED_DEVICE_FAMILY: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
     info:
@@ -37,6 +37,12 @@ targets:
           UIColorName: LaunchBackground
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSFaceIDUsageDescription: Hearth uses Face ID to unlock your conversations.
         NSCameraUsageDescription: Hearth uses the camera when you take a photo to attach to a message.
         NSMicrophoneUsageDescription: Hearth listens when you dictate a message or hold a voice conversation.
         NSSpeechRecognitionUsageDescription: Hearth turns what you say into text for your message.
@@ -61,3 +67,4 @@ schemes:
       targets:
         - package: HearthKit/HearthDataTests
         - package: HearthKit/HearthDomainTests
+        - package: HearthKit/HearthUITests

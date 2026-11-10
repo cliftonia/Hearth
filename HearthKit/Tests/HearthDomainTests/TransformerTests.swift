@@ -216,6 +216,19 @@ struct ServerSettingsTests {
         #expect(settings.speechAddress == "http://b.example.ts.net:8880")
         #expect(settings.voice == "af_heart")
         #expect(settings.appearance == .system)
+        #expect(settings.customInstructions.isEmpty)
+        #expect(!settings.isAutoReadEnabled)
+        #expect(!settings.isLockEnabled)
+    }
+
+    @Test func `the lock and reading aloud survive a round trip and a change of theme`() throws {
+        let settings = ServerSettings(customInstructions: "Be brief.", isAutoReadEnabled: true, isLockEnabled: true)
+
+        let decoded = try JSONDecoder().decode(ServerSettings.self, from: JSONEncoder().encode(settings)).updating(appearance: .dark)
+
+        #expect(decoded.isLockEnabled)
+        #expect(decoded.isAutoReadEnabled)
+        #expect(decoded.customInstructions == "Be brief.")
     }
 
     @Test(arguments: AppearanceKind.allCases)

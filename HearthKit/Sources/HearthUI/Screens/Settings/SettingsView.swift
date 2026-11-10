@@ -25,6 +25,7 @@ struct SettingsView: View {
                 }
                 Section(Strings.voice) {
                     voiceControl(voice: $viewModel.voice, voices: viewModel.voices)
+                    Toggle(Strings.readRepliesAloud, isOn: $viewModel.isAutoReadEnabled)
                 }
                 Section {
                     TextField(Strings.instructionsPlaceholder, text: $viewModel.customInstructions, axis: .vertical)
@@ -34,6 +35,14 @@ struct SettingsView: View {
                     Text(Strings.instructions)
                 } footer: {
                     Text(Strings.instructionsFooter)
+                }
+                Section {
+                    Toggle(Strings.requireUnlock, isOn: $viewModel.isLockEnabled)
+                        .onChange(of: viewModel.isLockEnabled) { Task { await presenter.lockAction() } }
+                } header: {
+                    Text(Strings.privacy)
+                } footer: {
+                    Text(Strings.requireUnlockFooter)
                 }
                 Section(Strings.theme) {
                     Picker(Strings.theme, selection: $viewModel.appearance) {

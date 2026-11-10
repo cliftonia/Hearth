@@ -21,6 +21,9 @@ A native iOS chat app for your own [Ollama](https://ollama.com) server. Pick any
 - **Voice conversation**: speak, pause, hear the answer, speak again. Tap the orb to interrupt. A "Start Voice Conversation" shortcut opens it from Siri, Shortcuts, Spotlight or the Action button.
 - **History** in a drawer, grouped by day, searchable and titled by the model. Chats can be pinned, renamed, shared as Markdown and deleted.
 - **Theme**: follow the system, or keep to light or dark.
+- **Read every reply aloud**, if you turn it on in Settings.
+- **Lock** behind Face ID, Touch ID or the passcode, with conversations hidden in the app switcher.
+- **iPad**: the conversations stay beside the chat on a wide screen.
 - Dynamic Type and VoiceOver labels throughout.
 
 ## Requirements
@@ -75,7 +78,7 @@ xcodebuild test -project Hearth.xcodeproj -scheme Hearth -destination 'platform=
 swiftlint lint
 ```
 
-Tests are written with Swift Testing and cover the stream decoding, prompt building, sentence chunking for speech, Markdown and maths parsing, export, the chat interactor, the conversation store and file storage.
+Tests are written with Swift Testing and cover the stream decoding, prompt building, sentence chunking for speech, Markdown and maths parsing, export, the chat interactor, the conversation store, file storage, the app lock and the drawer's grouping.
 
 ## Notes
 

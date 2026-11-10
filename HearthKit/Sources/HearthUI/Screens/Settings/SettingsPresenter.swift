@@ -26,6 +26,8 @@ final class SettingsViewModel {
     var voices: [String] = []
     var appearance: AppearanceKind = .system
     var customInstructions = ""
+    var isAutoReadEnabled = false
+    var isLockEnabled = false
     var connectionCheck: ConnectionCheckKind = .idle
 }
 
@@ -37,12 +39,19 @@ final class SettingsPresenter {
     private let settingsStore: SettingsStore
     private let speech: SpeechInteractor
     private let fetchModels: @Sendable (ServerSettings) async throws -> Int
+    private let authentication: AuthenticationProvider
     private let logger = Logger(for: SettingsPresenter.self)
 
     /// - Parameter fetchModels: Counts the models the given settings can reach, without changing any shared state.
-    init(settingsStore: SettingsStore, speech: SpeechInteractor, fetchModels: @escaping @Sendable (ServerSettings) async throws -> Int) {
+    init(
+        settingsStore: SettingsStore,
+        speech: SpeechInteractor,
+        authentication: AuthenticationProvider,
+        fetchModels: @escaping @Sendable (ServerSettings) async throws -> Int
+    ) {
         self.settingsStore = settingsStore
         self.speech = speech
+        self.authentication = authentication
         self.fetchModels = fetchModels
     }
 
@@ -54,6 +63,8 @@ final class SettingsPresenter {
         viewModel.voice = settings.voice
         viewModel.appearance = settings.appearance
         viewModel.customInstructions = settings.customInstructions
+        viewModel.isAutoReadEnabled = settings.isAutoReadEnabled
+        viewModel.isLockEnabled = settings.isLockEnabled
         viewModel.connectionCheck = .idle
         await loadVoicesAction()
     }
@@ -90,6 +101,16 @@ final class SettingsPresenter {
         }
     }
 
+    /// The lock is only switched on once the owner has shown they can open it, so no one is shut out.
+    func lockAction() async {
+        guard viewModel.isLockEnabled, !settingsStore.settings.isLockEnabled else {
+            return
+        }
+        if await !authentication.authenticate(Strings.lockEnableReason) {
+            viewModel.isLockEnabled = false
+        }
+    }
+
     func saveAction() {
         do {
             try settingsStore.update(draft)
@@ -112,7 +133,9 @@ final class SettingsPresenter {
             voice: viewModel.voice.trimmingCharacters(in: .whitespaces),
             defaultModelID: settingsStore.settings.defaultModelID,
             appearance: viewModel.appearance,
-            customInstructions: viewModel.customInstructions.trimmingCharacters(in: .whitespacesAndNewlines)
+            customInstructions: viewModel.customInstructions.trimmingCharacters(in: .whitespacesAndNewlines),
+            isAutoReadEnabled: viewModel.isAutoReadEnabled,
+            isLockEnabled: viewModel.isLockEnabled
         )
     }
 }

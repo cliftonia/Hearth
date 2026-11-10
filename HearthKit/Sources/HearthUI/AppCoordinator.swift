@@ -20,6 +20,9 @@ public final class AppCoordinator {
     let sidebarPresenter: SidebarPresenter
     let settingsPresenter: SettingsPresenter
     let voicePresenter: VoicePresenter
+    let lockPresenter: LockPresenter
+    /// A voice conversation asked for while locked, begun once the owner is in.
+    private var isVoicePending = false
 
     public init(dependencies: AppDependencies) {
         let chatPresenter = ChatPresenter(dependencies: ChatPresenter.Dependencies(
@@ -40,7 +43,12 @@ public final class AppCoordinator {
             settingsStore: settingsStore,
             selectedConversationID: { chatPresenter.viewModel.conversation.id }
         )
-        self.settingsPresenter = SettingsPresenter(settingsStore: settingsStore, speech: dependencies.speech) { settings in
+        self.lockPresenter = LockPresenter(authentication: dependencies.authentication) { settingsStore.settings.isLockEnabled }
+        self.settingsPresenter = SettingsPresenter(
+            settingsStore: settingsStore,
+            speech: dependencies.speech,
+            authentication: dependencies.authentication
+        ) { settings in
             guard let baseURL = settings.ollamaURL else {
                 throw ChatError.serverNotConfigured
             }
@@ -58,10 +66,15 @@ public final class AppCoordinator {
         sidebarPresenter.delegate = self
         settingsPresenter.delegate = self
         voicePresenter.delegate = self
+        lockPresenter.delegate = self
     }
 
     /// Goes straight to a voice conversation, as a shortcut or the Action button asks.
     public func startVoice() {
+        guard !lockPresenter.viewModel.isLocked else {
+            isVoicePending = true
+            return
+        }
         router.isSidebarOpen = false
         router.isSettingsPresented = false
         router.isVoicePresented = true
@@ -126,5 +139,22 @@ extension AppCoordinator: SettingsPresenterDelegate {
 extension AppCoordinator: VoicePresenterDelegate {
     func voicePresenterDidFinish(_ presenter: VoicePresenter) {
         router.isVoicePresented = false
+    }
+}
+
+extension AppCoordinator: LockPresenterDelegate {
+    /// Sheets sit above the lock screen, so they are closed when the app locks.
+    func lockPresenterDidLock(_ presenter: LockPresenter) {
+        router.isSettingsPresented = false
+        if router.isVoicePresented {
+            Task { await voicePresenter.endAction() }
+        }
+    }
+
+    func lockPresenterDidUnlock(_ presenter: LockPresenter) {
+        if isVoicePending {
+            isVoicePending = false
+            startVoice()
+        }
     }
 }

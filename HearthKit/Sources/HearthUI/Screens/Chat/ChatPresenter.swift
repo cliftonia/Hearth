@@ -219,6 +219,18 @@ private extension ChatPresenter {
         }
         turnTask = task
         await task.value
+        if style == .chat, !task.isCancelled {
+            readAloudIfWanted(reply.id)
+        }
+    }
+
+    /// Speaks a finished reply when the user has asked for every reply to be read.
+    func readAloudIfWanted(_ replyID: Message.ID) {
+        let isFinished = viewModel.conversation.messages.contains { $0.id == replyID && !$0.text.isEmpty }
+        guard settings.isAutoReadEnabled, isSpeechAvailable, isFinished else {
+            return
+        }
+        Task { await self.speakAction(replyID) }
     }
 
     func consume(_ events: AsyncThrowingStream<ChatInteractor.Event, any Error>, replyID: Message.ID, onDelta: (@MainActor (String) -> Void)?) async {

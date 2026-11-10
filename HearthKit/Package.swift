@@ -24,6 +24,7 @@ let package = Package(
             swiftSettings: settings
         ),
         .testTarget(name: "HearthDataTests", dependencies: ["HearthData"], swiftSettings: settings),
-        .testTarget(name: "HearthDomainTests", dependencies: ["HearthDomain"], swiftSettings: settings)
+        .testTarget(name: "HearthDomainTests", dependencies: ["HearthDomain"], swiftSettings: settings),
+        .testTarget(name: "HearthUITests", dependencies: ["HearthUI", "HearthDomain"], swiftSettings: settings)
     ]
 )

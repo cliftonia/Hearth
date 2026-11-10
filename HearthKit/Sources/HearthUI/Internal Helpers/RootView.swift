@@ -1,18 +1,26 @@
 import SwiftUI
 
-/// The chat with its drawer of conversations, and the sheets presented above them.
+/// The chat with its conversations beside it or in a drawer, the sheets presented above them, and the lock over all.
 struct RootView: View {
+    static let sidebarWidth: CGFloat = 320
+
     let coordinator: AppCoordinator
+
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         @Bindable var router = coordinator.router
         // Sheets are separate presentations, so each is given the chosen theme as well as the root.
         let colorScheme = coordinator.settingsStore.settings.appearance.colorScheme
-        DrawerContainer(isOpen: $router.isSidebarOpen) {
-            SidebarView(presenter: coordinator.sidebarPresenter)
-        } content: {
-            ChatView(presenter: coordinator.chatPresenter)
+        let lock = coordinator.lockPresenter.viewModel
+        layout(isSidebarOpen: $router.isSidebarOpen)
+        .overlay {
+            if lock.isLocked || lock.isObscured {
+                LockView(presenter: coordinator.lockPresenter)
+            }
         }
+        .task(id: scenePhase) { await coordinator.lockPresenter.sceneAction(scenePhase) }
         .sheet(isPresented: $router.isSettingsPresented) {
             SettingsView(presenter: coordinator.settingsPresenter)
                 .preferredColorScheme(colorScheme)
@@ -23,6 +31,29 @@ struct RootView: View {
         }
         .tint(HearthColor.pine)
         .preferredColorScheme(colorScheme)
+    }
+
+    /// On a wide screen the conversations stay beside the chat; on a phone they slide in as a drawer.
+    @ViewBuilder
+    private func layout(isSidebarOpen: Binding<Bool>) -> some View {
+        if horizontalSizeClass == .regular {
+            HStack(spacing: 0) {
+                SidebarView(presenter: coordinator.sidebarPresenter)
+                    .frame(width: Self.sidebarWidth)
+                Rectangle()
+                    .fill(HearthColor.line)
+                    .frame(width: 1)
+                    .ignoresSafeArea()
+                ChatView(presenter: coordinator.chatPresenter)
+            }
+            .background(HearthColor.paper.ignoresSafeArea())
+        } else {
+            DrawerContainer(isOpen: isSidebarOpen) {
+                SidebarView(presenter: coordinator.sidebarPresenter)
+            } content: {
+                ChatView(presenter: coordinator.chatPresenter)
+            }
+        }
     }
 }
 

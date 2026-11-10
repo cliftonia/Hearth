@@ -23,14 +23,19 @@ struct ChatView: View {
                     retryAction: { Task { await presenter.retryAction() } },
                     dismissAction: { viewModel.error = nil }
                 )
+                .frame(maxWidth: Self.readingWidth)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
             ComposerFooter(presenter: presenter)
+                .frame(maxWidth: Self.readingWidth)
         }
         .background(HearthColor.paper.ignoresSafeArea())
         .animation(.snappy, value: viewModel.error)
         .task { await presenter.loadAction() }
     }
+
+    /// The widest a line of chat grows, so that it stays readable on a large screen.
+    private static let readingWidth: CGFloat = 780
 
     private func messageList(viewModel: ChatViewModel) -> some View {
         let messages = viewModel.conversation.messages
@@ -51,6 +56,8 @@ struct ChatView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
+                .frame(maxWidth: Self.readingWidth)
+                .frame(maxWidth: .infinity)
             }
             .defaultScrollAnchor(.bottom)
             .scrollDismissesKeyboard(.interactively)

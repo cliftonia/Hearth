@@ -19,6 +19,10 @@ public struct ServerSettings: Hashable, Codable, Sendable {
     public let appearance: AppearanceKind
     /// Standing instructions from the user, given to the model at the start of every conversation.
     public let customInstructions: String
+    /// Whether each reply in a chat is spoken as soon as it is finished.
+    public let isAutoReadEnabled: Bool
+    /// Whether the app asks for Face ID, Touch ID or the passcode when it is opened.
+    public let isLockEnabled: Bool
 
     public init(
         ollamaAddress: String = "",
@@ -27,7 +31,9 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         voice: String = ServerSettings.defaultVoice,
         defaultModelID: ChatModel.ID? = nil,
         appearance: AppearanceKind = .system,
-        customInstructions: String = ""
+        customInstructions: String = "",
+        isAutoReadEnabled: Bool = false,
+        isLockEnabled: Bool = false
     ) {
         self.ollamaAddress = ollamaAddress
         self.searchAddress = searchAddress
@@ -36,6 +42,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         self.defaultModelID = defaultModelID
         self.appearance = appearance
         self.customInstructions = customInstructions
+        self.isAutoReadEnabled = isAutoReadEnabled
+        self.isLockEnabled = isLockEnabled
     }
 
     /// Settings saved before a field existed are read with that field's default, so nothing saved is lost.
@@ -48,7 +56,9 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             voice: try container.decodeIfPresent(String.self, forKey: .voice) ?? Self.defaultVoice,
             defaultModelID: try container.decodeIfPresent(ChatModel.ID.self, forKey: .defaultModelID),
             appearance: try container.decodeIfPresent(AppearanceKind.self, forKey: .appearance) ?? .system,
-            customInstructions: try container.decodeIfPresent(String.self, forKey: .customInstructions) ?? ""
+            customInstructions: try container.decodeIfPresent(String.self, forKey: .customInstructions) ?? "",
+            isAutoReadEnabled: try container.decodeIfPresent(Bool.self, forKey: .isAutoReadEnabled) ?? false,
+            isLockEnabled: try container.decodeIfPresent(Bool.self, forKey: .isLockEnabled) ?? false
         )
     }
 
@@ -67,7 +77,9 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             voice: voice,
             defaultModelID: defaultModelID ?? self.defaultModelID,
             appearance: appearance ?? self.appearance,
-            customInstructions: customInstructions
+            customInstructions: customInstructions,
+            isAutoReadEnabled: isAutoReadEnabled,
+            isLockEnabled: isLockEnabled
         )
     }
 

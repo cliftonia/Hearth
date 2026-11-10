@@ -5,9 +5,16 @@ import SwiftUI
 struct ChatHeader: View {
     let presenter: ChatPresenter
 
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
     var body: some View {
+        // On a wide screen the conversations are always in view, so there is no drawer to open.
+        let hasDrawer = horizontalSizeClass != .regular
         HStack(spacing: 8) {
             IconButton(systemImage: "line.3.horizontal", label: Strings.menuLabel, action: presenter.sidebarAction)
+                .opacity(hasDrawer ? 1 : 0)
+                .allowsHitTesting(hasDrawer)
+                .accessibilityHidden(!hasDrawer)
             modelMenu
                 .frame(maxWidth: .infinity)
             IconButton(systemImage: "square.and.pencil", label: Strings.newChat) {
