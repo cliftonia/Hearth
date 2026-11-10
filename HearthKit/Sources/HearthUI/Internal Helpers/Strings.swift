@@ -70,6 +70,8 @@ enum Strings {
     static let errorDictationDenied = String(localized: "error.dictationDenied", defaultValue: "Allow microphone and speech recognition access in the Settings app to dictate.", bundle: .module)
     static let errorDictationUnavailable = String(localized: "error.dictationUnavailable", defaultValue: "Dictation is not available right now.", bundle: .module)
     static let errorSpeechFailed = String(localized: "error.speechFailed", defaultValue: "The reply could not be spoken.", bundle: .module)
+    static let interruptedTitle = String(localized: "error.interruptedTitle", defaultValue: "Reply interrupted", bundle: .module)
+    static let interruptedMessage = String(localized: "error.interruptedMessage", defaultValue: "Hearth was in the background for too long and iOS paused it. What arrived is kept.", bundle: .module)
     static let errorSaveFailed = String(localized: "error.saveFailed", defaultValue: "This chat could not be saved.", bundle: .module)
 
     static let searchChats = String(localized: "sidebar.search", defaultValue: "Search chats", bundle: .module)

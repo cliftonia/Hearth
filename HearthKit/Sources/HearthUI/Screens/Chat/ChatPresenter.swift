@@ -28,6 +28,7 @@ final class ChatPresenter {
 
     let dependencies: Dependencies
     let logger = Logger(for: ChatPresenter.self)
+    let backgroundActivity = BackgroundActivity()
     var dictationTask: Task<Void, Never>?
     var speakTask: Task<Void, Never>?
     private var turnTask: Task<Void, Never>?
@@ -221,6 +222,8 @@ private extension ChatPresenter {
         viewModel.followUps = []
         viewModel.isStreaming = true
         let events = dependencies.chat.run(turn)
+        // A reply should outlive a glance at another app, for as long as iOS allows.
+        backgroundActivity.begin(named: "Reply")
         let task = Task {
             await self.consume(events, replyID: reply.id, onDelta: onDelta)
             self.viewModel.isStreaming = false
@@ -229,6 +232,7 @@ private extension ChatPresenter {
         }
         turnTask = task
         await task.value
+        backgroundActivity.end()
         if style == .chat, !task.isCancelled {
             readAloudIfWanted(reply.id)
         }
@@ -256,7 +260,10 @@ private extension ChatPresenter {
             // Stopped by the user; what has arrived so far is kept.
         } catch {
             logger.error("Reply failed: \(error.localizedDescription, privacy: .public)")
-            viewModel.error = ErrorViewConfiguration(from: error)
+            // A connection lost while the app was off screen is iOS suspending it, not the server or the VPN.
+            viewModel.error = backgroundActivity.wasBackgrounded
+                ? ErrorViewConfiguration(title: Strings.interruptedTitle, message: Strings.interruptedMessage)
+                : ErrorViewConfiguration(from: error)
         }
     }
 

@@ -463,6 +463,28 @@
         }
       }
     },
+    "error.interruptedMessage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hearth was in the background for too long and iOS paused it. What arrived is kept."
+          }
+        }
+      }
+    },
+    "error.interruptedTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply interrupted"
+          }
+        }
+      }
+    },
     "error.noModel": {
       "extractionState": "manual",
       "localizations": {
