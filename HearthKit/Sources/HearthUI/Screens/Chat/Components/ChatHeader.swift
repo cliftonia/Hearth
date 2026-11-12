@@ -8,13 +8,14 @@ struct ChatHeader: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
-        // On a wide screen the conversations are always in view, so there is no drawer to open.
-        let hasDrawer = horizontalSizeClass != .regular
+        // A narrow screen opens the chats as a drawer; a wide one shows them beside the chat or puts them away.
+        let isWide = horizontalSizeClass == .regular
         HStack(spacing: HearthSpacing.s8) {
-            IconButton(systemImage: "line.3.horizontal", label: Strings.menuLabel, action: presenter.sidebarAction)
-                .opacity(hasDrawer ? 1 : 0)
-                .allowsHitTesting(hasDrawer)
-                .accessibilityHidden(!hasDrawer)
+            IconButton(
+                systemImage: isWide ? "sidebar.left" : "line.3.horizontal",
+                label: isWide ? Strings.sidebarToggle : Strings.menuLabel,
+                action: presenter.sidebarAction
+            )
             modelMenu
                 .frame(maxWidth: .infinity)
             privateToggle

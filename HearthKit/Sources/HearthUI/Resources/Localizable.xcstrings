@@ -188,6 +188,17 @@
         }
       }
     },
+    "chat.sidebarToggle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show or hide chat list"
+          }
+        }
+      }
+    },
     "composer.attach": {
       "extractionState": "manual",
       "localizations": {

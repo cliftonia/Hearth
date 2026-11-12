@@ -6,6 +6,7 @@ enum Strings {
     static let brand = String(localized: "brand", defaultValue: "Hearth", bundle: .module)
 
     static let menuLabel = String(localized: "chat.menu", defaultValue: "Open chat list", bundle: .module)
+    static let sidebarToggle = String(localized: "chat.sidebarToggle", defaultValue: "Show or hide chat list", bundle: .module)
     static let newChat = String(localized: "chat.newChat", defaultValue: "New chat", bundle: .module)
     static let modelPickerLabel = String(localized: "chat.modelPicker", defaultValue: "Choose model", bundle: .module)
     static let noModel = String(localized: "chat.noModel", defaultValue: "No model", bundle: .module)

@@ -94,8 +94,13 @@ public final class AppCoordinator {
 // MARK: - ChatPresenterDelegate
 
 extension AppCoordinator: ChatPresenterDelegate {
+    /// A narrow screen opens the drawer; a wide one shows the chats beside the chat or puts them away.
     func chatPresenterDidRequestSidebar(_ presenter: ChatPresenter) {
-        router.isSidebarOpen = true
+        if router.isWide {
+            router.isSidebarPinned.toggle()
+        } else {
+            router.isSidebarOpen = true
+        }
     }
 
     func chatPresenterDidRequestVoice(_ presenter: ChatPresenter) {
