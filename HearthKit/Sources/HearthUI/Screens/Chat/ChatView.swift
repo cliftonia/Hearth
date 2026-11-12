@@ -25,7 +25,10 @@ struct ChatView: View {
                     .allowsHitTesting(viewModel.conversation.messages.isEmpty)
                     .accessibilityHidden(!viewModel.conversation.messages.isEmpty)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // It may shrink to nothing, so a tall keyboard squeezes this and never pushes the composer beneath itself.
+            .frame(minHeight: 0, maxHeight: .infinity)
+            .frame(maxWidth: .infinity)
+            .clipped()
             // A tap anywhere in the conversation puts the keyboard away, without taking the tap from what was tapped.
             .contentShape(Rectangle())
             .simultaneousGesture(TapGesture().onEnded { Keyboard.dismiss() })
