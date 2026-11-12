@@ -31,6 +31,8 @@ targets:
         SUPPORTS_MACCATALYST: YES
         DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: NO
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+        # Only the Mac build carries these; iPhone and iPad ask for the microphone through Info.plist alone.
+        "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": App/HearthMac.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
     info:
