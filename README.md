@@ -1,11 +1,11 @@
 # Hearth
 
 [![CI](https://github.com/cliftonia/Hearth/actions/workflows/ci.yml/badge.svg)](https://github.com/cliftonia/Hearth/actions/workflows/ci.yml)
-![Platform](https://img.shields.io/badge/platform-iOS%2017%2B%20%C2%B7%20iPadOS-2C6B5A)
+![Platform](https://img.shields.io/badge/platform-iOS%2017%2B%20%C2%B7%20iPadOS%20%C2%B7%20Mac-2C6B5A)
 ![Swift](https://img.shields.io/badge/Swift-5.9%2B-2C6B5A)
 ![Dependencies](https://img.shields.io/badge/dependencies-none-2C6B5A)
 
-A native iPhone and iPad chat app for your own [Ollama](https://ollama.com) server. Pick any model
+A native iPhone, iPad and Mac chat app for your own [Ollama](https://ollama.com) server. Pick any model
 the server offers, chat with streamed replies, search the web through your own SearXNG, and talk
 hands-free with replies spoken by your own Kokoro voice. Nothing goes through anyone else's cloud,
 and your conversations stay on the device.
@@ -17,7 +17,7 @@ and your conversations stay on the device.
   <img src="docs/voice.png" alt="The hands-free voice conversation screen, listening" width="24%">
 </p>
 
-- **Platform**: iOS and iPadOS 17+, SwiftUI, Swift 5.9+ with strict concurrency checking
+- **Platform**: iOS and iPadOS 17+, and the Mac through Mac Catalyst; SwiftUI, Swift 5.9+ with strict concurrency checking
 - **Dependencies**: none. SwiftUI, Speech, AVFoundation, PDFKit, LocalAuthentication and App Intents only
 - **Talks to**: Ollama for chat, [SearXNG](https://github.com/searxng/searxng) for web search and
   [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) for speech; the last two are optional
@@ -34,24 +34,30 @@ and your conversations stay on the device.
   question is about current events, reads the top pages it finds and cites its sources; for a model that cannot call
   tools, a toggle searches before it replies
 - **Suggested follow-up questions** under each reply; tap one to ask it
+- **A composer that stays out of the way**: one row at rest, opening out while you write to show the options for
+  the reply: web search, how hard to think, and reading aloud
 - **Attachments**: photos from the library or camera for models that can see, PDFs and text files for any model
 - **Edit and resend** a message you already sent
 - **Custom instructions** given to the model at the start of every conversation
 - **Memory**: lasting facts you tell a model, or ask it to remember, are kept on the device and carried into every
   conversation. A notice shows whenever something is remembered, and the list can be read, added to and cleared in Settings
-- **Private chat**: a new chat can be made private, so it uses no memories and adds none
+- **Private chat**: the eye-slash button at the top right of an empty chat makes it private, so it uses no memories
+  and adds none
 
 ### Voice
 
 - **Voice conversation**: speak, pause, hear the answer, speak again; tap the orb to interrupt
-- **Read aloud**: one reply at a time, or every reply with the speaker toggle in the composer, spoken sentence by
+- **Read aloud**: one reply at a time, or every reply with the speaker option in the composer, spoken sentence by
   sentence while it is still being written
+- **Hear this voice**: Settings plays a short sample of the chosen voice before you keep it
 - **Dictation** into the message field, recognised on the device where the phone supports it
 - **Shortcut**: "Start Voice Conversation" from Siri, Shortcuts, Spotlight or the Action button
 
 ### Your conversations
 
 - **History** in a drawer, grouped by day, searchable and titled by the model
+- **Settings and New chat** float at the bottom of the chat list; a dot on the Settings button shows whether the
+  server can be reached
 - **Pin, rename, share as Markdown, delete** from a long press
 - **Lock** behind Face ID, Touch ID or the passcode; the lock covers the app switcher and every sheet
 - **On the device only**: JSON files in the app's own folder, synced nowhere
@@ -60,6 +66,7 @@ and your conversations stay on the device.
 
 - **Theme**: follow the system, or keep to light or dark
 - **iPad**: conversations stay beside the chat on a wide screen
+- **Mac**: the same app, built with Mac Catalyst
 - Dynamic Type and VoiceOver labels throughout
 
 <p align="center">
@@ -120,18 +127,25 @@ HearthCore    Tagged identifiers, logging
   have reached a public address. Page text is reduced in a single pass that hostile markup cannot slow down. Each
   result's title, snippet and page text are handed to the model inside a fence with a marker made up afresh for
   every search, marked as material, not instructions.
+- **Design system**: colours, type, spacing, radii, sizes and shadows are tokens, and views use nothing else.
 - **Strings** live in `Localizable.xcstrings`, rebuilt from `Strings.swift` by `python3 Tools/sync_strings.py`.
+
+More in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), which covers the layers, how a screen is wired and how to add
+one, and [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md), which lists the tokens, the components and the rules for
+using them.
 
 ## Tests and linting
 
 ```sh
 xcodebuild test -project Hearth.xcodeproj -scheme Hearth \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max'
+xcodebuild build -project Hearth.xcodeproj -scheme Hearth \
+  -destination 'platform=macOS,variant=Mac Catalyst'
 swiftlint lint
 ```
 
 Tests are written with Swift Testing: the stream decoding, prompt building, sentence chunking for
-speech, Markdown, maths and web page parsing, memory and its limits, follow-up questions, export, the chat interactor, the
+speech and the feed that reads a reply aloud, Markdown, maths and web page parsing, memory and its limits, follow-up questions, export, the chat interactor, the
 conversation store, file storage, which addresses a page may be read from, the app lock and the drawer's grouping. The codebase holds a
 zero-warning SwiftLint bar.
 
