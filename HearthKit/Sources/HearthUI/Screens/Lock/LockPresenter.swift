@@ -1,25 +1,11 @@
 import HearthDomain
-import Observation
 import SwiftUI
 
+/// What the lock tells the coordinator, so the rest of the app can fall silent or carry on.
 @MainActor
 protocol LockPresenterDelegate: AnyObject {
     func lockPresenterDidLock(_ presenter: LockPresenter)
     func lockPresenterDidUnlock(_ presenter: LockPresenter)
-}
-
-@MainActor
-@Observable
-final class LockViewModel {
-    /// The conversations are hidden until the owner unlocks.
-    var isLocked: Bool
-    /// The conversations are hidden while the app is not in front, so the app switcher shows nothing.
-    var isObscured = false
-    var isAuthenticating = false
-
-    init(isLocked: Bool) {
-        self.isLocked = isLocked
-    }
 }
 
 /// Keeps the app behind Face ID, Touch ID or the passcode when the lock is turned on in Settings.
@@ -29,6 +15,7 @@ final class LockPresenter {
     weak var delegate: (any LockPresenterDelegate)?
 
     private let authentication: AuthenticationProvider
+    /// Whether the lock is turned on in Settings, asked afresh each time since it can change.
     private let isEnabled: @MainActor () -> Bool
     /// The unlock prompt is offered once each time the app comes forward; after a refusal the owner asks for it.
     private var promptsWhenActive = true
@@ -39,6 +26,7 @@ final class LockPresenter {
         self.viewModel = LockViewModel(isLocked: isEnabled())
     }
 
+    /// Follows the app coming forward or leaving, then asks the owner to unlock if that is now due.
     func sceneAction(_ phase: ScenePhase) async {
         if sceneChanged(to: phase) {
             await unlockAction()
@@ -69,6 +57,7 @@ final class LockPresenter {
         }
     }
 
+    /// Asks for Face ID, Touch ID or the passcode, and opens the app for its owner.
     func unlockAction() async {
         guard viewModel.isLocked, !viewModel.isAuthenticating else {
             return

@@ -8,6 +8,7 @@ public final class AudioPlaybackService {
 
     public init() {}
 
+    /// Plays the clip, cutting off any that is already playing. Cancelling the task stops it.
     public func play(_ data: Data) async throws {
         stop()
         let session = AVAudioSession.sharedInstance()
@@ -38,6 +39,7 @@ public final class AudioPlaybackService {
     }
 }
 
+/// Tells the waiting caller that a clip has ended, whether it played through, could not be decoded or was stopped.
 private final class PlaybackDelegate: NSObject, @unchecked Sendable {
     private let lock = NSLock()
     private var onFinish: (@Sendable () -> Void)?

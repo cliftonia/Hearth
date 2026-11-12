@@ -1255,6 +1255,50 @@
         }
       }
     },
+    "settings.voiceSample": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hello. This is how I sound when I read a reply aloud."
+          }
+        }
+      }
+    },
+    "settings.voiceSampleFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The voice could not be played. Check the speech address and the voice name."
+          }
+        }
+      }
+    },
+    "settings.voiceSamplePlay": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hear this voice"
+          }
+        }
+      }
+    },
+    "settings.voiceSampleStop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop"
+          }
+        }
+      }
+    },
     "sidebar.chatTitle": {
       "extractionState": "manual",
       "localizations": {

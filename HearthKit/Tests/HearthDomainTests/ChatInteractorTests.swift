@@ -2,6 +2,7 @@ import Foundation
 @testable import HearthDomain
 import Testing
 
+/// One turn of a conversation: the reply, the web searches around it, and the side requests.
 struct ChatInteractorTests {
     @Test func `thinking and text arrive in the order the model wrote them`() async throws {
         let fixture = InteractorHarness.makeTestSubject(rounds: [[.thinking("Hm"), .text("Hel"), .text("lo")]])

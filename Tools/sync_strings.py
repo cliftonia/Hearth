@@ -2,7 +2,7 @@
 import json
 import re
 
-SOURCE = "HearthKit/Sources/HearthUI/Internal Helpers/Strings.swift"
+SOURCE = "HearthKit/Sources/HearthUI/Localization/Strings.swift"
 CATALOG = "HearthKit/Sources/HearthUI/Resources/Localizable.xcstrings"
 
 pattern = re.compile(r'String\(localized: "([^"]+)", defaultValue: "((?:[^"\\]|\\.)*)"')

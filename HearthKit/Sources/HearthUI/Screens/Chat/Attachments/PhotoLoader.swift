@@ -4,8 +4,10 @@ import UIKit
 
 /// Loads picked photos and shrinks them to a size a vision model reads comfortably.
 enum PhotoLoader {
+    /// The longest side of a photo once shrunk, in pixels.
     private static let maximumSideLength: CGFloat = 1280
 
+    /// The picked photos as JPEG data, in the order they were picked.
     static func jpegData(from items: [PhotosPickerItem]) async -> [Data] {
         var result: [Data] = []
         for item in items {
@@ -17,6 +19,7 @@ enum PhotoLoader {
         return result
     }
 
+    /// Re-encodes a photo no larger than the maximum side, or returns `nil` if the data is not an image.
     static func downscaledJPEG(from data: Data) -> Data? {
         guard let image = UIImage(data: data) else {
             return nil

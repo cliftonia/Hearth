@@ -2,6 +2,7 @@ import Foundation
 @testable import HearthData
 import Testing
 
+/// How named blobs are saved, replaced, loaded and deleted.
 struct FileStoreServiceTests {
     /// A directory whose path holds a space, as Application Support does.
     private func makeTestSubject() -> FileStoreService {

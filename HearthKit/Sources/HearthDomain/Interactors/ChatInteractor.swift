@@ -1,9 +1,14 @@
 import Foundation
 
+/// Why the chat server could not be used, in terms a screen can explain.
 public enum ChatError: Error, Sendable, Equatable {
+    /// No usable address has been given for the chat server.
     case serverNotConfigured
+    /// There is no model to chat with.
     case noModelSelected
+    /// The server did not answer, or not in a form that could be read.
     case unreachable
+    /// The server answered with an error of its own.
     case server(message: String)
 }
 
@@ -19,18 +24,23 @@ public enum SearchModeKind: Sendable, Equatable {
 
 /// Runs one turn of a conversation: the model's streamed reply, with any web searches along the way.
 public final class ChatInteractor: Sendable {
+    /// Something that happened during a turn, reported in the order it happened.
     public enum Event: Sendable, Equatable {
         /// A web search has begun for this query.
         case searching(String)
         /// Every source found so far in this turn.
         case sources([SearchSource])
+        /// A search could not be made; the turn carries on without it.
         case searchFailed
         /// What became of a change the model asked to make to its memory.
         case memory(MemoryOutcome)
+        /// More of the model's reasoning.
         case thinking(String)
+        /// More of the reply.
         case text(String)
     }
 
+    /// Everything one turn needs: the conversation so far, the model, and what the model is allowed to do.
     public struct Turn: Sendable {
         public let history: [Message]
         public let model: ChatModel
@@ -65,6 +75,9 @@ public final class ChatInteractor: Sendable {
         }
     }
 
+    // MARK: Limits
+
+    /// How many results are kept from one search.
     private static let maximumSources = 5
     /// How many times in one turn the model may go back to the web before it must answer.
     private static let maximumSearchRounds = 3
@@ -86,6 +99,7 @@ public final class ChatInteractor: Sendable {
         self.now = now
     }
 
+    /// Runs the turn, reporting each event as it happens. Dropping the stream cancels the turn.
     public func run(_ turn: Turn) -> AsyncThrowingStream<Event, any Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
@@ -99,6 +113,8 @@ public final class ChatInteractor: Sendable {
             continuation.onTermination = { _ in task.cancel() }
         }
     }
+
+    // MARK: Side requests
 
     /// A few words naming the conversation, written by the model.
     public func title(for userText: String, model: ChatModel, settings: ServerSettings) async throws -> String {
@@ -123,6 +139,8 @@ public final class ChatInteractor: Sendable {
         return transformer.questions(from: try await chat.complete(baseURL, request))
     }
 }
+
+// MARK: - Running a turn
 
 private extension ChatInteractor {
     /// Where and how a turn searches the web.

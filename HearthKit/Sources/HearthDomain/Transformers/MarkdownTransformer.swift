@@ -1,5 +1,6 @@
 import Foundation
 
+/// The kinds of block a reply is laid out from, each with the text it holds.
 public enum MarkdownBlockKind: Hashable, Sendable {
     case heading(level: Int, text: String)
     case paragraph(String)
@@ -11,6 +12,7 @@ public enum MarkdownBlockKind: Hashable, Sendable {
     case rule
 }
 
+/// One block of a reply, identified by its place in the reply.
 public struct MarkdownBlock: Identifiable, Hashable, Sendable {
     public let id: Int
     public let kind: MarkdownBlockKind
@@ -20,6 +22,7 @@ public struct MarkdownBlock: Identifiable, Hashable, Sendable {
 public struct MarkdownTransformer: Sendable {
     public init() {}
 
+    /// The blocks of the text, in order. Lines that belong to no other block are gathered into paragraphs.
     public func blocks(from markdown: String) -> [MarkdownBlock] {
         var kinds: [MarkdownBlockKind] = []
         var paragraph: [String] = []
@@ -56,6 +59,9 @@ public struct MarkdownTransformer: Sendable {
         return kinds.enumerated().map { MarkdownBlock(id: $0.offset, kind: $0.element) }
     }
 
+    // MARK: Code
+
+    /// Everything up to the closing fence, or to the end when the fence has not been closed, as while a reply streams in.
     private func codeBlock(opening: String, lines: inout ArraySlice<String>) -> MarkdownBlockKind {
         let language = opening.dropFirst(3).trimmingCharacters(in: .whitespaces)
         var code: [String] = []
@@ -67,6 +73,8 @@ public struct MarkdownTransformer: Sendable {
         }
         return .code(language: language.isEmpty ? nil : language, text: code.joined(separator: "\n"))
     }
+
+    // MARK: Tables
 
     /// A table is a row of cells followed by a row of dashes; without the dashes the line is ordinary text.
     private func table(header: String, lines: inout ArraySlice<String>) -> MarkdownBlockKind? {
@@ -82,11 +90,13 @@ public struct MarkdownTransformer: Sendable {
         return .table(header: cells(in: header), rows: rows)
     }
 
+    /// Whether the line is the row of dashes that sits under a table's header.
     private func isTableSeparator(_ line: String) -> Bool {
         let trimmed = line.trimmingCharacters(in: .whitespaces)
         return trimmed.contains("-") && trimmed.contains("|") && trimmed.allSatisfy { "|-: ".contains($0) }
     }
 
+    /// The cells of a table row, without the bars at either edge.
     private func cells(in row: String) -> [String] {
         var inner = row.trimmingCharacters(in: .whitespaces)[...]
         if inner.hasPrefix("|") {
@@ -97,6 +107,8 @@ public struct MarkdownTransformer: Sendable {
         }
         return inner.split(separator: "|", omittingEmptySubsequences: false).map { $0.trimmingCharacters(in: .whitespaces) }
     }
+
+    // MARK: Maths
 
     /// Display maths, opened by `$$` or `\\[` and closed on the same line or a later one.
     private func math(opening: String, lines: inout ArraySlice<String>) -> MarkdownBlockKind? {
@@ -116,6 +128,9 @@ public struct MarkdownTransformer: Sendable {
         return .math(body.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }.joined(separator: " "))
     }
 
+    // MARK: Single lines
+
+    /// A heading, rule or quote, each of which takes one line.
     private func singleLineBlock(_ line: String) -> MarkdownBlockKind? {
         // The quantifier braces inside these regex literals are mistaken for code blocks by the linter.
         // swiftlint:disable opening_brace
@@ -132,6 +147,9 @@ public struct MarkdownTransformer: Sendable {
         return nil
     }
 
+    // MARK: Lists
+
+    /// The text of a bulleted or numbered item, and which of the two it is.
     private func listItem(_ line: String) -> (isOrdered: Bool, text: String)? {
         if let bullet = line.firstMatch(of: /^[-*+]\s+(.+)$/) {
             return (false, String(bullet.1))
@@ -142,6 +160,7 @@ public struct MarkdownTransformer: Sendable {
         return nil
     }
 
+    /// Gathers the items that follow the first, for as long as they are of the same sort.
     private func list(first: (isOrdered: Bool, text: String), lines: inout ArraySlice<String>) -> MarkdownBlockKind {
         var items = [first.text]
         while let next = lines.first {

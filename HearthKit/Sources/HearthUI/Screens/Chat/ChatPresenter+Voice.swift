@@ -3,6 +3,7 @@ import HearthDomain
 
 // Dictating into the composer and reading replies aloud.
 extension ChatPresenter {
+    /// Starts dictating after whatever is already in the draft, or stops if dictation is under way.
     func dictationAction() async {
         guard !viewModel.isDictating else {
             await stopDictation()
@@ -29,6 +30,7 @@ extension ChatPresenter {
         }
     }
 
+    /// Ends dictation and waits for the last words to reach the draft.
     func stopDictation() async {
         guard viewModel.isDictating else {
             return
@@ -91,6 +93,7 @@ extension ChatPresenter {
         return SpokenReplyFeed(continuation: continuation)
     }
 
+    /// Silences whatever is being read aloud.
     func stopSpeaking() async {
         guard viewModel.speakingMessageID != nil else {
             return

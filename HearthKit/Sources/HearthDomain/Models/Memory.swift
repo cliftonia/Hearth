@@ -37,12 +37,18 @@ public enum MemoryOutcome: Sendable, Equatable {
     case refused(MemoryRefusalKind)
 }
 
+/// Why a change to what is remembered was turned down.
 public enum MemoryRefusalKind: Sendable, Equatable {
+    /// There was no text to remember.
     case empty
+    /// The same fact is already remembered.
     case alreadySaved
+    /// There is no room for another memory.
     case full
+    /// No memory has the given handle.
     case notFound
     /// The memory was written by the user, and a model may not change or forget it.
     case writtenByUser
+    /// The change could not be written to disk.
     case notStored
 }

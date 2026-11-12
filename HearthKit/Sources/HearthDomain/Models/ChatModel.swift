@@ -6,9 +6,13 @@ public struct ChatModel: Identifiable, Hashable, Codable, Sendable {
     public typealias ID = Tagged<ChatModel, String>
 
     public let id: ID
+    /// Whether the server passes the chat on to a remote host rather than running the model itself.
     public let isCloud: Bool
+    /// How many parameters the model has, in the server's own words.
     public let parameterSize: String?
+    /// Whether the model can reason before it replies.
     public let canThink: Bool
+    /// Whether the model accepts images.
     public let canSee: Bool
     /// Whether the model can call tools, and so decide for itself when to search the web.
     public let canUseTools: Bool

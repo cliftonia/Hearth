@@ -4,6 +4,8 @@ import UniformTypeIdentifiers
 
 /// The plus button: photos from the library or the camera for models that can see, and files for any model.
 struct AttachmentMenu: View {
+    private static let maximumPhotoCount = 4
+
     let presenter: ChatPresenter
 
     @State private var pickedItems: [PhotosPickerItem] = []
@@ -31,11 +33,11 @@ struct AttachmentMenu: View {
             Image(systemName: "plus")
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(HearthColor.mute)
-                .frame(width: 34, height: 32)
-                .overlay { Capsule().strokeBorder(HearthColor.line, lineWidth: 1) }
+                .frame(size: HearthSize.composerControl)
+                .capsuleOutline()
         }
         .accessibilityLabel(Strings.attach)
-        .photosPicker(isPresented: $isPhotoPickerPresented, selection: $pickedItems, maxSelectionCount: 4, matching: .images)
+        .photosPicker(isPresented: $isPhotoPickerPresented, selection: $pickedItems, maxSelectionCount: Self.maximumPhotoCount, matching: .images)
         .onChange(of: pickedItems) {
             let items = pickedItems
             guard !items.isEmpty else {

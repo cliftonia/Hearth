@@ -1,8 +1,13 @@
 import HearthDomain
 import SwiftUI
 
-/// Where a message is written: text, attachments, the search toggle, dictation and send.
+/// Where a message is written: text, attachments, the reply's options, dictation and send.
+///
+/// At rest it is a single row. It opens out, showing its options, while a message is being written.
 struct ComposerFooter: View {
+    private static let pendingPhotoSide: CGFloat = 64
+    private static let cancelEditSize = CGSize(width: 28, height: 24)
+
     let presenter: ChatPresenter
 
     @State private var sendCount = 0
@@ -10,46 +15,43 @@ struct ComposerFooter: View {
 
     var body: some View {
         @Bindable var viewModel = presenter.viewModel
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: HearthSpacing.s10) {
             if viewModel.editingMessageID != nil {
                 editingHeader
             }
             if !viewModel.pendingImagesJPEG.isEmpty {
-                PhotoStrip(imagesJPEG: viewModel.pendingImagesJPEG, sideLength: 64, removeAction: presenter.removeImageAction(at:))
+                PhotoStrip(imagesJPEG: viewModel.pendingImagesJPEG, sideLength: Self.pendingPhotoSide, removeAction: presenter.removeImageAction(at:))
             }
             if !viewModel.pendingDocuments.isEmpty {
                 DocumentStrip(documents: viewModel.pendingDocuments, removeAction: presenter.removeDocumentAction)
             }
-            ComposerLayout(isCompact: !isExpanded, spacing: isExpanded ? 10 : 6) {
+            ComposerLayout(isCompact: !isExpanded, spacing: isExpanded ? HearthSpacing.s10 : HearthSpacing.s6) {
                 TextField(placeholder, text: $viewModel.draft, axis: .vertical)
                     .lineLimit(1...6)
                     .font(.body)
                     .foregroundStyle(HearthColor.ink)
                     .tint(HearthColor.pine)
                     .focused($isFocused)
-                    .padding(.horizontal, 4)
-                HStack(spacing: 8) {
+                    .padding(.horizontal, HearthSpacing.s4)
+                HStack(spacing: HearthSpacing.s8) {
                     AttachmentMenu(presenter: presenter)
                     if isExpanded {
                         optionChips
                     }
                 }
-                HStack(spacing: 8) {
+                HStack(spacing: HearthSpacing.s8) {
                     dictationButton
                     primaryButton
                 }
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.top, isExpanded ? 12 : 10)
-        .padding(.bottom, 10)
-        .background(HearthColor.card, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(HearthColor.line, lineWidth: 1)
-        }
-        .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 2)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, HearthSpacing.s12)
+        .padding(.top, isExpanded ? HearthSpacing.s12 : HearthSpacing.s10)
+        .padding(.bottom, HearthSpacing.s10)
+        .cardSurface(radius: HearthRadius.composer)
+        .hearthShadow(.composer)
+        .padding(.horizontal, HearthSpacing.s12)
+        .padding(.vertical, HearthSpacing.s8)
         .sensoryFeedback(.impact(weight: .light), trigger: sendCount)
         .animation(.snappy, value: viewModel.editingMessageID)
         .animation(.snappy, value: isExpanded)
@@ -64,7 +66,9 @@ struct ComposerFooter: View {
         }
     }
 
-    /// At rest the composer is a single row. It opens out, showing its options, while a message is being written.
+    // MARK: Arrangement
+
+    /// Whether the composer has opened out: it holds the keyboard, or something has been typed.
     private var isExpanded: Bool {
         isFocused || !presenter.viewModel.draft.isEmpty
     }
@@ -86,8 +90,11 @@ struct ComposerFooter: View {
         presenter.viewModel.selectedModel.map { Strings.messageModel($0.displayName) } ?? Strings.composerPlaceholder
     }
 
+    // MARK: Editing
+
+    /// Says that a sent message is being edited, and offers to leave it as it was.
     private var editingHeader: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: HearthSpacing.s8) {
             Image(systemName: "pencil")
                 .font(.footnote)
                 .foregroundStyle(HearthColor.pine)
@@ -100,18 +107,21 @@ struct ComposerFooter: View {
                 Image(systemName: "xmark")
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(HearthColor.mute)
-                    .frame(width: 28, height: 24)
+                    .frame(size: Self.cancelEditSize)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Strings.cancelEdit)
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, HearthSpacing.s4)
     }
 
+    // MARK: Options
+
+    /// Searches the web before replying, for a model that cannot ask for a search itself.
     private var searchToggle: some View {
         let isOn = presenter.viewModel.isSearchEnabled
         return Button(action: presenter.toggleSearchAction) {
-            chip(systemImage: "globe", isOn: isOn)
+            OptionChip(systemImage: "globe", isOn: isOn)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Strings.searchLabel)
@@ -128,7 +138,7 @@ struct ComposerFooter: View {
                 }
             }
         } label: {
-            chip(systemImage: level == .off ? "lightbulb.slash" : "lightbulb", isOn: level != .off)
+            OptionChip(systemImage: level == .off ? "lightbulb.slash" : "lightbulb", isOn: level != .off)
         }
         .accessibilityLabel(Strings.thinkingLevel)
         .accessibilityValue(level.title)
@@ -139,35 +149,28 @@ struct ComposerFooter: View {
         Binding(get: { presenter.thinkingLevel }, set: { presenter.selectThinkingLevelAction($0) })
     }
 
-    /// An icon-only capsule, filled when its switch is on.
-    private func chip(systemImage: String, isOn: Bool) -> some View {
-        Image(systemName: systemImage)
-            .font(.footnote.weight(.medium))
-            .foregroundStyle(isOn ? HearthColor.pine : HearthColor.mute)
-            .frame(width: 38, height: 32)
-            .background(isOn ? HearthColor.pineSoft : .clear, in: Capsule())
-            .overlay { Capsule().strokeBorder(isOn ? .clear : HearthColor.line, lineWidth: 1) }
-    }
-
     /// When on, every reply is read aloud as soon as it is finished.
     private var readAloudToggle: some View {
         let isOn = presenter.isAutoReadEnabled
         return Button(action: { Task { await presenter.toggleAutoReadAction() } }, label: {
-            chip(systemImage: isOn ? "speaker.wave.2.fill" : "speaker.wave.2", isOn: isOn)
+            OptionChip(systemImage: isOn ? "speaker.wave.2.fill" : "speaker.wave.2", isOn: isOn)
         })
         .buttonStyle(.plain)
         .accessibilityLabel(Strings.readRepliesAloud)
         .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 
+    // MARK: Dictation and send
+
+    /// Dictates into the field; it turns to the danger colour while the microphone is live.
     private var dictationButton: some View {
         let isDictating = presenter.viewModel.isDictating
         return Button(action: { Task { await presenter.dictationAction() } }, label: {
             Image(systemName: isDictating ? "mic.fill" : "mic")
                 .font(.footnote.weight(.medium))
                 .foregroundStyle(isDictating ? HearthColor.danger : HearthColor.mute)
-                .frame(width: 34, height: 32)
-                .overlay { Capsule().strokeBorder(isDictating ? HearthColor.danger : HearthColor.line, lineWidth: 1) }
+                .frame(size: HearthSize.composerControl)
+                .capsuleOutline(isDictating ? HearthColor.danger : HearthColor.line)
         })
         .buttonStyle(.plain)
         .accessibilityLabel(isDictating ? Strings.stopDictation : Strings.dictate)
@@ -182,7 +185,7 @@ struct ComposerFooter: View {
             Image(systemName: symbol)
                 .font(.footnote.weight(.bold))
                 .foregroundStyle(HearthColor.onPine)
-                .frame(width: 34, height: 34)
+                .frame(width: HearthSize.sendButton, height: HearthSize.sendButton)
                 .background(HearthColor.pine, in: Circle())
                 .contentTransition(.symbolEffect(.replace))
         }
@@ -202,47 +205,6 @@ struct ComposerFooter: View {
         } else {
             isFocused = false
             presenter.voiceAction()
-        }
-    }
-}
-
-/// The files attached to a message, each a chip with its name.
-struct DocumentStrip: View {
-    let documents: [AttachedDocument]
-    let removeAction: ((AttachedDocument.ID) -> Void)?
-
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                ForEach(documents) { document in
-                    HStack(spacing: 6) {
-                        Image(systemName: "doc.text")
-                            .font(.caption)
-                            .foregroundStyle(HearthColor.pine)
-                            .accessibilityHidden(true)
-                        Text(document.name)
-                            .font(.caption)
-                            .foregroundStyle(HearthColor.ink)
-                            .lineLimit(1)
-                        if let removeAction {
-                            Button(action: { removeAction(document.id) }, label: {
-                                Image(systemName: "xmark")
-                                    .font(.caption2.weight(.bold))
-                                    .foregroundStyle(HearthColor.mute)
-                                    .frame(width: 20, height: 20)
-                            })
-                            .buttonStyle(.plain)
-                            .accessibilityLabel(Strings.removeFile)
-                        }
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(HearthColor.paper, in: Capsule())
-                    .overlay { Capsule().strokeBorder(HearthColor.line, lineWidth: 1) }
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel(Strings.attachedFile(document.name))
-                }
-            }
         }
     }
 }

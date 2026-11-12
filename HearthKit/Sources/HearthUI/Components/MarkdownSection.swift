@@ -4,10 +4,13 @@ import UIKit
 
 /// A reply laid out from Markdown: headings, paragraphs, lists, quotes and code.
 struct MarkdownSection: View {
+    private static let quoteBarWidth: CGFloat = 3
+    static let paragraphLineSpacing: CGFloat = 3
+
     let markdown: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: HearthSpacing.s12) {
             ForEach(MarkdownTransformer().blocks(from: markdown)) { block in
                 view(for: block.kind)
             }
@@ -19,6 +22,7 @@ struct MarkdownSection: View {
         })
     }
 
+    /// The view for one block of the reply.
     @ViewBuilder
     private func view(for kind: MarkdownBlockKind) -> some View {
         switch kind {
@@ -31,7 +35,7 @@ struct MarkdownSection: View {
             Text(Self.inline(text))
                 .font(.body)
                 .foregroundStyle(HearthColor.ink)
-                .lineSpacing(3)
+                .lineSpacing(Self.paragraphLineSpacing)
         case .code(let language, let text):
             CodeBlockSection(language: language, code: text)
         case .list(let isOrdered, let items):
@@ -40,9 +44,9 @@ struct MarkdownSection: View {
             Text(Self.inline(text))
                 .font(.body)
                 .foregroundStyle(HearthColor.mute)
-                .padding(.leading, 12)
+                .padding(.leading, HearthSpacing.s12)
                 .overlay(alignment: .leading) {
-                    Rectangle().fill(HearthColor.line).frame(width: 3)
+                    Rectangle().fill(HearthColor.line).frame(width: Self.quoteBarWidth)
                 }
         case .table(let header, let rows):
             TableSection(header: header, rows: rows)
@@ -51,11 +55,11 @@ struct MarkdownSection: View {
                 Text(MathTransformer().readable(latex))
                     .font(HearthFont.math)
                     .foregroundStyle(HearthColor.ink)
-                    .padding(.vertical, 4)
+                    .padding(.vertical, HearthSpacing.s4)
             }
             .frame(maxWidth: .infinity, alignment: .center)
         case .rule:
-            Rectangle().fill(HearthColor.line).frame(height: 1)
+            Hairline()
         }
     }
 
@@ -67,12 +71,15 @@ struct MarkdownSection: View {
     }
 }
 
+/// A table that scrolls sideways when it is wider than the chat.
 private struct TableSection: View {
+    /// A cell and its column, so that `ForEach` can tell equal texts apart.
     private struct Cell: Identifiable {
         let id: Int
         let text: String
     }
 
+    /// A row of cells and its position in the table.
     private struct Row: Identifiable {
         let id: Int
         let cells: [Cell]
@@ -83,7 +90,7 @@ private struct TableSection: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 8) {
+            Grid(alignment: .leading, horizontalSpacing: HearthSpacing.s18, verticalSpacing: HearthSpacing.s8) {
                 GridRow {
                     ForEach(Self.cells(header)) { cell in
                         Text(MarkdownSection.inline(cell.text))
@@ -92,9 +99,7 @@ private struct TableSection: View {
                     }
                 }
                 ForEach(rows.enumerated().map { Row(id: $0.offset, cells: Self.cells($0.element)) }) { row in
-                    Rectangle()
-                        .fill(HearthColor.line)
-                        .frame(height: 1)
+                    Hairline()
                         .gridCellUnsizedAxes(.horizontal)
                     GridRow {
                         ForEach(row.cells) { cell in
@@ -105,12 +110,9 @@ private struct TableSection: View {
                     }
                 }
             }
-            .padding(12)
+            .padding(HearthSpacing.s12)
         }
-        .background(HearthColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(HearthColor.line, lineWidth: 1)
-        }
+        .cardSurface()
     }
 
     private static func cells(_ texts: [String]) -> [Cell] {
@@ -118,7 +120,9 @@ private struct TableSection: View {
     }
 }
 
+/// A bulleted or numbered list.
 private struct ListSection: View {
+    /// An item and its position, which is also its number in an ordered list.
     private struct Item: Identifiable {
         let id: Int
         let text: String
@@ -128,9 +132,9 @@ private struct ListSection: View {
     let items: [String]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: HearthSpacing.s6) {
             ForEach(items.enumerated().map { Item(id: $0.offset, text: $0.element) }) { item in
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                HStack(alignment: .firstTextBaseline, spacing: HearthSpacing.s8) {
                     Text(isOrdered ? "\(item.id + 1)." : "•")
                         .font(.body.monospacedDigit())
                         .foregroundStyle(HearthColor.mute)
@@ -138,14 +142,17 @@ private struct ListSection: View {
                     Text(MarkdownSection.inline(item.text))
                         .font(.body)
                         .foregroundStyle(HearthColor.ink)
-                        .lineSpacing(3)
+                        .lineSpacing(MarkdownSection.paragraphLineSpacing)
                 }
             }
         }
     }
 }
 
+/// A block of code under a bar naming its language, with a button that copies it.
 private struct CodeBlockSection: View {
+    private static let copyButtonSize = CGSize(width: 32, height: 28)
+
     let language: String?
     let code: String
 
@@ -153,7 +160,7 @@ private struct CodeBlockSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 8) {
+            HStack(spacing: HearthSpacing.s8) {
                 Text(language ?? Strings.code)
                     .font(.caption)
                     .foregroundStyle(HearthColor.mute)
@@ -162,26 +169,23 @@ private struct CodeBlockSection: View {
                     Image(systemName: "doc.on.doc")
                         .font(.caption)
                         .foregroundStyle(HearthColor.mute)
-                        .frame(width: 32, height: 28)
+                        .frame(size: Self.copyButtonSize)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Strings.copyCode)
             }
-            .padding(.leading, 12)
-            .padding(.trailing, 4)
-            Rectangle().fill(HearthColor.line).frame(height: 1)
+            .padding(.leading, HearthSpacing.s12)
+            .padding(.trailing, HearthSpacing.s4)
+            Hairline()
             ScrollView(.horizontal, showsIndicators: false) {
                 Text(code)
                     .font(HearthFont.code)
                     .foregroundStyle(HearthColor.ink)
                     .textSelection(.enabled)
-                    .padding(12)
+                    .padding(HearthSpacing.s12)
             }
         }
-        .background(HearthColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(HearthColor.line, lineWidth: 1)
-        }
+        .cardSurface()
         .sensoryFeedback(.success, trigger: copyCount)
     }
 

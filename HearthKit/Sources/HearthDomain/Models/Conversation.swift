@@ -1,6 +1,7 @@
 import Foundation
 import HearthCore
 
+/// Who wrote a message in a saved conversation.
 public enum MessageRole: String, Codable, Sendable {
     case user
     case assistant
@@ -42,15 +43,20 @@ public struct AttachedDocument: Identifiable, Hashable, Codable, Sendable {
     }
 }
 
+/// One message of a conversation: what the user sent, or a reply to it.
 public struct Message: Identifiable, Hashable, Codable, Sendable {
     public typealias ID = Tagged<Message, UUID>
 
     public let id: ID
     public let role: MessageRole
     public let text: String
+    /// The model's reasoning before the reply; empty when it did none.
     public let thinking: String
+    /// How long the reasoning took, where known.
     public let thinkingSeconds: Int?
+    /// The web pages the reply was given to answer from.
     public let sources: [SearchSource]
+    /// Photos attached to the message, as JPEG data.
     public let imagesJPEG: [Data]
     public let documents: [AttachedDocument]
     public let createdAt: Date
@@ -114,17 +120,20 @@ public struct Message: Identifiable, Hashable, Codable, Sendable {
     }
 }
 
+/// A chat with a model, as it is saved and listed.
 public struct Conversation: Identifiable, Hashable, Codable, Sendable {
     public typealias ID = Tagged<Conversation, UUID>
 
     public let id: ID
     public let title: String
+    /// The model the conversation is held with, if one has been set.
     public let modelID: ChatModel.ID?
     public let messages: [Message]
     public let isPinned: Bool
     /// A private conversation is given no memories and writes none.
     public let isPrivate: Bool
     public let createdAt: Date
+    /// When the conversation was last active; the list is ordered by it.
     public let updatedAt: Date
 
     public init(
@@ -147,7 +156,7 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
         self.updatedAt = updatedAt
     }
 
-    /// Conversations saved before pinning existed carry no `isPinned`; they are read as not pinned.
+    /// Conversations saved before pinning or private chats existed carry neither mark; they are read as neither.
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
@@ -162,6 +171,7 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
         )
     }
 
+    /// A copy with the given parts replaced; anything left `nil` is kept.
     public func updating(
         title: String? = nil,
         modelID: ChatModel.ID? = nil,

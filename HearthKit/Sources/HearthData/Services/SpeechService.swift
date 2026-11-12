@@ -1,5 +1,6 @@
 import Foundation
 
+/// The body of a request to turn text into speech.
 public struct SpeechRequestDTO: Encodable, Sendable {
     public let model: String
     public let input: String
@@ -14,9 +15,11 @@ public struct SpeechRequestDTO: Encodable, Sendable {
     }
 }
 
+/// The names of the voices a speech server offers.
 public struct SpeechVoicesDTO: Decodable, Sendable {
     public let voices: [String]
 
+    /// A voice in the form that carries its name inside an object.
     private struct Voice: Decodable {
         let id: String
     }

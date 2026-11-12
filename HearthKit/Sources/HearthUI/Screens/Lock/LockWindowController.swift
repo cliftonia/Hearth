@@ -9,6 +9,7 @@ import UIKit
 final class LockWindowController {
     private var window: UIWindow?
 
+    /// Raises the lock window, or removes it. The colour scheme is the chosen theme, which a new window would not inherit.
     func setCovered(_ isCovered: Bool, presenter: LockPresenter, colorScheme: ColorScheme?) {
         guard isCovered else {
             window?.isHidden = true
@@ -20,7 +21,7 @@ final class LockWindowController {
                 return
             }
             // Put the keyboard away, so that nothing half-typed stays on show beneath it.
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            Keyboard.dismiss()
             let window = UIWindow(windowScene: scene)
             window.windowLevel = .alert + 1
             window.rootViewController = UIHostingController(rootView: LockView(presenter: presenter))

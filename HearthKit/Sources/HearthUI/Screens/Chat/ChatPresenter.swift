@@ -3,6 +3,7 @@ import HearthCore
 import HearthDomain
 import os
 
+/// What the chat asks of the coordinator: the screens that open over or beside it.
 @MainActor
 protocol ChatPresenterDelegate: AnyObject {
     func chatPresenterDidRequestSidebar(_ presenter: ChatPresenter)
@@ -10,8 +11,12 @@ protocol ChatPresenterDelegate: AnyObject {
     func chatPresenterDidRequestSettings(_ presenter: ChatPresenter)
 }
 
+/// Runs the chat screen: sends messages, streams replies, and keeps the open conversation saved.
+///
+/// The work is spread over extensions by subject: `+Replying`, `+Editing`, `+FollowUps` and `+Voice`.
 @MainActor
 final class ChatPresenter {
+    /// What the chat is built from: the interactors, the dictation provider and the stores it shares with other screens.
     struct Dependencies {
         let chat: ChatInteractor
         let speech: SpeechInteractor
@@ -30,13 +35,18 @@ final class ChatPresenter {
     let dependencies: Dependencies
     let logger = Logger(for: ChatPresenter.self)
     let backgroundActivity = BackgroundActivity()
+    /// Copies what is dictated into the draft until dictation ends.
     var dictationTask: Task<Void, Never>?
+    /// The reply being read aloud, kept so that it can be silenced.
     var speakTask: Task<Void, Never>?
-    private var turnTask: Task<Void, Never>?
+    /// The reply being streamed, kept so that it can be stopped.
+    var turnTask: Task<Void, Never>?
 
     init(dependencies: Dependencies) {
         self.dependencies = dependencies
     }
+
+    // MARK: Shared state
 
     var settings: ServerSettings { dependencies.settingsStore.settings }
     var models: [ChatModel] { dependencies.modelStore.models }
@@ -46,6 +56,7 @@ final class ChatPresenter {
 
     // MARK: Loading
 
+    /// Reads the saved conversations and memories, then asks the server for its models. Run as the chat appears.
     func loadAction() async {
         do {
             try await dependencies.conversationStore.load()
@@ -60,6 +71,7 @@ final class ChatPresenter {
         await refreshModelsAction()
     }
 
+    /// Fetches the server's models again, as after the settings change, and settles which one is chosen.
     func refreshModelsAction() async {
         do {
             try await dependencies.modelStore.refresh(settings: settings)
@@ -75,6 +87,7 @@ final class ChatPresenter {
 
     // MARK: Conversation
 
+    /// Sends what is in the composer. If a sent message was being edited, it and everything after it are replaced.
     func sendAction() async {
         guard viewModel.canSend, !viewModel.isStreaming else {
             return
@@ -146,6 +159,7 @@ final class ChatPresenter {
         await regenerateAction()
     }
 
+    /// Throws away the last reply and asks for another to the same message.
     func regenerateAction() async {
         guard !viewModel.isStreaming, let model = viewModel.selectedModel else {
             return
@@ -162,6 +176,7 @@ final class ChatPresenter {
         await suggestFollowUps(model: model)
     }
 
+    /// Stops whatever is under way and clears the screen for a fresh conversation with the same model.
     func newChatAction() async {
         await stopAction()
         await stopSpeaking()
@@ -173,6 +188,7 @@ final class ChatPresenter {
         viewModel.error = nil
     }
 
+    /// Opens a saved conversation, and switches to the model it was held with if the server still offers it.
     func selectConversationAction(_ id: Conversation.ID) async {
         guard id != viewModel.conversation.id, let conversation = dependencies.conversationStore.conversation(for: id) else {
             return
@@ -189,6 +205,9 @@ final class ChatPresenter {
         }
     }
 
+    // MARK: Composer
+
+    /// Switches model and remembers the choice for the next launch.
     func selectModelAction(_ model: ChatModel) {
         viewModel.selectedModel = model
         do {
@@ -225,140 +244,5 @@ final class ChatPresenter {
 
     func settingsAction() {
         delegate?.chatPresenterDidRequestSettings(self)
-    }
-}
-
-// MARK: - Replying
-
-private extension ChatPresenter {
-    func reply(model: ChatModel, style: ReplyStyle, onDelta: (@MainActor (String) -> Void)?) async {
-        let reply = Message(role: .assistant, text: "")
-        let usesMemory = settings.allowsMemory(in: viewModel.conversation)
-        let turn = ChatInteractor.Turn(
-            history: viewModel.conversation.messages,
-            model: model,
-            settings: settings,
-            searchMode: searchMode(for: model),
-            style: style,
-            memories: usesMemory ? dependencies.memoryStore.memories : [],
-            remember: usesMemory ? rememberClosure : nil,
-            isPrivate: viewModel.conversation.isPrivate
-        )
-        viewModel.conversation = viewModel.conversation.updating(messages: viewModel.conversation.messages + [reply], updatedAt: Date())
-        viewModel.error = nil
-        viewModel.followUps = []
-        viewModel.memoryNotice = nil
-        viewModel.isStreaming = true
-        let events = dependencies.chat.run(turn)
-        // A reply should outlive a glance at another app, for as long as iOS allows.
-        backgroundActivity.begin(named: "Reply")
-        await stopSpeaking()
-        let narration = style == .chat ? beginNarration(of: reply.id) : nil
-        let task = Task {
-            await self.consume(events, replyID: reply.id) { delta in
-                onDelta?(delta)
-                narration?.append(delta)
-            }
-            narration?.finish()
-            self.viewModel.isStreaming = false
-            self.viewModel.searchingQuery = nil
-            await self.save(self.discardingEmptyReply(reply.id))
-        }
-        turnTask = task
-        await task.value
-        backgroundActivity.end()
-    }
-
-    func consume(_ events: AsyncThrowingStream<ChatInteractor.Event, any Error>, replyID: Message.ID, onDelta: (@MainActor (String) -> Void)?) async {
-        let startedAt = Date()
-        do {
-            for try await event in events {
-                apply(event, to: replyID, startedAt: startedAt)
-                if case .text(let delta) = event {
-                    onDelta?(delta)
-                }
-            }
-        } catch is CancellationError {
-            // Stopped by the user; what has arrived so far is kept.
-        } catch {
-            logger.error("Reply failed: \(error.localizedDescription, privacy: .public)")
-            // A connection lost while the app was off screen is iOS suspending it, not the server or the VPN.
-            viewModel.error = backgroundActivity.wasBackgrounded
-                ? ErrorViewConfiguration(title: Strings.interruptedTitle, message: Strings.interruptedMessage)
-                : ErrorViewConfiguration(from: error)
-        }
-    }
-
-    func apply(_ event: ChatInteractor.Event, to replyID: Message.ID, startedAt: Date) {
-        guard let message = viewModel.conversation.messages.first(where: { $0.id == replyID }) else {
-            return
-        }
-        let updated: Message
-        switch event {
-        case .searching(let query):
-            viewModel.searchingQuery = query
-            return
-        case .sources(let sources):
-            viewModel.searchingQuery = nil
-            updated = message.updating(sources: sources)
-        case .memory(let outcome):
-            viewModel.memoryNotice = Self.notice(for: outcome) ?? viewModel.memoryNotice
-            return
-        case .searchFailed:
-            viewModel.searchingQuery = nil
-            viewModel.error = ErrorViewConfiguration(title: Strings.searchLabel, message: Strings.searchFailed, retryActionLabel: nil)
-            return
-        case .thinking(let delta):
-            updated = message.updating(thinking: message.thinking + delta)
-        case .text(let delta):
-            let isFirstText = message.text.isEmpty && !message.thinking.isEmpty
-            updated = message.updating(
-                text: message.text + delta,
-                thinkingSeconds: isFirstText ? Int(Date().timeIntervalSince(startedAt).rounded()) : nil
-            )
-        }
-        viewModel.conversation = viewModel.conversation.replacing(updated)
-    }
-
-    /// A reply that never produced anything is removed rather than left as an empty row.
-    func discardingEmptyReply(_ replyID: Message.ID) -> Conversation {
-        let conversation = viewModel.conversation
-        guard let reply = conversation.messages.first(where: { $0.id == replyID }), reply.text.isEmpty, reply.thinking.isEmpty else {
-            return conversation
-        }
-        let trimmed = conversation.updating(messages: conversation.messages.filter { $0.id != replyID })
-        viewModel.conversation = trimmed
-        return trimmed
-    }
-
-    func save(_ conversation: Conversation) async {
-        do {
-            try await dependencies.conversationStore.save(conversation)
-        } catch {
-            logger.error("Saving the conversation failed: \(error.localizedDescription, privacy: .public)")
-            viewModel.error = ErrorViewConfiguration(message: Strings.errorSaveFailed, retryActionLabel: nil)
-        }
-    }
-
-    /// Asks the model for a short title. The first words of the message stay as the title if it cannot.
-    func nameConversation(_ id: Conversation.ID, from text: String, model: ChatModel) async {
-        guard let title = try? await dependencies.chat.title(for: text, model: model, settings: settings), !title.isEmpty,
-              let stored = dependencies.conversationStore.conversation(for: id) else {
-            return
-        }
-        if viewModel.conversation.id == id {
-            viewModel.conversation = viewModel.conversation.updating(title: title)
-        }
-        await save(stored.updating(title: title))
-    }
-
-    func selectAvailableModel() {
-        if let selected = viewModel.selectedModel, models.contains(selected) {
-            return
-        }
-        let store = dependencies.modelStore
-        viewModel.selectedModel = store.model(for: viewModel.conversation.modelID)
-            ?? store.model(for: settings.defaultModelID)
-            ?? models.first
     }
 }

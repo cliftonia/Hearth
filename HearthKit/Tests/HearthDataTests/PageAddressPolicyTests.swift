@@ -2,6 +2,7 @@ import Foundation
 @testable import HearthData
 import Testing
 
+/// Which addresses a page may be read from, by form and by where they lead.
 struct PageAddressPolicyTests {
     @Test(arguments: [
         "https://docs.example.com/page",
@@ -14,7 +15,7 @@ struct PageAddressPolicyTests {
     @Test(arguments: [
         "http://docs.example.com/page",
         "https://192.168.1.1/admin",
-        "https://100.74.3.68:8123/",
+        "https://100.64.0.1:8123/",
         "https://[::1]/",
         "https://[fd7a:115c:a1e0::1]/",
         "https://localhost/",
@@ -46,6 +47,7 @@ struct PageAddressPolicyTests {
         #expect(!PageAddressPolicy.isPublic(address: address))
     }
 
+    /// A 16-byte address from its leading and last bytes, with zeros between.
     private func ipv6(_ leading: [UInt8], last: [UInt8] = []) -> [UInt8] {
         leading + Array(repeating: 0, count: 16 - leading.count - last.count) + last
     }
@@ -76,7 +78,7 @@ struct PageAddressPolicyTests {
 
     @Test(arguments: [
         ("8.8.8.8", true), ("2606:4700::1111", true), ("64:ff9b::808:808", true),
-        ("192.168.1.1", false), ("100.74.3.68", false), ("127.0.0.1", false), ("::1", false), ("fd7a:115c:a1e0::1", false),
+        ("192.168.1.1", false), ("100.64.0.1", false), ("127.0.0.1", false), ("::1", false), ("fd7a:115c:a1e0::1", false),
         ("fe80::1%en0", false), ("::ffff:10.0.0.1", false), ("2002:c0a8:101::", false), ("not an address", false), ("", false)
     ])
     func `the address a connection reports is judged as text`(address: String, isPublic: Bool) {

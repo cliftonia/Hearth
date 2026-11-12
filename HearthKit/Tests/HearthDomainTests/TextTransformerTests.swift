@@ -2,6 +2,7 @@ import Foundation
 @testable import HearthDomain
 import Testing
 
+/// How LaTeX maths is rewritten as readable text.
 struct MathTransformerTests {
     @Test(arguments: [
         ("x^2 + y^{10}", "x² + y¹⁰"),
@@ -32,6 +33,7 @@ struct MathTransformerTests {
     }
 }
 
+/// How a conversation is written out as Markdown.
 struct ConversationExporterTests {
     @Test func `a conversation is written out with a title, speakers, files and sources`() throws {
         let source = SearchSource(title: "Docs", url: try #require(URL(string: "https://docs.example/ps")), snippet: "")
@@ -53,6 +55,7 @@ struct ConversationExporterTests {
     }
 }
 
+/// How follow-up questions are asked for and read out of the answer.
 struct FollowUpTransformerTests {
     @Test func `questions are read one per line without their list markers or quotes`() {
         let answer = """
@@ -92,6 +95,7 @@ struct FollowUpTransformerTests {
     }
 }
 
+/// How a web page is reduced to its text, however awkward its markup.
 struct HTMLTextTransformerTests {
     @Test func `a page is reduced to the text of its article`() {
         let filler = String(repeating: "The council voted on the plan last night. ", count: 15)
@@ -146,7 +150,9 @@ struct HTMLTextTransformerTests {
     }
 }
 
+/// How search results are fenced off so that a web page cannot pass as instructions.
 struct SearchResultsTextTests {
+    /// A search result with the given title and snippet.
     private func source(title: String = "Blog", snippet: String = "A snippet.") throws -> SearchSource {
         SearchSource(title: title, url: try #require(URL(string: "https://blog.example/post")), snippet: snippet)
     }

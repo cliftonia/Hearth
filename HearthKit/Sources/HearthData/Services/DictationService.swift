@@ -1,17 +1,21 @@
 import AVFoundation
 import Speech
 
+/// What the recogniser has heard so far, and whether that is its last word.
 public struct DictationUpdateDTO: Sendable, Equatable {
     public let text: String
     public let isFinal: Bool
 }
 
+/// Why listening could not begin.
 public enum DictationError: Error, Sendable {
+    /// The phone has no speech recogniser for its language, or it cannot be used just now.
     case recognizerUnavailable
+    /// The microphone offers no audio to listen to.
     case microphoneUnavailable
 }
 
-/// Live speech-to-text from the microphone, using the phone's own recognizer.
+/// Live speech-to-text from the microphone, using the phone's own recogniser.
 @MainActor
 public final class DictationService {
     private let engine = AVAudioEngine()
@@ -21,6 +25,7 @@ public final class DictationService {
 
     public init() {}
 
+    /// Asks for leave to recognise speech and then to use the microphone; true only if both are given.
     public func requestAuthorization() async -> Bool {
         guard await Self.requestSpeechAuthorization() else {
             return false
@@ -40,7 +45,7 @@ public final class DictationService {
 
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.shouldReportPartialResults = true
-        // Keep speech on the phone wherever the recognizer can manage without Apple's servers.
+        // Keep speech on the phone wherever the recogniser can manage without Apple's servers.
         request.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
         guard Self.installTap(on: engine.inputNode, feeding: request) else {
             throw DictationError.microphoneUnavailable
@@ -55,6 +60,7 @@ public final class DictationService {
         return stream
     }
 
+    /// Stops listening and ends the stream. Harmless when nothing is running.
     public func stop() {
         if engine.isRunning {
             engine.stop()
@@ -69,7 +75,7 @@ public final class DictationService {
     }
 }
 
-// The callbacks below arrive on audio and recognizer queues, so they are built outside the main actor.
+// The callbacks below arrive on audio and recogniser queues, so they are built outside the main actor.
 private extension DictationService {
     nonisolated static func requestSpeechAuthorization() async -> Bool {
         await withCheckedContinuation { continuation in
@@ -79,6 +85,7 @@ private extension DictationService {
         }
     }
 
+    /// Feeds the microphone's audio to the recogniser. False when the microphone has no usable format.
     nonisolated static func installTap(on node: AVAudioInputNode, feeding request: SFSpeechAudioBufferRecognitionRequest) -> Bool {
         let format = node.outputFormat(forBus: 0)
         guard format.sampleRate > 0, format.channelCount > 0 else {
@@ -91,6 +98,7 @@ private extension DictationService {
         return true
     }
 
+    /// Passes on each transcription as it firms up, and ends the stream on the last one or on a failure.
     nonisolated static func recognize(
         with recognizer: SFSpeechRecognizer,
         request: SFSpeechAudioBufferRecognitionRequest,

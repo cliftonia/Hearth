@@ -1,6 +1,7 @@
 import Foundation
 import HearthData
 
+/// How the domain reads and writes what is remembered about the user.
 public struct MemoryDataProvider: Sendable {
     public let load: @Sendable () async throws -> [Memory]
     public let save: @Sendable ([Memory]) async throws -> Void

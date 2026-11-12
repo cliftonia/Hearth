@@ -3,6 +3,7 @@ import HearthDomain
 
 // Attaching files, and editing a message that was already sent.
 extension ChatPresenter {
+    /// Attaches the files that could be read, and says so if some could not.
     func addDocumentsAction(_ documents: [AttachedDocument], unreadableCount: Int) {
         viewModel.pendingDocuments.append(contentsOf: documents)
         if unreadableCount > 0 {
@@ -25,6 +26,7 @@ extension ChatPresenter {
         viewModel.pendingDocuments = message.documents
     }
 
+    /// Leaves the sent message as it was and empties the composer.
     func cancelEditAction() {
         viewModel.editingMessageID = nil
         viewModel.draft = ""

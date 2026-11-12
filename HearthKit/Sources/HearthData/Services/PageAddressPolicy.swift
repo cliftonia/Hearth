@@ -5,6 +5,7 @@ import Foundation
 /// The addresses come from search results, which anyone can influence. A phone sits on networks with
 /// unguarded services (a router, a home server, a tailnet), so only public web addresses are read.
 public enum PageAddressPolicy {
+    /// Endings of names that are never pages on the public web: local networks, tailnets and the like.
     private static let privateSuffixes = [".local", ".localhost", ".internal", ".lan", ".home", ".home.arpa", ".ts.net", ".onion"]
 
     /// Whether the URL, by its form alone, names a page on the public web: HTTPS, and a real domain name rather than a number.
@@ -69,6 +70,7 @@ public enum PageAddressPolicy {
         return false
     }
 
+    /// Whether an IPv4 address lies outside every private, carrier-grade, local and reserved range.
     private static func isPublicIPv4(_ bytes: [UInt8]) -> Bool {
         let (first, second) = (bytes[0], bytes[1])
         let isPrivate = first == 10 || (first == 172 && (16...31).contains(second)) || (first == 192 && second == 168)

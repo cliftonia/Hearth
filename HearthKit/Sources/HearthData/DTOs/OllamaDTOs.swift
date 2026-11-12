@@ -1,9 +1,13 @@
 import Foundation
 
+// MARK: - Model list
+
+/// The answer to `/api/tags`: every model the server has.
 public struct OllamaTagsDTO: Decodable, Sendable {
     public let models: [OllamaModelDTO]
 }
 
+/// The finer details of a model; only its size is read.
 public struct OllamaModelDetailsDTO: Decodable, Sendable {
     public let parameterSize: String?
 
@@ -12,10 +16,13 @@ public struct OllamaModelDetailsDTO: Decodable, Sendable {
     }
 }
 
+/// One model as the server lists it.
 public struct OllamaModelDTO: Decodable, Sendable {
     public let name: String
+    /// Present when the model runs on a remote host rather than on the server itself.
     public let remoteHost: String?
     public let details: OllamaModelDetailsDTO?
+    /// What the model can do, such as `completion`, `vision` or `tools`; `nil` when the server does not say.
     public let capabilities: [String]?
 
     enum CodingKeys: String, CodingKey {
@@ -26,8 +33,11 @@ public struct OllamaModelDTO: Decodable, Sendable {
     }
 }
 
-/// What a model was asked to look up when it called the web search tool.
+// MARK: - Tools
+
+/// What a model passed when it called a tool. Each tool fills in only the fields it uses.
 public struct OllamaToolArgumentsDTO: Codable, Sendable, Equatable {
+    /// What to search the web for, for the web search tool.
     public let query: String?
     /// "news" when the model wants current events rather than the general web.
     public let category: String?
@@ -44,6 +54,7 @@ public struct OllamaToolArgumentsDTO: Codable, Sendable, Equatable {
     }
 }
 
+/// The tool a model called, by name, with what it passed.
 public struct OllamaToolFunctionDTO: Codable, Sendable, Equatable {
     public let name: String
     public let arguments: OllamaToolArgumentsDTO
@@ -54,6 +65,7 @@ public struct OllamaToolFunctionDTO: Codable, Sendable, Equatable {
     }
 }
 
+/// One tool call made by a model, in the wrapping Ollama gives it.
 public struct OllamaToolCallDTO: Codable, Sendable, Equatable {
     public let function: OllamaToolFunctionDTO
 
@@ -62,6 +74,7 @@ public struct OllamaToolCallDTO: Codable, Sendable, Equatable {
     }
 }
 
+/// One argument a tool accepts, described for the model.
 public struct OllamaToolPropertyDTO: Encodable, Sendable, Equatable {
     public let type: String
     public let description: String
@@ -81,21 +94,24 @@ public struct OllamaToolPropertyDTO: Encodable, Sendable, Equatable {
     }
 }
 
+/// The arguments a tool accepts, as a JSON Schema object.
 public struct OllamaToolParametersDTO: Encodable, Sendable, Equatable {
     public let type: String
     public let properties: [String: OllamaToolPropertyDTO]
     public let required: [String]
 }
 
+/// What a tool is called, what it does and what it takes, as the model is told.
 public struct OllamaToolSpecDTO: Encodable, Sendable, Equatable {
     public let name: String
     public let description: String
     public let parameters: OllamaToolParametersDTO
 }
 
-/// A tool offered to the model. The app offers one: a web search.
+/// A tool offered to the model: the web search, or one of the three that keep its memory.
 public struct OllamaToolDTO: Encodable, Sendable, Equatable {
     public static let webSearchName = "web_search"
+    /// The category a model gives, and the search server takes, for a search of the news.
     public static let newsCategory = "news"
 
     public let type: String
@@ -116,6 +132,7 @@ public struct OllamaToolDTO: Encodable, Sendable, Equatable {
         tool(deleteMemoryName, "Forget a saved memory.", ["id": "The id of the memory, such as m3"])
     ]
 
+    /// A tool whose arguments are all required strings, each given with its description.
     private static func tool(_ name: String, _ description: String, _ properties: [String: String]) -> OllamaToolDTO {
         OllamaToolDTO(
             type: "function",
@@ -131,6 +148,7 @@ public struct OllamaToolDTO: Encodable, Sendable, Equatable {
         )
     }
 
+    /// The tool with which a model searches the web, for news if it says so.
     public static let webSearch = OllamaToolDTO(
         type: "function",
         function: OllamaToolSpecDTO(
@@ -152,6 +170,9 @@ public struct OllamaToolDTO: Encodable, Sendable, Equatable {
     )
 }
 
+// MARK: - Chat request
+
+/// One message of the conversation as it is sent to the model.
 public struct OllamaMessageDTO: Encodable, Sendable, Equatable {
     public let role: String
     public let content: String
@@ -194,6 +215,7 @@ public enum OllamaThinkDTO: Encodable, Sendable, Equatable {
     }
 }
 
+/// The body of a request to `/api/chat`.
 public struct OllamaChatRequestDTO: Encodable, Sendable, Equatable {
     public let model: String
     public let messages: [OllamaMessageDTO]
@@ -212,6 +234,9 @@ public struct OllamaChatRequestDTO: Encodable, Sendable, Equatable {
     }
 }
 
+// MARK: - Chat reply
+
+/// What one piece of a reply carries: text, thinking, tool calls, or any mix of them.
 public struct OllamaChunkMessageDTO: Decodable, Sendable, Equatable {
     public let content: String?
     public let thinking: String?
@@ -224,9 +249,11 @@ public struct OllamaChunkMessageDTO: Decodable, Sendable, Equatable {
     }
 }
 
+/// One piece of a reply from `/api/chat`: a streamed line, or the whole of a reply that was not streamed.
 public struct OllamaChatChunkDTO: Decodable, Sendable, Equatable {
     public let message: OllamaChunkMessageDTO?
     public let done: Bool?
+    /// Set when the server reports a failure in place of a reply.
     public let error: String?
 
     /// Decodes one line of the newline-delimited JSON that `/api/chat` streams.

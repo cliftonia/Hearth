@@ -5,6 +5,7 @@ import HearthDomain
 struct ErrorViewConfiguration: Hashable {
     let title: String
     let message: String
+    /// The retry button's title, or `nil` when trying again would not help.
     let retryActionLabel: String?
 
     init(title: String = Strings.errorTitle, message: String, retryActionLabel: String? = Strings.retry) {
@@ -13,6 +14,7 @@ struct ErrorViewConfiguration: Hashable {
         self.retryActionLabel = retryActionLabel
     }
 
+    /// Words the user can act on for an error from any layer. An error that only a change of settings can fix offers no retry.
     init(from error: any Error) {
         switch error {
         case let chatError as ChatError:

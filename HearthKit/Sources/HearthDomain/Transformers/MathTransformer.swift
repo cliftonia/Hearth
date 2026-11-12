@@ -56,6 +56,8 @@ public struct MathTransformer: Sendable {
         return text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
     }
 
+    // MARK: Helpers
+
     /// Replaces every match of the pattern with what the closure makes of its groups; group 0 is the whole match.
     private func replacing(_ pattern: String, in text: String, passes: Int = 1, with replacement: ([String]) -> String) -> String {
         guard let regex = try? NSRegularExpression(pattern: pattern) else {
@@ -95,17 +97,22 @@ public struct MathTransformer: Sendable {
         return content.count == 1 ? marker + content : "\(marker)(\(content))"
     }
 
+    // MARK: Tables
+
+    /// The characters Unicode can raise.
     private static let superscripts: [Character: Character] = [
         "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹",
         "+": "⁺", "-": "⁻", "=": "⁼", "(": "⁽", ")": "⁾", "n": "ⁿ", "i": "ⁱ"
     ]
 
+    /// The characters Unicode can lower.
     private static let subscripts: [Character: Character] = [
         "0": "₀", "1": "₁", "2": "₂", "3": "₃", "4": "₄", "5": "₅", "6": "₆", "7": "₇", "8": "₈", "9": "₉",
         "+": "₊", "-": "₋", "=": "₌", "(": "₍", ")": "₎",
         "a": "ₐ", "e": "ₑ", "i": "ᵢ", "j": "ⱼ", "k": "ₖ", "m": "ₘ", "n": "ₙ", "o": "ₒ", "t": "ₜ", "x": "ₓ"
     ]
 
+    /// LaTeX commands with a plain-text form. Commands that only lay things out, such as `\left`, become nothing.
     private static let symbols: [String: String] = [
         "times": "×", "cdot": "·", "div": "÷", "pm": "±", "mp": "∓",
         "leq": "≤", "le": "≤", "geq": "≥", "ge": "≥", "neq": "≠", "ne": "≠", "approx": "≈", "equiv": "≡", "sim": "∼", "propto": "∝",

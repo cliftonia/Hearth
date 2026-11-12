@@ -19,9 +19,11 @@ public struct SearchRequest: Sendable, Equatable {
     }
 }
 
+/// How the domain searches the web and reads the pages it finds.
 public struct SearchDataProvider: Sendable {
     /// The raw HTML of a page, for reading what a result actually says.
     public let fetchPage: @Sendable (URL) async throws -> String
+    /// The results of a search made on the given search server.
     public let search: @Sendable (URL, SearchRequest) async throws -> [SearchSource]
 
     public init(
@@ -34,6 +36,7 @@ public struct SearchDataProvider: Sendable {
 }
 
 public extension SearchDataProvider {
+    /// Backed by a SearXNG server, with pages fetched by the phone itself.
     static func live(service: SearchService = SearchService(), pages: PageService = PageService()) -> SearchDataProvider {
         SearchDataProvider(
             fetchPage: { url in try await pages.fetchHTML(url: url) },

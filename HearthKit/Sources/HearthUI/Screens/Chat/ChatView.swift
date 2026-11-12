@@ -1,13 +1,18 @@
 import HearthDomain
 import SwiftUI
 
+/// The chat screen: the header, the conversation or its empty state, any error, and the composer.
 struct ChatView: View {
+    private static let followUpsID = "followUps"
+    private static let messageSpacing: CGFloat = 22
+
     let presenter: ChatPresenter
 
     var body: some View {
         let viewModel = presenter.viewModel
         VStack(spacing: 0) {
             ChatHeader(presenter: presenter)
+            // Both stay in the tree with one of them hidden, rather than being swapped, so neither is rebuilt as a chat begins.
             ZStack {
                 messageList(viewModel: viewModel)
                     .opacity(viewModel.conversation.messages.isEmpty ? 0 : 1)
@@ -30,26 +35,23 @@ struct ChatView: View {
                     retryAction: { Task { await presenter.retryAction() } },
                     dismissAction: { viewModel.error = nil }
                 )
-                .frame(maxWidth: Self.readingWidth)
+                .frame(maxWidth: HearthSize.readingWidth)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
             ComposerFooter(presenter: presenter)
-                .frame(maxWidth: Self.readingWidth)
+                .frame(maxWidth: HearthSize.readingWidth)
         }
         .background(HearthColor.paper.ignoresSafeArea())
         .animation(.snappy, value: viewModel.error)
         .task { await presenter.loadAction() }
     }
 
-    /// The widest a line of chat grows, so that it stays readable on a large screen.
-    private static let readingWidth: CGFloat = 780
-    private static let followUpsID = "followUps"
-
+    /// The messages, the latest notice and suggestions beneath them, kept scrolled to the newest.
     private func messageList(viewModel: ChatViewModel) -> some View {
         let messages = viewModel.conversation.messages
         return ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 22) {
+                LazyVStack(alignment: .leading, spacing: Self.messageSpacing) {
                     ForEach(messages) { message in
                         MessageSection(
                             message: message,
@@ -75,9 +77,9 @@ struct ChatView: View {
                 }
                 .animation(.snappy, value: viewModel.followUps)
                 .animation(.snappy, value: viewModel.memoryNotice)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .frame(maxWidth: Self.readingWidth)
+                .padding(.horizontal, HearthSpacing.s16)
+                .padding(.vertical, HearthSpacing.s12)
+                .frame(maxWidth: HearthSize.readingWidth)
                 .frame(maxWidth: .infinity)
             }
             .defaultScrollAnchor(.bottom)
@@ -93,133 +95,5 @@ struct ChatView: View {
                 }
             }
         }
-    }
-}
-
-/// Says what was just remembered, changed or forgotten.
-private struct MemoryNoticeSection: View {
-    let notice: String
-
-    var body: some View {
-        Label(notice, systemImage: "bookmark.fill")
-            .font(.footnote)
-            .foregroundStyle(HearthColor.pine)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(HearthColor.pineSoft, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .transition(.opacity)
-    }
-}
-
-/// Questions the user might ask next; tapping one sends it.
-private struct FollowUpSection: View {
-    let questions: [String]
-    let action: (String) -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(questions, id: \.self) { question in
-                Rectangle().fill(HearthColor.line).frame(height: 1)
-                Button(action: { action(question) }, label: {
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Text(question)
-                            .font(.subheadline)
-                            .foregroundStyle(HearthColor.ink)
-                            .multilineTextAlignment(.leading)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        Image(systemName: "arrow.turn.down.right")
-                            .font(.footnote)
-                            .foregroundStyle(HearthColor.pine)
-                            .accessibilityHidden(true)
-                    }
-                    .padding(.vertical, 11)
-                    .contentShape(Rectangle())
-                })
-                .buttonStyle(.plain)
-                .accessibilityHint(Strings.followUpHint)
-            }
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(Strings.followUps)
-    }
-}
-
-private struct EmptyChatSection: View {
-    let isServerConfigured: Bool
-    let isPrivate: Bool
-    let settingsAction: () -> Void
-
-    var body: some View {
-        VStack(spacing: 16) {
-            HearthMark(sideLength: 56)
-            Text(isServerConfigured ? Strings.emptyTitle : Strings.connectTitle)
-                .font(HearthFont.display)
-                .foregroundStyle(HearthColor.ink)
-                .multilineTextAlignment(.center)
-            if isServerConfigured {
-                Text(Strings.privateChatNote)
-                    .font(.footnote)
-                    .foregroundStyle(HearthColor.mute)
-                    .multilineTextAlignment(.center)
-                    .opacity(isPrivate ? 1 : 0)
-                    .accessibilityHidden(!isPrivate)
-            }
-            if !isServerConfigured {
-                Text(Strings.connectMessage)
-                    .font(.subheadline)
-                    .foregroundStyle(HearthColor.mute)
-                    .multilineTextAlignment(.center)
-                Button(Strings.openSettings, action: settingsAction)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(HearthColor.onPine)
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 10)
-                    .background(HearthColor.pine, in: Capsule())
-                    .buttonStyle(.plain)
-            }
-        }
-        .padding(32)
-    }
-}
-
-private struct ErrorBannerSection: View {
-    let configuration: ErrorViewConfiguration
-    let retryAction: () -> Void
-    let dismissAction: () -> Void
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(configuration.title)
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(HearthColor.ink)
-                Text(configuration.message)
-                    .font(.footnote)
-                    .foregroundStyle(HearthColor.mute)
-                    .lineLimit(4)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            if let retryActionLabel = configuration.retryActionLabel {
-                Button(retryActionLabel, action: retryAction)
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(HearthColor.pine)
-                    .buttonStyle(.plain)
-            }
-            Button(action: dismissAction) {
-                Image(systemName: "xmark")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(HearthColor.mute)
-                    .frame(width: 24, height: 20)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(Strings.dismiss)
-        }
-        .padding(12)
-        .background(HearthColor.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(HearthColor.danger.opacity(0.5), lineWidth: 1)
-        }
-        .padding(.horizontal, 12)
-        .padding(.top, 6)
     }
 }

@@ -1,7 +1,9 @@
 import Foundation
 import Observation
 
+/// Whether the chat server answered the last time it was asked for its models.
 public enum ServerReachability: Sendable, Equatable {
+    /// Not asked yet, or there is no address to ask.
     case unknown
     case reachable
     case unreachable
@@ -20,6 +22,7 @@ public final class ModelStore {
         self.fetchModels = fetchModels
     }
 
+    /// Asks the server for its models, listing those it runs itself first and each group by name.
     public func refresh(settings: ServerSettings) async throws {
         guard let baseURL = settings.ollamaURL else {
             models = []

@@ -2,8 +2,10 @@ import Foundation
 
 /// Cuts text that arrives a few characters at a time into whole sentences, ready to be spoken.
 public struct SentenceChunker: Sendable {
+    /// Anything shorter is held back, so that the voice is not handed a word or two at a time.
     private static let minimumLength = 24
 
+    /// Text that has arrived but does not yet end a sentence.
     private var buffer = ""
 
     public init() {}
@@ -63,6 +65,7 @@ public struct SentenceChunker: Sendable {
         return boundary
     }
 
+    /// The text made speakable, as one piece; nothing when it holds no letter or digit to say.
     private static func sentences(in text: String) -> [String] {
         let spoken = speakable(text)
         return spoken.contains(where: \.isLetter) || spoken.contains(where: \.isNumber) ? [spoken] : []

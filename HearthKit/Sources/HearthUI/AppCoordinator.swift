@@ -1,20 +1,14 @@
 import HearthDomain
-import Observation
 import SwiftUI
 
-/// What is on screen besides the chat itself.
-@MainActor
-@Observable
-final class AppRouter {
-    var isSidebarOpen = false
-    var isSettingsPresented = false
-    var isVoicePresented = false
-}
-
 /// Builds the screens, wires them together and decides where each request leads.
+///
+/// The app has one coordinator. Each presenter reports to it through a delegate protocol, which it conforms to in
+/// the extensions below; it answers by changing the `AppRouter` or by asking another presenter to act.
 @MainActor
 public final class AppCoordinator {
     let router = AppRouter()
+    /// Read by the root view for the chosen theme.
     let settingsStore: SettingsStore
     let chatPresenter: ChatPresenter
     let sidebarPresenter: SidebarPresenter
@@ -97,6 +91,8 @@ public final class AppCoordinator {
     }
 }
 
+// MARK: - ChatPresenterDelegate
+
 extension AppCoordinator: ChatPresenterDelegate {
     func chatPresenterDidRequestSidebar(_ presenter: ChatPresenter) {
         router.isSidebarOpen = true
@@ -111,12 +107,15 @@ extension AppCoordinator: ChatPresenterDelegate {
     }
 }
 
+// MARK: - SidebarPresenterDelegate
+
 extension AppCoordinator: SidebarPresenterDelegate {
     func sidebarPresenter(_ presenter: SidebarPresenter, didSelect id: Conversation.ID) {
         router.isSidebarOpen = false
         Task { await chatPresenter.selectConversationAction(id) }
     }
 
+    /// Deleting the open chat leaves nothing to show, so a new one takes its place.
     func sidebarPresenter(_ presenter: SidebarPresenter, didDelete id: Conversation.ID) {
         guard chatPresenter.viewModel.conversation.id == id else {
             return
@@ -138,7 +137,10 @@ extension AppCoordinator: SidebarPresenterDelegate {
     }
 }
 
+// MARK: - SettingsPresenterDelegate
+
 extension AppCoordinator: SettingsPresenterDelegate {
+    /// Saved settings may point at another server, so the models are fetched afresh.
     func settingsPresenterDidFinish(_ presenter: SettingsPresenter, didSave: Bool) {
         router.isSettingsPresented = false
         if didSave {
@@ -147,11 +149,15 @@ extension AppCoordinator: SettingsPresenterDelegate {
     }
 }
 
+// MARK: - VoicePresenterDelegate
+
 extension AppCoordinator: VoicePresenterDelegate {
     func voicePresenterDidFinish(_ presenter: VoicePresenter) {
         router.isVoicePresented = false
     }
 }
+
+// MARK: - LockPresenterDelegate
 
 extension AppCoordinator: LockPresenterDelegate {
     /// A locked app shows nothing, says nothing and listens to nothing: sheets close and voice and speech stop.
@@ -170,6 +176,7 @@ extension AppCoordinator: LockPresenterDelegate {
         }
     }
 
+    /// Begins the voice conversation that was asked for while the app was locked, if there was one.
     func lockPresenterDidUnlock(_ presenter: LockPresenter) {
         if isVoicePending {
             isVoicePending = false

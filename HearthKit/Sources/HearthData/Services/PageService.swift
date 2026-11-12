@@ -1,6 +1,8 @@
 import Foundation
 
+/// Why a page was not read.
 public enum PageError: Error, Sendable, Equatable {
+    /// The address answered with something other than a web page, such as a file or an image.
     case notHTML
     /// The address is not a page on the public web, so it is not read.
     case addressNotAllowed
@@ -17,6 +19,7 @@ public struct PageService: Sendable {
         self.session = session
     }
 
+    /// The page's markup, up to the size limit. Fails unless the address, every redirect and every connection is public.
     public func fetchHTML(url: URL) async throws -> String {
         guard PageAddressPolicy.isAllowed(url) else {
             throw PageError.addressNotAllowed
@@ -52,6 +55,7 @@ public struct PageService: Sendable {
 /// Watches one page fetch: follows a redirect only to another public web page, and records where each connection went.
 private final class PageFetchGuard: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
     private let lock = NSLock()
+    /// Where each connection of the fetch went; `nil` until the fetch has ended and said so.
     private var remoteAddresses: [String?]?
 
     func urlSession(

@@ -2,6 +2,7 @@ import Foundation
 @testable import HearthDomain
 import Testing
 
+/// How streamed text is cut into sentences fit to be spoken.
 struct SentenceChunkerTests {
     @Test func `sentences are released only once they are complete`() {
         var chunker = SentenceChunker()
@@ -44,7 +45,9 @@ struct SentenceChunkerTests {
     }
 }
 
+/// How a reply's Markdown is split into blocks.
 struct MarkdownTransformerTests {
+    /// The kinds of block the text is split into, without their identifiers.
     private func kinds(_ markdown: String) -> [MarkdownBlockKind] {
         MarkdownTransformer().blocks(from: markdown).map(\.kind)
     }
@@ -108,6 +111,7 @@ struct MarkdownTransformerTests {
     }
 }
 
+/// What the model is sent for a conversation.
 struct PromptBuilderTests {
     private let now = Date(timeIntervalSince1970: 1_800_000_000)
 
@@ -153,6 +157,7 @@ struct PromptBuilderTests {
         #expect(messages.last?.imagesJPEG == [photo])
     }
 
+    /// The system message built for an empty conversation with the given standing instructions.
     private func systemMessage(instructions: String) -> PromptMessage? {
         PromptBuilder(instructions: instructions).messages(history: [], sources: [], style: .chat, now: now).first
     }
@@ -192,6 +197,7 @@ struct PromptBuilderTests {
     }
 }
 
+/// How addresses are read, and how settings survive saving, updating and older saved forms.
 struct ServerSettingsTests {
     @Test(arguments: [
         ("https://server.example.ts.net", "https://server.example.ts.net"),
@@ -277,6 +283,7 @@ struct ServerSettingsTests {
     }
 }
 
+/// How a model's name is shown.
 struct ChatModelTests {
     @Test(arguments: [
         ("gemma4:latest", "gemma4"),
@@ -289,6 +296,7 @@ struct ChatModelTests {
     }
 }
 
+/// Which links count as web pages.
 struct SearchSourceTests {
     @Test(arguments: [
         ("https://docs.example.com/ps", true),

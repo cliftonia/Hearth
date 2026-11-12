@@ -2,7 +2,9 @@ import Foundation
 
 /// How a reply will reach the user, which changes how it should be written.
 public enum ReplyStyle: Sendable {
+    /// Read on screen, where Markdown helps.
     case chat
+    /// Spoken aloud, so kept short and free of markup.
     case voice
 }
 
@@ -25,6 +27,8 @@ public struct PromptBuilder: Sendable {
         self.isPrivate = isPrivate
     }
 
+    /// The system message, followed by every message of the conversation that has anything in it.
+    ///
     /// - Parameters:
     ///   - offersSearch: Whether the model is being given a web search tool to call when it needs one.
     ///   - offersMemory: Whether the model is being given the tools to change what it remembers.
@@ -107,6 +111,7 @@ public struct PromptBuilder: Sendable {
         return "\(listing)\n\n\(caution) Cite the results you use as [1], [2]. \(ending)"
     }
 
+    /// What the model is told about when to save, correct and forget memories.
     static let memoryGuidance = "You can keep what you remember about the user up to date with the save_memory, update_memory "
         + "and delete_memory tools. Save a lasting fact the user tells you about themselves or how they like things done, "
         + "and anything they ask you to remember, as one short sentence. Update or delete a memory when the user corrects it "
@@ -128,6 +133,7 @@ public struct PromptBuilder: Sendable {
         return query.isEmpty ? nil : String(query)
     }
 
+    /// The system message: who the model is and the date, then how to write, the user's instructions, memories and any search results.
     private func systemText(sources: [SearchSource], style: ReplyStyle, now: Date) -> String {
         var parts = ["You are a helpful, direct assistant. Today is \(now.formatted(date: .complete, time: .omitted))."]
         switch style {

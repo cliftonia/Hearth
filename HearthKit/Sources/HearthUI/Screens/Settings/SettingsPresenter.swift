@@ -1,41 +1,17 @@
 import Foundation
 import HearthCore
 import HearthDomain
-import Observation
 import os
 
+/// What the settings tell the coordinator: that the sheet should close, and whether anything was saved.
 @MainActor
 protocol SettingsPresenterDelegate: AnyObject {
     func settingsPresenterDidFinish(_ presenter: SettingsPresenter, didSave: Bool)
 }
 
-enum ConnectionCheckKind: Hashable {
-    case idle
-    case checking
-    case succeeded(modelCount: Int)
-    case failed(message: String)
-}
-
-@MainActor
-@Observable
-final class SettingsViewModel {
-    var ollamaAddress = ""
-    var searchAddress = ""
-    var speechAddress = ""
-    var voice = ServerSettings.defaultVoice
-    var voices: [String] = []
-    var appearance: AppearanceKind = .system
-    var customInstructions = ""
-    var isAutoReadEnabled = false
-    var isLockEnabled = false
-    var isFollowUpsEnabled = true
-    var isPageReadingEnabled = true
-    var isMemoryEnabled = true
-    var newMemoryText = ""
-    var isConfirmingClearMemories = false
-    var connectionCheck: ConnectionCheckKind = .idle
-}
-
+/// Edits a draft of the settings, which is kept only when the user taps Done.
+///
+/// The theme and the memories are the exceptions: they take effect at once.
 @MainActor
 final class SettingsPresenter {
     let viewModel = SettingsViewModel()
@@ -47,6 +23,7 @@ final class SettingsPresenter {
     private let authentication: AuthenticationProvider
     private let memoryStore: MemoryStore
     private let logger = Logger(for: SettingsPresenter.self)
+    private var previewTask: Task<Void, Never>?
 
     /// - Parameter fetchModels: Counts the models the given settings can reach, without changing any shared state.
     init(
@@ -63,6 +40,9 @@ final class SettingsPresenter {
         self.fetchModels = fetchModels
     }
 
+    // MARK: Loading
+
+    /// Fills the draft from the saved settings each time the sheet opens.
     func loadAction() async {
         let settings = settingsStore.settings
         viewModel.ollamaAddress = settings.ollamaAddress
@@ -78,6 +58,7 @@ final class SettingsPresenter {
         viewModel.isMemoryEnabled = settings.isMemoryEnabled
         viewModel.newMemoryText = ""
         viewModel.connectionCheck = .idle
+        viewModel.voicePreview = .idle
         await loadVoicesAction()
     }
 
@@ -86,6 +67,51 @@ final class SettingsPresenter {
         viewModel.voices = (try? await speech.voices(settings: draft)) ?? []
     }
 
+    // MARK: Voice sample
+
+    /// Speaks a short sample in the chosen voice, or silences the sample if it is playing.
+    func previewVoiceAction() async {
+        let wasPlaying = viewModel.voicePreview == .playing
+        await stopVoicePreviewAction()
+        guard !wasPlaying else {
+            return
+        }
+        viewModel.voicePreview = .playing
+        let speech = speech
+        let settings = draft
+        let task = Task {
+            do {
+                try await speech.speak(text: Strings.voiceSample, settings: settings)
+            } catch is CancellationError {
+                // Stopped by the user.
+            } catch {
+                self.logger.error("Playing the voice sample failed: \(error.localizedDescription, privacy: .public)")
+                self.viewModel.voicePreview = .failed
+            }
+        }
+        previewTask = task
+        await task.value
+        // A sample that was stopped, or replaced by another, has already been accounted for.
+        if previewTask == task, viewModel.voicePreview == .playing {
+            viewModel.voicePreview = .idle
+        }
+    }
+
+    /// Silences the sample, as when another voice is chosen or the settings are closed.
+    func stopVoicePreviewAction() async {
+        guard let previewTask else {
+            viewModel.voicePreview = .idle
+            return
+        }
+        self.previewTask = nil
+        previewTask.cancel()
+        await speech.stop()
+        viewModel.voicePreview = .idle
+    }
+
+    // MARK: Connection, theme and lock
+
+    /// Checks that the Ollama address in the draft answers, and says how many models it offers.
     func testAction() async {
         guard draft.ollamaURL != nil else {
             viewModel.connectionCheck = .failed(message: Strings.invalidAddress)
@@ -135,10 +161,12 @@ final class SettingsPresenter {
         }
     }
 
+    /// Forgets one memory, whoever wrote it.
     func deleteMemoryAction(_ id: Memory.ID) async {
         await memoryStore.apply(.delete(id), isFromUser: true)
     }
 
+    /// Forgets everything, once the user has confirmed.
     func clearMemoriesAction() async {
         do {
             try await memoryStore.clear()
@@ -147,7 +175,11 @@ final class SettingsPresenter {
         }
     }
 
+    // MARK: Finishing
+
+    /// Keeps the draft and closes the sheet. A draft that cannot be written is reported where the connection is.
     func saveAction() {
+        Task { await stopVoicePreviewAction() }
         do {
             try settingsStore.update(draft)
             delegate?.settingsPresenterDidFinish(self, didSave: true)
@@ -157,10 +189,13 @@ final class SettingsPresenter {
         }
     }
 
+    /// Closes the sheet and lets the draft go.
     func cancelAction() {
+        Task { await stopVoicePreviewAction() }
         delegate?.settingsPresenterDidFinish(self, didSave: false)
     }
 
+    /// The settings as they stand in the form, with stray spaces trimmed. What the form does not show is carried over.
     private var draft: ServerSettings {
         ServerSettings(
             ollamaAddress: viewModel.ollamaAddress.trimmingCharacters(in: .whitespaces),

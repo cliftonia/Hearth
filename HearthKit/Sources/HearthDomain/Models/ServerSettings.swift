@@ -17,12 +17,15 @@ public enum ThinkingLevelKind: String, Codable, Sendable, CaseIterable {
 
 /// Where the user's services live, how replies should sound and how the app should look.
 public struct ServerSettings: Hashable, Codable, Sendable {
+    /// The voice replies are spoken in until the user chooses another.
     public static let defaultVoice = "bf_emma"
 
     public let ollamaAddress: String
     public let searchAddress: String
     public let speechAddress: String
+    /// The voice replies are spoken in, by its name on the speech server.
     public let voice: String
+    /// The model a new conversation starts with, if one has been chosen.
     public let defaultModelID: ChatModel.ID?
     public let appearance: AppearanceKind
     /// Standing instructions from the user, given to the model at the start of every conversation.
@@ -89,6 +92,7 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         )
     }
 
+    /// The chat server's address in usable form; `nil` when it is blank or not an address. Likewise the two below.
     public var ollamaURL: URL? { Self.url(from: ollamaAddress) }
     public var searchURL: URL? { Self.url(from: searchAddress) }
     public var speechURL: URL? { Self.url(from: speechAddress) }
@@ -96,6 +100,7 @@ public struct ServerSettings: Hashable, Codable, Sendable {
     /// The host of the chat server, for display.
     public var ollamaHost: String? { ollamaURL?.host() }
 
+    /// A copy with the given parts replaced; anything left `nil` is kept.
     public func updating(
         defaultModelID: ChatModel.ID? = nil,
         appearance: AppearanceKind? = nil,

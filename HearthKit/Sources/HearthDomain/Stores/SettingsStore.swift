@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-/// The server addresses and voice, shared by every screen and kept between launches.
+/// The user's settings, shared by every screen and kept between launches.
 @MainActor
 @Observable
 public final class SettingsStore {
@@ -20,6 +20,7 @@ public final class SettingsStore {
         self.save = save
     }
 
+    /// Replaces the settings and writes them, so that they are there at the next launch.
     public func update(_ settings: ServerSettings) throws {
         self.settings = settings
         save(try JSONEncoder().encode(settings))
@@ -27,6 +28,7 @@ public final class SettingsStore {
 }
 
 public extension SettingsStore {
+    /// Kept in the user defaults.
     static func live(defaults: ServerSettings, userDefaults: UserDefaults = .standard) -> SettingsStore {
         let key = "serverSettings"
         return SettingsStore(

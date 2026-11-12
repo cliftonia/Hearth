@@ -1,9 +1,9 @@
 import Foundation
 import HearthCore
 import HearthDomain
-import Observation
 import os
 
+/// What the chat list asks of the coordinator, and what it reports having done to a chat.
 @MainActor
 protocol SidebarPresenterDelegate: AnyObject {
     func sidebarPresenter(_ presenter: SidebarPresenter, didSelect id: Conversation.ID)
@@ -13,42 +13,7 @@ protocol SidebarPresenterDelegate: AnyObject {
     func sidebarPresenterDidRequestSettings(_ presenter: SidebarPresenter)
 }
 
-@MainActor
-@Observable
-final class SidebarViewModel {
-    var query = ""
-    var isRenaming = false
-    var renameDraft = ""
-    var renamingID: Conversation.ID?
-}
-
-struct SidebarRowViewConfiguration: Hashable, Identifiable {
-    let id: Conversation.ID
-    let title: String
-    let isPinned: Bool
-    let isPrivate: Bool
-}
-
-enum SidebarGroupKind: Hashable, CaseIterable {
-    case pinned
-    case today
-    case yesterday
-    case previousWeek
-    case earlier
-}
-
-struct SidebarGroupViewConfiguration: Hashable, Identifiable {
-    let id: SidebarGroupKind
-    let title: String
-    let rows: [SidebarRowViewConfiguration]
-}
-
-struct ServerStatusViewConfiguration: Hashable {
-    let host: String
-    let detail: String
-    let isOnline: Bool
-}
-
+/// Lists the saved chats, searches them, and pins, renames, shares and deletes them.
 @MainActor
 final class SidebarPresenter {
     let viewModel = SidebarViewModel()
@@ -57,6 +22,7 @@ final class SidebarPresenter {
     private let conversationStore: ConversationStore
     private let modelStore: ModelStore
     private let settingsStore: SettingsStore
+    /// The chat that is open, which belongs to the chat screen; the list only highlights it.
     private let selectedConversationID: @MainActor () -> Conversation.ID
     private let logger = Logger(for: SidebarPresenter.self)
 
@@ -72,12 +38,16 @@ final class SidebarPresenter {
         self.selectedConversationID = selectedConversationID
     }
 
+    // MARK: What the list shows
+
+    /// The chats that match the search, sorted into dated groups.
     var groups: [SidebarGroupViewConfiguration] {
         ConversationGrouper().groups(from: conversationStore.conversations, query: viewModel.query, now: Date())
     }
 
     var selectedID: Conversation.ID { selectedConversationID() }
 
+    /// Whether the server answered when the models were last fetched, for the dot on the settings button.
     var status: ServerStatusViewConfiguration {
         let host = settingsStore.settings.ollamaHost
         switch modelStore.reachability {
@@ -94,6 +64,8 @@ final class SidebarPresenter {
         }
     }
 
+    // MARK: Navigation
+
     func selectAction(_ id: Conversation.ID) {
         delegate?.sidebarPresenter(self, didSelect: id)
     }
@@ -106,6 +78,9 @@ final class SidebarPresenter {
         delegate?.sidebarPresenterDidRequestSettings(self)
     }
 
+    // MARK: Changing a chat
+
+    /// Pins a chat to the top of the list, or lets it go back among the others.
     func pinAction(_ row: SidebarRowViewConfiguration) async {
         do {
             try await conversationStore.setPinned(!row.isPinned, for: row.id)
@@ -114,12 +89,14 @@ final class SidebarPresenter {
         }
     }
 
+    /// Opens the rename alert with the chat's present title in its field.
     func renameAction(_ row: SidebarRowViewConfiguration) {
         viewModel.renamingID = row.id
         viewModel.renameDraft = row.title
         viewModel.isRenaming = true
     }
 
+    /// Saves the title typed into the rename alert. An empty title changes nothing.
     func commitRenameAction() async {
         let title = viewModel.renameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let id = viewModel.renamingID, !title.isEmpty else {
@@ -146,63 +123,6 @@ final class SidebarPresenter {
             delegate?.sidebarPresenter(self, didDelete: id)
         } catch {
             logger.error("Deleting a conversation failed: \(error.localizedDescription, privacy: .public)")
-        }
-    }
-}
-
-/// Sorts conversations into the sidebar's dated groups.
-struct ConversationGrouper {
-    func groups(from conversations: [Conversation], query: String, now: Date, calendar: Calendar = .current) -> [SidebarGroupViewConfiguration] {
-        let needle = query.trimmingCharacters(in: .whitespaces)
-        let matching = conversations.filter { conversation in
-            needle.isEmpty || conversation.title.localizedCaseInsensitiveContains(needle)
-                || conversation.messages.contains { $0.text.localizedCaseInsensitiveContains(needle) }
-        }
-        let grouped = Dictionary(grouping: matching) { conversation in
-            conversation.isPinned ? .pinned : kind(for: conversation.updatedAt, now: now, calendar: calendar)
-        }
-        return SidebarGroupKind.allCases.compactMap { kind in
-            guard let members = grouped[kind], !members.isEmpty else {
-                return nil
-            }
-            let rows = members.map { conversation in
-                SidebarRowViewConfiguration(
-                    id: conversation.id,
-                    title: conversation.title.isEmpty ? Strings.newChat : conversation.title,
-                    isPinned: conversation.isPinned,
-                    isPrivate: conversation.isPrivate
-                )
-            }
-            return SidebarGroupViewConfiguration(id: kind, title: title(for: kind), rows: rows)
-        }
-    }
-
-    private func kind(for date: Date, now: Date, calendar: Calendar) -> SidebarGroupKind {
-        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: date), to: calendar.startOfDay(for: now)).day ?? 0
-        switch days {
-        case ...0:
-            return .today
-        case 1:
-            return .yesterday
-        case 2...7:
-            return .previousWeek
-        default:
-            return .earlier
-        }
-    }
-
-    private func title(for kind: SidebarGroupKind) -> String {
-        switch kind {
-        case .pinned:
-            Strings.pinned
-        case .today:
-            Strings.today
-        case .yesterday:
-            Strings.yesterday
-        case .previousWeek:
-            Strings.previousWeek
-        case .earlier:
-            Strings.earlier
         }
     }
 }

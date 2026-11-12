@@ -10,7 +10,7 @@ struct ChatHeader: View {
     var body: some View {
         // On a wide screen the conversations are always in view, so there is no drawer to open.
         let hasDrawer = horizontalSizeClass != .regular
-        HStack(spacing: 8) {
+        HStack(spacing: HearthSpacing.s8) {
             IconButton(systemImage: "line.3.horizontal", label: Strings.menuLabel, action: presenter.sidebarAction)
                 .opacity(hasDrawer ? 1 : 0)
                 .allowsHitTesting(hasDrawer)
@@ -19,8 +19,8 @@ struct ChatHeader: View {
                 .frame(maxWidth: .infinity)
             privateToggle
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, HearthSpacing.s8)
+        .padding(.vertical, HearthSpacing.s4)
     }
 
     /// Makes a chat that has not yet begun private. Once the chat has begun it only shows that the chat is private.
@@ -31,9 +31,9 @@ struct ChatHeader: View {
         let isShown = canChange || isPrivate
         return Button(action: presenter.togglePrivateAction) {
             Image(systemName: isPrivate ? "eye.slash.fill" : "eye.slash")
-                .font(.system(.body, weight: .medium))
+                .font(HearthFont.icon)
                 .foregroundStyle(isPrivate ? HearthColor.pine : HearthColor.ink)
-                .frame(width: 40, height: 40)
+                .frame(width: HearthSize.iconButton, height: HearthSize.iconButton)
                 .background(isPrivate ? HearthColor.pineSoft : .clear, in: Circle())
                 .contentShape(Rectangle())
         }
@@ -46,13 +46,14 @@ struct ChatHeader: View {
         .animation(.snappy, value: isPrivate)
     }
 
+    /// The chosen model in a pill; tapping it lists the server's models, local ones first.
     private var modelMenu: some View {
         let selected = presenter.viewModel.selectedModel
         return Menu {
             modelSection(title: Strings.localModels, models: presenter.models.filter { !$0.isCloud })
             modelSection(title: Strings.cloudModels, models: presenter.models.filter(\.isCloud))
         } label: {
-            HStack(spacing: 6) {
+            HStack(spacing: HearthSpacing.s6) {
                 Text(selected?.displayName ?? Strings.noModel)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(HearthColor.ink)
@@ -65,10 +66,9 @@ struct ChatHeader: View {
                     .foregroundStyle(HearthColor.mute)
                     .accessibilityHidden(true)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(HearthColor.card, in: Capsule())
-            .overlay { Capsule().strokeBorder(HearthColor.line, lineWidth: 1) }
+            .padding(.horizontal, HearthSpacing.s14)
+            .padding(.vertical, HearthSpacing.s8)
+            .capsuleSurface()
         }
         .accessibilityLabel(Strings.modelPickerLabel)
         .accessibilityValue(selected?.displayName ?? Strings.noModel)

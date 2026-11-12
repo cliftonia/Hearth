@@ -10,7 +10,7 @@ struct MemorySection: View {
         Section {
             Toggle(Strings.memoryToggle, isOn: $viewModel.isMemoryEnabled)
             NavigationLink(destination: { MemoryListView(presenter: presenter) }, label: {
-                HStack(spacing: 8) {
+                HStack(spacing: HearthSpacing.s8) {
                     Text(Strings.savedMemories)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Text("\(presenter.memories.count)")
@@ -25,6 +25,7 @@ struct MemorySection: View {
     }
 }
 
+/// The saved memories, where one can be added by hand, swiped away, or all forgotten at once.
 private struct MemoryListView: View {
     let presenter: SettingsPresenter
 

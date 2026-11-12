@@ -1,9 +1,11 @@
 import Foundation
 
+/// The answer SearXNG gives to a search.
 public struct SearchResponseDTO: Decodable, Sendable {
     public let results: [SearchResultDTO]
 }
 
+/// One search result. Any part of it may be missing.
 public struct SearchResultDTO: Decodable, Sendable, Equatable {
     public let title: String?
     public let url: String?

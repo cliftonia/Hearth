@@ -3,10 +3,12 @@ import UIKit
 
 /// The system camera, handing back one photo already shrunk for a vision model.
 struct CameraPicker: UIViewControllerRepresentable {
+    /// False where there is no camera to use, as in the simulator; the menu then leaves the camera out.
     static var isAvailable: Bool {
         UIImagePickerController.isSourceTypeAvailable(.camera)
     }
 
+    /// Receives the photo as JPEG data. Nothing is called if the camera is dismissed without one.
     let onCapture: (Data) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -24,6 +26,7 @@ struct CameraPicker: UIViewControllerRepresentable {
         Coordinator(onCapture: onCapture, onFinish: { dismiss() })
     }
 
+    /// Receives the camera's result on the picker's behalf, then closes it.
     final class Coordinator: NSObject {
         private let onCapture: (Data) -> Void
         private let onFinish: () -> Void

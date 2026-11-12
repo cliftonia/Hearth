@@ -8,11 +8,13 @@ public struct Tagged<Tag, RawValue: Hashable & Codable & Sendable>: RawRepresent
         self.rawValue = rawValue
     }
 
+    /// Wraps a value without the `rawValue:` label, to keep call sites short.
     public init(_ rawValue: RawValue) {
         self.rawValue = rawValue
     }
 }
 
+// Encoded as the bare raw value, so a tagged identifier is stored exactly as an untagged one would be.
 extension Tagged: Codable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()

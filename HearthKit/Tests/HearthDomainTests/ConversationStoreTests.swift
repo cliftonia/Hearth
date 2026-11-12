@@ -2,13 +2,16 @@ import Foundation
 @testable import HearthDomain
 import Testing
 
+/// How conversations are loaded, ordered, pinned and renamed, and how older saved ones are still read.
 @MainActor
 struct ConversationStoreTests {
+    /// The store under test, with a record of what it wrote to disk.
     struct Fixture {
         let subject: ConversationStore
         let saved: Recorder<Conversation>
     }
 
+    /// A store whose disk already holds the given conversations.
     private func makeTestSubject(stored: [Conversation] = []) -> Fixture {
         let saved = Recorder<Conversation>()
         let provider = ConversationDataProvider(

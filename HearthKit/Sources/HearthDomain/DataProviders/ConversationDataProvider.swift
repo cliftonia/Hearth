@@ -1,6 +1,7 @@
 import Foundation
 import HearthData
 
+/// How the domain reads and writes saved conversations.
 public struct ConversationDataProvider: Sendable {
     public let loadAll: @Sendable () async throws -> [Conversation]
     public let save: @Sendable (Conversation) async throws -> Void

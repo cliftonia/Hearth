@@ -36,6 +36,7 @@ public final class MemoryStore {
         }
     }
 
+    /// Forgets everything. If that cannot be written, the memories are put back and the error is thrown.
     public func clear() async throws {
         let before = memories
         memories = []

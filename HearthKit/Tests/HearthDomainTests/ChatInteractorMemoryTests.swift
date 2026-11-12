@@ -2,7 +2,9 @@ import Foundation
 @testable import HearthDomain
 import Testing
 
+/// When a model may change what it remembers during a turn, and how often.
 struct ChatInteractorMemoryTests {
+    /// A turn in which the model may change its memory; every change it asks for is recorded and reported as saved.
     private func remembering(
         _ changes: Recorder<MemoryRequest>,
         searchMode: SearchModeKind = .off,

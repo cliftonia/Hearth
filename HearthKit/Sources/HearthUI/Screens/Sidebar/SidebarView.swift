@@ -1,29 +1,38 @@
 import HearthDomain
 import SwiftUI
 
+/// The chat list: the brand, a search field, the chats grouped by day, and Settings and New chat floating at the foot.
 struct SidebarView: View {
+    /// The vertical padding that gives the search field and each chat their height.
+    private static let rowVerticalPadding: CGFloat = 9
+    /// Room for the last chat to be scrolled clear of the floating controls.
+    private static let listBottomClearance: CGFloat = 84
+    private static let statusDotRingWidth: CGFloat = 2
+    /// How far down the floating controls the list has faded out completely.
+    private static let fadeEnd = UnitPoint(x: 0.5, y: 0.4)
+
     let presenter: SidebarPresenter
 
     var body: some View {
         @Bindable var viewModel = presenter.viewModel
         let groups = presenter.groups
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 10) {
+            HStack(spacing: HearthSpacing.s10) {
                 HearthMark(sideLength: 26)
                 Text(Strings.brand)
                     .font(HearthFont.brand)
                     .foregroundStyle(HearthColor.ink)
             }
-            .padding(.horizontal, 18)
-            .padding(.top, 8)
-            .padding(.bottom, 14)
+            .padding(.horizontal, HearthSpacing.s18)
+            .padding(.top, HearthSpacing.s8)
+            .padding(.bottom, HearthSpacing.s14)
             searchField(text: $viewModel.query)
             ZStack(alignment: .top) {
                 conversationList(groups: groups)
                 Text(Strings.noChats)
                     .font(.subheadline)
                     .foregroundStyle(HearthColor.mute)
-                    .padding(.top, 32)
+                    .padding(.top, HearthSpacing.s32)
                     .opacity(groups.isEmpty ? 1 : 0)
                     .accessibilityHidden(!groups.isEmpty)
             }
@@ -38,8 +47,10 @@ struct SidebarView: View {
         }
     }
 
+    // MARK: Search and list
+
     private func searchField(text: Binding<String>) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: HearthSpacing.s8) {
             Image(systemName: "magnifyingglass")
                 .font(.footnote)
                 .foregroundStyle(HearthColor.mute)
@@ -49,41 +60,40 @@ struct SidebarView: View {
                 .foregroundStyle(HearthColor.ink)
                 .autocorrectionDisabled()
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
-        .background(HearthColor.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay { RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(HearthColor.line, lineWidth: 1) }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, HearthSpacing.s12)
+        .padding(.vertical, Self.rowVerticalPadding)
+        .cardSurface()
+        .padding(.horizontal, HearthSpacing.s14)
     }
 
     private func conversationList(groups: [SidebarGroupViewConfiguration]) -> some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 2) {
+            LazyVStack(alignment: .leading, spacing: HearthSpacing.s2) {
                 ForEach(groups) { group in
                     Text(group.title)
                         .font(.caption.weight(.medium))
                         .textCase(.uppercase)
                         .kerning(0.6)
                         .foregroundStyle(HearthColor.mute)
-                        .padding(.horizontal, 18)
-                        .padding(.top, 14)
-                        .padding(.bottom, 4)
+                        .padding(.horizontal, HearthSpacing.s18)
+                        .padding(.top, HearthSpacing.s14)
+                        .padding(.bottom, HearthSpacing.s4)
                         .accessibilityAddTraits(.isHeader)
                     ForEach(group.rows) { row in
                         conversationRow(row)
                     }
                 }
             }
-            // Room for the last chat to be scrolled clear of the floating controls.
-            .padding(.bottom, 84)
+            .padding(.bottom, Self.listBottomClearance)
         }
         .scrollDismissesKeyboard(.immediately)
     }
 
+    /// One chat. A long press offers to pin, rename, share or delete it.
     private func conversationRow(_ row: SidebarRowViewConfiguration) -> some View {
         let isSelected = row.id == presenter.selectedID
         return Button(action: { presenter.selectAction(row.id) }, label: {
-            HStack(spacing: 6) {
+            HStack(spacing: HearthSpacing.s6) {
                 Text(row.title)
                     .font(.subheadline)
                     .foregroundStyle(HearthColor.ink)
@@ -101,13 +111,13 @@ struct SidebarView: View {
                     .opacity(row.isPinned ? 1 : 0)
                     .accessibilityHidden(true)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 9)
-            .background(isSelected ? HearthColor.bubble : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .padding(.horizontal, HearthSpacing.s10)
+            .padding(.vertical, Self.rowVerticalPadding)
+            .background(isSelected ? HearthColor.bubble : .clear, in: RoundedRectangle(cornerRadius: HearthRadius.row, style: .continuous))
             .contentShape(Rectangle())
         })
         .buttonStyle(.plain)
-        .padding(.horizontal, 8)
+        .padding(.horizontal, HearthSpacing.s8)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityValue(Self.spokenMarks(for: row))
         .contextMenu {
@@ -131,18 +141,20 @@ struct SidebarView: View {
         [row.isPinned ? Strings.pinned : "", row.isPrivate ? Strings.privateChat : ""].filter { !$0.isEmpty }.joined(separator: ", ")
     }
 
+    // MARK: Floating controls
+
     /// The settings and the new chat button, floating over the end of the list.
     private var floatingControls: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: HearthSpacing.s12) {
             settingsButton
                 .frame(maxWidth: .infinity, alignment: .leading)
             newChatButton
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 28)
-        .padding(.bottom, 10)
+        .padding(.horizontal, HearthSpacing.s16)
+        .padding(.top, HearthSpacing.s28)
+        .padding(.bottom, HearthSpacing.s10)
         .background {
-            LinearGradient(colors: [HearthColor.paper.opacity(0), HearthColor.paper], startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.4))
+            LinearGradient(colors: [HearthColor.paper.opacity(0), HearthColor.paper], startPoint: .top, endPoint: Self.fadeEnd)
                 // The fade runs to the very bottom of the screen, so no chat shows beneath the buttons.
                 .ignoresSafeArea(edges: .bottom)
                 .allowsHitTesting(false)
@@ -154,10 +166,10 @@ struct SidebarView: View {
             Label(Strings.newChat, systemImage: "plus")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(HearthColor.onPine)
-                .padding(.horizontal, 18)
-                .frame(height: 48)
+                .padding(.horizontal, HearthSpacing.s18)
+                .frame(height: HearthSize.floatingButton)
                 .background(HearthColor.pine, in: Capsule())
-                .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 3)
+                .hearthShadow(.floatingProminent)
         }
         .buttonStyle(.plain)
     }
@@ -169,18 +181,18 @@ struct SidebarView: View {
             Image(systemName: "gearshape")
                 .font(.body)
                 .foregroundStyle(HearthColor.ink)
-                .frame(width: 48, height: 48)
-                .background(HearthColor.card, in: Circle())
-                .overlay { Circle().strokeBorder(HearthColor.line, lineWidth: 1) }
+                .frame(width: HearthSize.floatingButton, height: HearthSize.floatingButton)
+                .surface(Circle())
                 .overlay(alignment: .topTrailing) {
                     Circle()
                         .fill(status.isOnline ? HearthColor.online : HearthColor.mute)
-                        .frame(width: 10, height: 10)
-                        .overlay { Circle().strokeBorder(HearthColor.paper, lineWidth: 2) }
-                        .padding(2)
+                        .frame(width: HearthSize.statusDot, height: HearthSize.statusDot)
+                        // A ring of paper sets the dot apart from the button's edge.
+                        .overlay { Circle().strokeBorder(HearthColor.paper, lineWidth: Self.statusDotRingWidth) }
+                        .padding(HearthSpacing.s2)
                         .accessibilityHidden(true)
                 }
-                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 3)
+                .hearthShadow(.floating)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Strings.settings)

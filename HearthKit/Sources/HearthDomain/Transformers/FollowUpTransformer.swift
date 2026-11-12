@@ -2,7 +2,9 @@ import Foundation
 
 /// Asks a model for questions the user might put next, and reads them out of its answer.
 public struct FollowUpTransformer: Sendable {
+    /// How many questions are asked for, and the most that are kept.
     public static let maximumCount = 3
+    /// How much of the question, and of the reply, the model is shown.
     private static let excerptLength = 1500
 
     public init() {}

@@ -3,6 +3,7 @@ import Foundation
 
 /// A chat interactor wired to scripted replies and searches, with a record of what it asked of them.
 enum InteractorHarness {
+    /// The interactor under test, with what it sent to the model and what it searched for.
     struct Fixture {
         let subject: ChatInteractor
         let requests: Recorder<ChatRequest>
@@ -48,6 +49,7 @@ enum InteractorHarness {
         return Fixture(subject: subject, requests: requests, queries: queries, kinds: kinds)
     }
 
+    /// A turn holding one question from the user, with nothing attached.
     static func turn(
         searchMode: SearchModeKind = .off,
         style: ReplyStyle = .chat,
@@ -63,6 +65,7 @@ enum InteractorHarness {
         )
     }
 
+    /// Every event of a turn, collected once the turn has ended.
     static func events(_ stream: AsyncThrowingStream<ChatInteractor.Event, any Error>) async throws -> [ChatInteractor.Event] {
         var events: [ChatInteractor.Event] = []
         for try await event in stream {

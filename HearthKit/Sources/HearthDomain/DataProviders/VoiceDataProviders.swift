@@ -1,9 +1,11 @@
 import Foundation
 import HearthData
 
+/// How the domain turns text into audio.
 public struct SpeechDataProvider: Sendable {
     /// Server, text and voice in; audio out.
     public let synthesize: @Sendable (URL, String, String) async throws -> Data
+    /// The voices the given server can speak in.
     public let fetchVoices: @Sendable (URL) async throws -> [String]
 
     public init(
@@ -15,6 +17,7 @@ public struct SpeechDataProvider: Sendable {
     }
 }
 
+/// How the domain plays a clip of audio.
 public struct AudioPlaybackProvider: Sendable {
     /// Returns once the clip has finished playing or been stopped.
     public let play: @Sendable (Data) async throws -> Void
@@ -26,6 +29,7 @@ public struct AudioPlaybackProvider: Sendable {
     }
 }
 
+/// What has been heard so far, and whether that is the recogniser's last word.
 public struct DictationUpdate: Sendable, Equatable {
     public let text: String
     public let isFinal: Bool
@@ -36,8 +40,11 @@ public struct DictationUpdate: Sendable, Equatable {
     }
 }
 
+/// How the domain listens to the user speak.
 public struct DictationProvider: Sendable {
+    /// Whether the user allows both speech recognition and the microphone.
     public let requestAuthorization: @Sendable () async -> Bool
+    /// Starts listening. The stream ends when recognition finishes or `stop` is called.
     public let start: @Sendable () async throws -> AsyncStream<DictationUpdate>
     public let stop: @Sendable () async -> Void
 
@@ -53,6 +60,7 @@ public struct DictationProvider: Sendable {
 }
 
 public extension SpeechDataProvider {
+    /// Backed by an OpenAI-compatible speech server.
     static func live(service: SpeechService = SpeechService()) -> SpeechDataProvider {
         SpeechDataProvider(
             synthesize: { baseURL, text, voice in
@@ -66,6 +74,7 @@ public extension SpeechDataProvider {
 }
 
 public extension AudioPlaybackProvider {
+    /// Backed by the phone's audio player; every clip goes through the same one.
     @MainActor
     static func live() -> AudioPlaybackProvider {
         let service = AudioPlaybackService()
@@ -77,6 +86,7 @@ public extension AudioPlaybackProvider {
 }
 
 public extension DictationProvider {
+    /// Backed by the phone's own speech recogniser.
     @MainActor
     static func live() -> DictationProvider {
         let service = DictationService()

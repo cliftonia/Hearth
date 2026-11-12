@@ -4,11 +4,21 @@ import UIKit
 
 /// One message in the chat: the user's in a bubble, the assistant's as open text with its extras.
 struct MessageSection: View {
+    private static let bubbleRadii = RectangleCornerRadii(
+        topLeading: HearthRadius.bubble,
+        bottomLeading: HearthRadius.bubble,
+        bottomTrailing: HearthRadius.bubbleTail,
+        topTrailing: HearthRadius.bubble
+    )
+    /// Keeps a long message of the user's from reaching the leading edge, so it still reads as theirs.
+    private static let bubbleLeadingInset: CGFloat = 48
+
     let message: Message
     let isStreaming: Bool
     let isSpeaking: Bool
     /// What the web is being searched for while this reply is on its way.
     let searchingQuery: String?
+    /// Each action is `nil` when it does not apply to this message, and its button is then left out.
     let speakAction: (() -> Void)?
     let editAction: (() -> Void)?
     let retryAction: (() -> Void)?
@@ -24,8 +34,10 @@ struct MessageSection: View {
         }
     }
 
+    // MARK: The user's message
+
     private var userBubble: some View {
-        VStack(alignment: .trailing, spacing: 6) {
+        VStack(alignment: .trailing, spacing: HearthSpacing.s6) {
             if !message.imagesJPEG.isEmpty {
                 PhotoStrip(imagesJPEG: message.imagesJPEG, sideLength: 96, removeAction: nil)
             }
@@ -36,19 +48,21 @@ struct MessageSection: View {
                 Text(message.text)
                     .font(.body)
                     .foregroundStyle(HearthColor.ink)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
+                    .padding(.horizontal, HearthSpacing.s14)
+                    .padding(.vertical, HearthSpacing.s10)
                     .background(HearthColor.bubble, in: UnevenRoundedRectangle(cornerRadii: Self.bubbleRadii, style: .continuous))
                     .contentShape(.contextMenuPreview, UnevenRoundedRectangle(cornerRadii: Self.bubbleRadii, style: .continuous))
                     .contextMenu { userMenu }
             }
         }
-        .padding(.leading, 48)
+        .padding(.leading, Self.bubbleLeadingInset)
         .frame(maxWidth: .infinity, alignment: .trailing)
     }
 
+    // MARK: The assistant's reply
+
     private var assistantReply: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: HearthSpacing.s12) {
             if !message.thinking.isEmpty {
                 ThinkingSection(thinking: message.thinking, seconds: message.thinkingSeconds, isActive: isStreaming && message.text.isEmpty)
             }
@@ -68,6 +82,7 @@ struct MessageSection: View {
             if !message.sources.isEmpty {
                 SourcesSection(sources: message.sources)
             }
+            // The actions keep their place while a reply streams, so the text above does not jump when it ends.
             actions
                 .opacity(isStreaming || message.text.isEmpty ? 0 : 1)
                 .accessibilityHidden(isStreaming || message.text.isEmpty)
@@ -75,6 +90,7 @@ struct MessageSection: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// What a long press on the user's bubble offers.
     @ViewBuilder private var userMenu: some View {
         Button(action: copyAction) {
             Label(Strings.copy, systemImage: "doc.on.doc")
@@ -91,14 +107,15 @@ struct MessageSection: View {
         copyCount += 1
     }
 
+    /// The row of buttons under a finished reply.
     private var actions: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: HearthSpacing.s4) {
             actionButton(systemImage: "doc.on.doc", label: Strings.copy, action: copyAction)
             ShareLink(item: message.text) {
                 Image(systemName: "square.and.arrow.up")
                     .font(.footnote)
                     .foregroundStyle(HearthColor.mute)
-                    .frame(width: 34, height: 30)
+                    .frame(size: HearthSize.messageAction)
                     .contentShape(Rectangle())
             }
             .accessibilityLabel(Strings.share)
@@ -121,18 +138,20 @@ struct MessageSection: View {
             Image(systemName: systemImage)
                 .font(.footnote)
                 .foregroundStyle(HearthColor.mute)
-                .frame(width: 34, height: 30)
+                .frame(size: HearthSize.messageAction)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
     }
-
-    private static let bubbleRadii = RectangleCornerRadii(topLeading: 18, bottomLeading: 18, bottomTrailing: 6, topTrailing: 18)
 }
 
 /// The model's reasoning, folded away until asked for.
 private struct ThinkingSection: View {
+    private static let dotDiameter: CGFloat = 7
+    private static let dotSpacing: CGFloat = 7
+    private static let quoteBarWidth: CGFloat = 2
+
     let thinking: String
     let seconds: Int?
     let isActive: Bool
@@ -140,12 +159,12 @@ private struct ThinkingSection: View {
     @State private var isExpanded = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: HearthSpacing.s8) {
             Button(action: { isExpanded.toggle() }, label: {
-                HStack(spacing: 7) {
+                HStack(spacing: Self.dotSpacing) {
                     Circle()
                         .fill(HearthColor.pine)
-                        .frame(width: 7, height: 7)
+                        .frame(width: Self.dotDiameter, height: Self.dotDiameter)
                         .opacity(isActive ? 0.35 : 1)
                         .animation(isActive ? .easeInOut(duration: 0.7).repeatForever(autoreverses: true) : .default, value: isActive)
                     Text(title)
@@ -166,15 +185,16 @@ private struct ThinkingSection: View {
                 Text(thinking.trimmingCharacters(in: .whitespacesAndNewlines))
                     .font(.footnote)
                     .foregroundStyle(HearthColor.mute)
-                    .padding(.leading, 12)
+                    .padding(.leading, HearthSpacing.s12)
                     .overlay(alignment: .leading) {
-                        Rectangle().fill(HearthColor.line).frame(width: 2)
+                        Rectangle().fill(HearthColor.line).frame(width: Self.quoteBarWidth)
                     }
             }
         }
         .animation(.snappy, value: isExpanded)
     }
 
+    /// "Thinking…" while it lasts, then how long it took.
     private var title: String {
         if isActive {
             return Strings.thinking
@@ -186,13 +206,14 @@ private struct ThinkingSection: View {
     }
 }
 
+/// A pulsing dot shown until the first of a reply arrives.
 private struct WritingIndicator: View {
     @State private var isPulsing = false
 
     var body: some View {
         Circle()
             .fill(HearthColor.pine)
-            .frame(width: 10, height: 10)
+            .frame(width: HearthSize.statusDot, height: HearthSize.statusDot)
             .scaleEffect(isPulsing ? 1.25 : 0.75)
             .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: isPulsing)
             .onAppear { isPulsing = true }
@@ -206,7 +227,7 @@ private struct SourcesSection: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
+            HStack(spacing: HearthSpacing.s6) {
                 ForEach(sources) { source in
                     let number = (sources.firstIndex(of: source) ?? 0) + 1
                     let host = source.url.host()?.replacingOccurrences(of: "www.", with: "") ?? source.title
@@ -214,59 +235,14 @@ private struct SourcesSection: View {
                         Text("\(number)  \(host)")
                             .font(.caption)
                             .foregroundStyle(HearthColor.mute)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(HearthColor.card, in: Capsule())
-                            .overlay { Capsule().strokeBorder(HearthColor.line, lineWidth: 1) }
+                            .padding(.horizontal, HearthSpacing.s10)
+                            .padding(.vertical, HearthSpacing.s6)
+                            .capsuleSurface()
                     }
                     .accessibilityLabel(Strings.source(number: number, host: host))
                     .accessibilityHint(source.title)
                 }
             }
-        }
-    }
-}
-
-/// A row of photo thumbnails, optionally removable.
-struct PhotoStrip: View {
-    private struct Photo: Identifiable {
-        let id: Int
-        let image: UIImage
-    }
-
-    let imagesJPEG: [Data]
-    let sideLength: CGFloat
-    let removeAction: ((Int) -> Void)?
-
-    var body: some View {
-        HStack(spacing: 8) {
-            ForEach(photos) { photo in
-                Image(uiImage: photo.image)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: sideLength, height: sideLength)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .accessibilityLabel(Strings.attachedPhoto)
-                    .overlay(alignment: .topTrailing) {
-                        if let removeAction {
-                            Button(action: { removeAction(photo.id) }, label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.body)
-                                    .symbolRenderingMode(.palette)
-                                    .foregroundStyle(HearthColor.onPine, HearthColor.ink.opacity(0.7))
-                                    .padding(4)
-                            })
-                            .buttonStyle(.plain)
-                            .accessibilityLabel(Strings.removePhoto)
-                        }
-                    }
-            }
-        }
-    }
-
-    private var photos: [Photo] {
-        imagesJPEG.enumerated().compactMap { index, data in
-            UIImage(data: data).map { Photo(id: index, image: $0) }
         }
     }
 }

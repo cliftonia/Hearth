@@ -1,13 +1,18 @@
 import SwiftUI
 
+/// A hands-free conversation: the orb, what is being heard or said, and the mute and end buttons.
 struct VoiceView: View {
+    /// Room for the caption to grow without the orb moving.
+    private static let captionMinimumHeight: CGFloat = 120
+    private static let captionLineLimit = 7
+
     let presenter: VoicePresenter
 
     var body: some View {
         let viewModel = presenter.viewModel
         VStack(spacing: 0) {
             header(viewModel: viewModel)
-            VStack(spacing: 28) {
+            VStack(spacing: HearthSpacing.s28) {
                 Button(action: { Task { await presenter.interruptAction() } }, label: {
                     VoiceOrb(state: viewModel.state)
                 })
@@ -23,11 +28,11 @@ struct VoiceView: View {
                     .foregroundStyle(viewModel.caption.isEmpty ? HearthColor.mute : HearthColor.ink)
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
-                    .lineLimit(7)
-                    .frame(maxWidth: .infinity, minHeight: 120, alignment: .top)
+                    .lineLimit(Self.captionLineLimit)
+                    .frame(maxWidth: .infinity, minHeight: Self.captionMinimumHeight, alignment: .top)
                     .animation(.easeOut(duration: 0.15), value: viewModel.caption)
             }
-            .padding(.horizontal, 28)
+            .padding(.horizontal, HearthSpacing.s28)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             controls(viewModel: viewModel)
         }
@@ -36,12 +41,15 @@ struct VoiceView: View {
         .task { await presenter.startAction() }
     }
 
+    // MARK: Header and controls
+
+    /// A way out, and a pill naming the model and the voice.
     private func header(viewModel: VoiceViewModel) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: HearthSpacing.s8) {
             IconButton(systemImage: "chevron.down", label: Strings.endVoice) {
                 Task { await presenter.endAction() }
             }
-            HStack(spacing: 6) {
+            HStack(spacing: HearthSpacing.s6) {
                 Text(viewModel.modelName)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(HearthColor.ink)
@@ -50,22 +58,22 @@ struct VoiceView: View {
                     .foregroundStyle(HearthColor.mute)
             }
             .lineLimit(1)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(HearthColor.card, in: Capsule())
-            .overlay { Capsule().strokeBorder(HearthColor.line, lineWidth: 1) }
+            .padding(.horizontal, HearthSpacing.s14)
+            .padding(.vertical, HearthSpacing.s8)
+            .capsuleSurface()
             .frame(maxWidth: .infinity)
+            // Balances the button on the other side, so the pill sits in the middle.
             Color.clear
-                .frame(width: 40, height: 40)
+                .frame(width: HearthSize.iconButton, height: HearthSize.iconButton)
                 .accessibilityHidden(true)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, HearthSpacing.s8)
+        .padding(.vertical, HearthSpacing.s4)
     }
 
     private func controls(viewModel: VoiceViewModel) -> some View {
         let isMuted = viewModel.state == .muted
-        return HStack(spacing: 24) {
+        return HStack(spacing: HearthSpacing.s24) {
             roundButton(
                 systemImage: isMuted ? "mic.slash.fill" : "mic.fill",
                 label: isMuted ? Strings.unmute : Strings.mute,
@@ -79,21 +87,23 @@ struct VoiceView: View {
                 Task { await presenter.endAction() }
             }
         }
-        .padding(.bottom, 28)
+        .padding(.bottom, HearthSpacing.s28)
     }
 
+    /// A large round button: outlined when quiet, filled with the danger colour when it ends the conversation.
     private func roundButton(systemImage: String, label: String, isProminent: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.title3.weight(.medium))
-                .foregroundStyle(isProminent ? Color.white : HearthColor.ink)
-                .frame(width: 60, height: 60)
-                .background(isProminent ? HearthColor.danger : HearthColor.card, in: Circle())
-                .overlay { Circle().strokeBorder(isProminent ? .clear : HearthColor.line, lineWidth: 1) }
+                .foregroundStyle(isProminent ? HearthColor.onDanger : HearthColor.ink)
+                .frame(width: HearthSize.voiceButton, height: HearthSize.voiceButton)
+                .surface(Circle(), fill: isProminent ? HearthColor.danger : HearthColor.card, border: isProminent ? .clear : HearthColor.line)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
     }
+
+    // MARK: Words
 
     private func stateTitle(_ state: VoiceStateKind) -> String {
         switch state {
@@ -110,6 +120,7 @@ struct VoiceView: View {
         }
     }
 
+    /// The caption, or a hint when there is none. A single space keeps the line's height while there is nothing to say.
     private func caption(viewModel: VoiceViewModel) -> String {
         guard viewModel.caption.isEmpty else {
             return viewModel.caption
@@ -121,65 +132,6 @@ struct VoiceView: View {
             return Strings.voiceMutedHint
         case .thinking, .speaking, .unavailable:
             return " "
-        }
-    }
-}
-
-/// The glowing orb at the heart of a voice conversation; it breathes faster the busier things are.
-private struct VoiceOrb: View {
-    let state: VoiceStateKind
-
-    @State private var isExpanded = false
-
-    var body: some View {
-        ZStack {
-            Circle()
-                .fill(HearthColor.pine.opacity(0.06))
-                .frame(width: 230, height: 230)
-                .scaleEffect(isExpanded ? 1.08 : 0.92)
-            Circle()
-                .fill(HearthColor.pine.opacity(0.10))
-                .frame(width: 190, height: 190)
-                .scaleEffect(isExpanded ? 1.06 : 0.95)
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: Self.orbColors,
-                        center: UnitPoint(x: 0.35, y: 0.3),
-                        startRadius: 4,
-                        endRadius: 130
-                    )
-                )
-                .frame(width: 150, height: 150)
-                .scaleEffect(isExpanded ? 1.04 : 0.97)
-        }
-        .saturation(state == .muted || state == .unavailable ? 0.15 : 1)
-        .opacity(state == .muted || state == .unavailable ? 0.6 : 1)
-        .animation(.easeInOut(duration: breathDuration).repeatForever(autoreverses: true), value: isExpanded)
-        .animation(.easeInOut(duration: 0.3), value: state)
-        .onAppear { isExpanded = true }
-        .onChange(of: state) {
-            // Restart the breathing so the new pace takes hold.
-            isExpanded.toggle()
-        }
-    }
-
-    private static let orbColors = [
-        Color(lightHex: 0x9FE0CB, darkHex: 0x9FE0CB),
-        Color(lightHex: 0x2C6B5A, darkHex: 0x3E8A75),
-        Color(lightHex: 0x1B4A3D, darkHex: 0x1B4A3D)
-    ]
-
-    private var breathDuration: Double {
-        switch state {
-        case .listening:
-            1.6
-        case .thinking:
-            0.5
-        case .speaking:
-            0.9
-        case .muted, .unavailable:
-            3
         }
     }
 }

@@ -13,6 +13,7 @@ public final class ConversationStore {
         self.provider = provider
     }
 
+    /// Reads every conversation from disk, most recently active first.
     public func load() async throws {
         conversations = try await provider.loadAll().sorted { $0.updatedAt > $1.updatedAt }
     }
@@ -41,6 +42,7 @@ public final class ConversationStore {
         try await replace(id) { $0.updating(title: title) }
     }
 
+    /// Changes one conversation where it stands and writes it to disk. An unknown identifier is ignored.
     private func replace(_ id: Conversation.ID, with change: (Conversation) -> Conversation) async throws {
         guard let index = conversations.firstIndex(where: { $0.id == id }) else {
             return

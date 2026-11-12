@@ -12,6 +12,7 @@ final class BackgroundActivity {
     private var identifier = UIBackgroundTaskIdentifier.invalid
     private var observer: (any NSObjectProtocol)?
 
+    /// Starts the allowance, ending any earlier one. The name shows in the system's logs.
     func begin(named name: String) {
         end()
         wasBackgrounded = UIApplication.shared.applicationState == .background
@@ -28,6 +29,7 @@ final class BackgroundActivity {
         }
     }
 
+    /// Hands the allowance back once the work is done.
     func end() {
         finishTask()
         if let observer {

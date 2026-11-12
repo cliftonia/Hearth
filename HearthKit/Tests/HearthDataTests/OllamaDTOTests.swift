@@ -2,6 +2,7 @@ import Foundation
 @testable import HearthData
 import Testing
 
+/// How requests and replies are written to and read from the JSON the servers speak.
 struct OllamaDTOTests {
     @Test func `a streamed line carries text and thinking`() throws {
         let chunk = try OllamaChatChunkDTO(line: #"{"model":"m","message":{"role":"assistant","content":"Hi","thinking":"Hm"},"done":false}"#)
@@ -25,6 +26,7 @@ struct OllamaDTOTests {
         }
     }
 
+    /// The value as the JSON object it is sent as.
     private func json(_ value: some Encodable) throws -> [String: Any] {
         try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(value)) as? [String: Any])
     }

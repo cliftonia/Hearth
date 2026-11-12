@@ -1,8 +1,12 @@
 import Foundation
 
+/// What can go wrong when talking to one of the user's servers.
 public enum HTTPError: Error, Sendable, Equatable {
+    /// What came back was not a usable HTTP response.
     case invalidResponse
+    /// The server answered with a failure status; the body is the start of what it sent.
     case status(code: Int, body: String)
+    /// The server answered with an error message of its own in place of a reply.
     case server(message: String)
 }
 
@@ -16,6 +20,7 @@ extension URLSession {
         return URLSession(configuration: configuration)
     }()
 
+    /// The body of the response. Fails unless the status is in the 200s, keeping the start of the body as a clue.
     func validatedData(for request: URLRequest) async throws -> Data {
         let (data, response) = try await data(for: request)
         guard let http = response as? HTTPURLResponse else {
@@ -27,12 +32,14 @@ extension URLSession {
         return data
     }
 
+    /// The response decoded from JSON, after the same check of its status.
     func decoded<Value: Decodable>(_ type: Value.Type, for request: URLRequest) async throws -> Value {
         try JSONDecoder().decode(type, from: try await validatedData(for: request))
     }
 }
 
 extension URLRequest {
+    /// A POST request carrying the body as JSON.
     static func jsonPost(url: URL, body: some Encodable) throws -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"

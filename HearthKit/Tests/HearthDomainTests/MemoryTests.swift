@@ -2,13 +2,16 @@ import Foundation
 @testable import HearthDomain
 import Testing
 
+/// The rules for what may be remembered, applied to one change at a time.
 struct MemoryLedgerTests {
     private let now = Date(timeIntervalSince1970: 1_800_000_000)
 
+    /// A memory saved by a model, under the given handle.
     private func memory(_ id: String, _ text: String) -> Memory {
         Memory(id: Memory.ID(id), text: text, isFromUser: false, createdAt: now, updatedAt: now)
     }
 
+    /// Applies a change as a model would make it.
     private func apply(_ request: MemoryRequest, to memories: [Memory] = []) -> (memories: [Memory], outcome: MemoryOutcome) {
         MemoryLedger().applying(request, to: memories, isFromUser: false, now: now)
     }
@@ -81,6 +84,7 @@ struct MemoryLedgerTests {
     }
 }
 
+/// How changes to memory reach the disk, and what happens when they cannot.
 @MainActor
 struct MemoryStoreTests {
     @Test func `a change is written to disk, and one that cannot be written is undone`() async {
@@ -110,6 +114,7 @@ struct MemoryStoreTests {
     }
 }
 
+/// What the model is told about its memories and the tools that change them.
 struct MemoryPromptTests {
     private let now = Date(timeIntervalSince1970: 1_800_000_000)
     private let memories = [
@@ -136,6 +141,7 @@ struct MemoryPromptTests {
     }
 }
 
+/// When a conversation may use memory, and what a private one is told.
 struct MemoryAccessTests {
     @Test func `a private chat tells the model that nothing will be remembered, and carries no memories`() async throws {
         let fixture = InteractorHarness.makeTestSubject()

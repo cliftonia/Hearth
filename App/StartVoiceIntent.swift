@@ -13,6 +13,7 @@ struct StartVoiceIntent: AppIntent {
     }
 }
 
+/// Offers the voice conversation to Siri and Shortcuts without the user having to set anything up.
 struct HearthShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(

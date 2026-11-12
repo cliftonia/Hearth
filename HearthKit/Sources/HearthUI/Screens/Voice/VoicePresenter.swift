@@ -1,34 +1,18 @@
 import Foundation
 import HearthCore
 import HearthDomain
-import Observation
 import os
 
+/// What a voice conversation tells the coordinator: that it is over.
 @MainActor
 protocol VoicePresenterDelegate: AnyObject {
     func voicePresenterDidFinish(_ presenter: VoicePresenter)
 }
 
-enum VoiceStateKind: Hashable {
-    case listening
-    case thinking
-    case speaking
-    case muted
-    case unavailable
-}
-
-@MainActor
-@Observable
-final class VoiceViewModel {
-    var state: VoiceStateKind = .listening
-    var caption = ""
-    var modelName = ""
-    var voiceName = ""
-}
-
 /// Runs a spoken conversation: listen until the user pauses, ask the model, speak the reply, listen again.
 @MainActor
 final class VoicePresenter {
+    /// What a voice conversation is built from. The chat itself stays with the chat screen, reached through closures.
     struct Dependencies {
         let dictation: DictationProvider
         let speech: SpeechInteractor
@@ -36,9 +20,11 @@ final class VoicePresenter {
         let modelName: @MainActor () -> String
         /// Sends the words to the chat; the closure receives the reply piece by piece.
         let runTurn: @MainActor (String, @escaping @MainActor (String) -> Void) async -> Void
+        /// Stops a reply that is still on its way.
         let stopTurn: @MainActor () async -> Void
     }
 
+    /// How long a silence must last before what was said is sent.
     private static let pauseBeforeSending: Duration = .milliseconds(1400)
 
     let viewModel = VoiceViewModel()
@@ -46,13 +32,16 @@ final class VoicePresenter {
 
     private let dependencies: Dependencies
     private let logger = Logger(for: VoicePresenter.self)
+    /// The listen, think, speak cycle, for as long as the conversation runs.
     private var loopTask: Task<Void, Never>?
+    /// The reply being spoken, kept so that it can be cut short.
     private var speakTask: Task<Void, Never>?
 
     init(dependencies: Dependencies) {
         self.dependencies = dependencies
     }
 
+    /// Begins listening as the screen appears, once the microphone and speech recognition are allowed.
     func startAction() async {
         viewModel.modelName = dependencies.modelName()
         viewModel.voiceName = dependencies.settings().voice
@@ -64,11 +53,13 @@ final class VoicePresenter {
         startLoop()
     }
 
+    /// Stops everything and closes the screen.
     func endAction() async {
         await halt()
         delegate?.voicePresenterDidFinish(self)
     }
 
+    /// Stops listening and speaking until tapped again, which starts listening afresh.
     func muteAction() async {
         if viewModel.state == .muted {
             startLoop()
@@ -89,11 +80,14 @@ final class VoicePresenter {
     }
 }
 
+// MARK: - The conversation loop
+
 private extension VoicePresenter {
     func startLoop() {
         loopTask = Task { await self.loop() }
     }
 
+    /// Stops listening, speaking and any reply on its way, and waits for the loop to wind up.
     func halt() async {
         loopTask?.cancel()
         speakTask?.cancel()
@@ -104,6 +98,7 @@ private extension VoicePresenter {
         loopTask = nil
     }
 
+    /// Ends the loop with the reason shown where the caption would be.
     func fail(_ message: String) {
         viewModel.state = .unavailable
         viewModel.caption = message
@@ -157,6 +152,7 @@ private extension VoicePresenter {
         return words.isEmpty ? nil : words
     }
 
+    /// Sends the words to the chat and speaks the reply sentence by sentence as it is written.
     func respond(to words: String) async {
         viewModel.state = .thinking
         let (sentences, continuation) = AsyncStream.makeStream(of: String.self)

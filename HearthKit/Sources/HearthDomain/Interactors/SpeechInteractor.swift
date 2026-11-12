@@ -1,10 +1,12 @@
 import Foundation
 
+/// Why nothing could be spoken.
 public enum SpeechError: Error, Sendable, Equatable {
+    /// No usable address has been given for the speech server.
     case serverNotConfigured
 }
 
-/// Speaks sentences aloud in order, synthesizing ahead while the previous one plays.
+/// Speaks sentences aloud in order, synthesising ahead while the previous one plays.
 public final class SpeechInteractor: Sendable {
     private let speech: SpeechDataProvider
     private let playback: AudioPlaybackProvider
@@ -57,6 +59,7 @@ public final class SpeechInteractor: Sendable {
         await playback.stop()
     }
 
+    /// The voices the speech server offers, in alphabetical order.
     public func voices(settings: ServerSettings) async throws -> [String] {
         guard let baseURL = settings.speechURL else {
             throw SpeechError.serverNotConfigured

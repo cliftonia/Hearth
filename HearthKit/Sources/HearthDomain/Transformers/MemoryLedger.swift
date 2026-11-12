@@ -2,7 +2,9 @@ import Foundation
 
 /// The rules for what may be remembered: short, few, and never the same thing twice.
 public struct MemoryLedger: Sendable {
+    /// The most memories kept at once.
     public static let maximumCount = 50
+    /// The most characters one memory may hold.
     public static let maximumLength = 200
 
     public init() {}
@@ -49,6 +51,7 @@ public struct MemoryLedger: Sendable {
         String(text.split(whereSeparator: \.isWhitespace).joined(separator: " ").prefix(Self.maximumLength))
     }
 
+    /// Why a fact cannot be kept, if it cannot: it is empty, or already remembered, whatever its case or accents.
     private func refusal(for fact: String, among memories: [Memory]) -> MemoryRefusalKind? {
         if fact.isEmpty {
             return .empty

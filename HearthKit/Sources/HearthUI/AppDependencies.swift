@@ -1,35 +1,21 @@
 import Foundation
 import HearthDomain
 
-/// The addresses the app starts with before the user has saved any of their own.
-public struct AppDefaults: Sendable {
-    public let ollamaAddress: String
-    public let searchAddress: String
-    public let speechAddress: String
-    /// The model the app starts with, by its name on the server. Empty means the first one the server offers.
-    public let modelName: String
-
-    public init(ollamaAddress: String = "", searchAddress: String = "", speechAddress: String = "", modelName: String = "") {
-        self.ollamaAddress = ollamaAddress
-        self.searchAddress = searchAddress
-        self.speechAddress = speechAddress
-        self.modelName = modelName
-    }
-}
-
-/// Everything the screens are built from.
+/// Everything the screens are built from: the interactors, the providers and the stores they share.
 @MainActor
 public struct AppDependencies {
     let chat: ChatInteractor
     let speech: SpeechInteractor
     let dictation: DictationProvider
     let authentication: AuthenticationProvider
+    /// Lists the models at a server address, for testing a connection without touching the model store.
     let fetchModels: @Sendable (URL) async throws -> [ChatModel]
     let settingsStore: SettingsStore
     let modelStore: ModelStore
     let conversationStore: ConversationStore
     let memoryStore: MemoryStore
 
+    /// The real thing, talking to the servers and the device. The defaults seed the settings on first launch.
     public static func live(defaults: AppDefaults) -> AppDependencies {
         let chatProvider = ChatDataProvider.live()
         let settings = ServerSettings(

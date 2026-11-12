@@ -44,6 +44,7 @@ extension ChatPresenter {
         }
     }
 
+    /// Remembers how hard models should think, for this reply and those that follow.
     func selectThinkingLevelAction(_ level: ThinkingLevelKind) {
         do {
             try dependencies.settingsStore.update(settings.updating(thinkingLevel: level))

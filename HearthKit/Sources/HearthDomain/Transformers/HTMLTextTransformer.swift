@@ -15,6 +15,7 @@ public struct HTMLTextTransformer: Sendable {
 
     public init() {}
 
+    /// The readable text of the page, a line for each block of it, cut to the given length.
     public func text(from html: String, maximumLength: Int) -> String {
         let bytes = mainContent(of: Array(html.utf8.prefix(Self.maximumInputLength)))
         let text = decodingEntities(in: String(decoding: strippingMarkup(from: bytes), as: UTF8.self))
@@ -23,6 +24,8 @@ public struct HTMLTextTransformer: Sendable {
             .filter { !$0.isEmpty }
         return String(lines.joined(separator: "\n").prefix(maximumLength))
     }
+
+    // MARK: Markup
 
     /// The page's article or main region when it marks one, otherwise all of it.
     private func mainContent(of bytes: [UInt8]) -> [UInt8] {
@@ -99,6 +102,8 @@ public struct HTMLTextTransformer: Sendable {
         return String(decoding: name, as: UTF8.self)
     }
 
+    // MARK: Byte search
+
     /// Whether the lower-case ASCII needle sits at the index, whatever the case of the text.
     private func matches(_ needle: [UInt8], in bytes: [UInt8], at index: Int) -> Bool {
         guard index + needle.count <= bytes.count else {
@@ -114,6 +119,7 @@ public struct HTMLTextTransformer: Sendable {
         return true
     }
 
+    /// The first place at or after `start` where the needle sits, whatever the case of the text.
     private func firstIndex(of needle: [UInt8], in bytes: [UInt8], from start: Int) -> Int? {
         guard bytes.count >= needle.count, start <= bytes.count - needle.count else {
             return nil
@@ -121,6 +127,7 @@ public struct HTMLTextTransformer: Sendable {
         return (start...(bytes.count - needle.count)).first { matches(needle, in: bytes, at: $0) }
     }
 
+    /// The last place where the needle sits, whatever the case of the text.
     private func lastIndex(of needle: [UInt8], in bytes: [UInt8]) -> Int? {
         guard bytes.count >= needle.count else {
             return nil
@@ -128,6 +135,9 @@ public struct HTMLTextTransformer: Sendable {
         return (0...(bytes.count - needle.count)).last { matches(needle, in: bytes, at: $0) }
     }
 
+    // MARK: Entities
+
+    /// Turns the common named entities, and numbered ones such as `&#8217;`, back into the characters they stand for.
     private func decodingEntities(in text: String) -> String {
         var result = text
         let named = ["&nbsp;": " ", "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": "\"", "&apos;": "'", "&#39;": "'",

@@ -16,6 +16,7 @@ public struct ConversationExporter: Sendable {
         self.untitled = untitled
     }
 
+    /// The title as a heading, then each message under its speaker's label, with the names of attached files and numbered sources.
     public func markdown(for conversation: Conversation) -> String {
         let title = "# " + (conversation.title.isEmpty ? untitled : conversation.title)
         let turns = conversation.messages.filter { !$0.isEmpty }.map { message in

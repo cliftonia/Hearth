@@ -1,14 +1,16 @@
 import Foundation
 import HearthData
 
+/// Who a message sent to the model is from.
 public enum PromptRole: String, Sendable {
     case system
     case user
     case assistant
-    /// The results of a web search the model asked for.
+    /// The result of something the model asked for: a web search, or a change to what it remembers.
     case tool
 }
 
+/// One message as the model is sent it.
 public struct PromptMessage: Sendable, Equatable {
     public let role: PromptRole
     public let text: String
@@ -27,6 +29,7 @@ public struct PromptMessage: Sendable, Equatable {
     }
 }
 
+/// Everything one call to the model needs: which model, what has been said and what it may ask for.
 public struct ChatRequest: Sendable, Equatable {
     public let model: ChatModel
     public let messages: [PromptMessage]
@@ -52,6 +55,7 @@ public struct ChatRequest: Sendable, Equatable {
     }
 }
 
+/// One piece of a reply as it streams in.
 public enum ChatDelta: Sendable, Equatable {
     case thinking(String)
     case text(String)
@@ -61,9 +65,13 @@ public enum ChatDelta: Sendable, Equatable {
     case memoryRequested(MemoryRequest)
 }
 
+/// How the domain reaches the chat server.
 public struct ChatDataProvider: Sendable {
+    /// The models on the given server that can hold a conversation.
     public let fetchModels: @Sendable (URL) async throws -> [ChatModel]
+    /// The reply as it is written, piece by piece.
     public let streamChat: @Sendable (URL, ChatRequest) -> AsyncThrowingStream<ChatDelta, any Error>
+    /// The whole text of a reply that is not streamed, for short side requests such as a title.
     public let complete: @Sendable (URL, ChatRequest) async throws -> String
 
     public init(
@@ -77,7 +85,10 @@ public struct ChatDataProvider: Sendable {
     }
 }
 
+// MARK: - Live
+
 public extension ChatDataProvider {
+    /// Backed by an Ollama server.
     static func live(service: OllamaService = OllamaService()) -> ChatDataProvider {
         ChatDataProvider(
             fetchModels: { baseURL in
@@ -117,7 +128,10 @@ public extension ChatDataProvider {
     }
 }
 
+// MARK: - Mapping to and from the server's types
+
 extension OllamaChatRequestDTO {
+    /// Thinking and tools are sent only to models that have them.
     init(from request: ChatRequest, stream: Bool) {
         self.init(
             model: request.model.id.rawValue,
@@ -128,6 +142,7 @@ extension OllamaChatRequestDTO {
         )
     }
 
+    /// The tools offered in this request; `nil` when there are none or the model cannot call tools.
     private static func tools(for request: ChatRequest) -> [OllamaToolDTO]? {
         guard request.model.canUseTools else {
             return nil
@@ -172,6 +187,7 @@ extension ChatDelta {
 }
 
 extension OllamaToolCallDTO {
+    /// The tool call that stands for a memory change, for showing the model what it asked for.
     init(from request: MemoryRequest) {
         switch request {
         case .save(let text):
@@ -185,6 +201,7 @@ extension OllamaToolCallDTO {
 }
 
 extension OllamaMessageDTO {
+    /// An assistant message carries the tool calls made in it; a tool message names the tool it answers instead.
     init(from message: PromptMessage) {
         let isToolResult = message.role == .tool
         let searches = message.searchQueries.map { query in
@@ -203,6 +220,7 @@ extension OllamaMessageDTO {
 }
 
 extension OllamaThinkDTO {
+    /// Off is sent as a plain `false`; every other level by its name.
     init(from level: ThinkingLevelKind) {
         switch level {
         case .off:

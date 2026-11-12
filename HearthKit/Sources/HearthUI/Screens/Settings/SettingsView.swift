@@ -1,6 +1,7 @@
 import HearthDomain
 import SwiftUI
 
+/// The settings sheet: servers, voice, instructions, memory, the lock and the theme.
 struct SettingsView: View {
     let presenter: SettingsPresenter
 
@@ -32,6 +33,9 @@ struct SettingsView: View {
                 }
                 Section(Strings.voice) {
                     voiceControl(voice: $viewModel.voice, voices: viewModel.voices)
+                        .onChange(of: viewModel.voice) { Task { await presenter.stopVoicePreviewAction() } }
+                    voicePreviewButton(viewModel.voicePreview)
+                        .disabled(viewModel.speechAddress.trimmingCharacters(in: .whitespaces).isEmpty)
                     Toggle(Strings.readRepliesAloud, isOn: $viewModel.isAutoReadEnabled)
                 }
                 Section {
@@ -83,8 +87,11 @@ struct SettingsView: View {
         .task { await presenter.loadAction() }
     }
 
+    // MARK: Rows
+
+    /// A server address under a small caption, typed without autocorrection.
     private func addressField(_ title: String, text: Binding<String>) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: HearthSpacing.s4) {
             Text(title)
                 .font(.caption)
                 .foregroundStyle(HearthColor.mute)
@@ -98,6 +105,7 @@ struct SettingsView: View {
         }
     }
 
+    /// The outcome of the connection test. Nothing is shown until one has been run.
     @ViewBuilder
     private func connectionStatus(_ check: ConnectionCheckKind) -> some View {
         switch check {
@@ -118,6 +126,8 @@ struct SettingsView: View {
         }
     }
 
+    /// A picker of the server's voices, or a field for the voice's name when the server has not listed any.
+    /// A saved voice the server no longer lists is kept at the head of the picker.
     @ViewBuilder
     private func voiceControl(voice: Binding<String>, voices: [String]) -> some View {
         if voices.isEmpty {
@@ -131,6 +141,23 @@ struct SettingsView: View {
                     Text(name).tag(name)
                 }
             }
+        }
+    }
+
+    /// Plays a short sample, so a voice can be heard before it is kept.
+    private func voicePreviewButton(_ preview: VoicePreviewKind) -> some View {
+        let isPlaying = preview == .playing
+        return VStack(alignment: .leading, spacing: HearthSpacing.s6) {
+            Button(action: { Task { await presenter.previewVoiceAction() } }, label: {
+                Label(isPlaying ? Strings.stopVoiceSample : Strings.playVoiceSample, systemImage: isPlaying ? "stop.fill" : "play.fill")
+                    .foregroundStyle(HearthColor.pine)
+            })
+            Label(Strings.voiceSampleFailed, systemImage: "exclamationmark.triangle.fill")
+                .font(.footnote)
+                .foregroundStyle(HearthColor.danger)
+                .opacity(preview == .failed ? 1 : 0)
+                .frame(height: preview == .failed ? nil : 0)
+                .accessibilityHidden(preview != .failed)
         }
     }
 }

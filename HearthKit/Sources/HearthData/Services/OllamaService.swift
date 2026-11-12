@@ -8,6 +8,7 @@ public struct OllamaService: Sendable {
         self.session = session
     }
 
+    /// Every model the server has, whether or not it can hold a conversation.
     public func fetchModels(baseURL: URL) async throws -> [OllamaModelDTO] {
         var request = URLRequest(url: baseURL.appending(path: "api/tags"))
         request.timeoutInterval = 15
@@ -57,6 +58,7 @@ public struct OllamaService: Sendable {
         }
     }
 
+    /// The error for a line of a failed response: the server's own message when the line carries one, otherwise the status.
     private static func failure(statusCode: Int, line: String) -> HTTPError {
         if let message = (try? OllamaChatChunkDTO(line: line))?.error {
             return .server(message: message)
