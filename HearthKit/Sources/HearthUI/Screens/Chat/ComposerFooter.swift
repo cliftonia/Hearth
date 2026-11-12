@@ -20,34 +20,28 @@ struct ComposerFooter: View {
             if !viewModel.pendingDocuments.isEmpty {
                 DocumentStrip(documents: viewModel.pendingDocuments, removeAction: presenter.removeDocumentAction)
             }
-            TextField(placeholder, text: $viewModel.draft, axis: .vertical)
-                .lineLimit(1...6)
-                .font(.body)
-                .foregroundStyle(HearthColor.ink)
-                .tint(HearthColor.pine)
-                .focused($isFocused)
-                .padding(.horizontal, 4)
-            HStack(spacing: 8) {
-                AttachmentMenu(presenter: presenter)
-                if presenter.isSearchToggleVisible {
-                    searchToggle
+            ComposerLayout(isCompact: !isExpanded, spacing: isExpanded ? 10 : 6) {
+                TextField(placeholder, text: $viewModel.draft, axis: .vertical)
+                    .lineLimit(1...6)
+                    .font(.body)
+                    .foregroundStyle(HearthColor.ink)
+                    .tint(HearthColor.pine)
+                    .focused($isFocused)
+                    .padding(.horizontal, 4)
+                HStack(spacing: 8) {
+                    AttachmentMenu(presenter: presenter)
+                    if isExpanded {
+                        optionChips
+                    }
                 }
-                if presenter.viewModel.selectedModel?.canThink == true {
-                    thinkingMenu
+                HStack(spacing: 8) {
+                    dictationButton
+                    primaryButton
                 }
-                if presenter.isSpeechAvailable {
-                    readAloudToggle
-                }
-                hideKeyboardButton
-                    .opacity(isFocused ? 1 : 0)
-                    .accessibilityHidden(!isFocused)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                dictationButton
-                primaryButton
             }
         }
         .padding(.horizontal, 12)
-        .padding(.top, 12)
+        .padding(.top, isExpanded ? 12 : 10)
         .padding(.bottom, 10)
         .background(HearthColor.card, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay {
@@ -58,10 +52,33 @@ struct ComposerFooter: View {
         .padding(.vertical, 8)
         .sensoryFeedback(.impact(weight: .light), trigger: sendCount)
         .animation(.snappy, value: viewModel.editingMessageID)
+        .animation(.snappy, value: isExpanded)
+        // A different conversation starts with the composer at rest.
+        .onChange(of: viewModel.conversation.id) {
+            isFocused = false
+        }
         .onChange(of: viewModel.editingMessageID) {
             if viewModel.editingMessageID != nil {
                 isFocused = true
             }
+        }
+    }
+
+    /// At rest the composer is a single row. It opens out, showing its options, while a message is being written.
+    private var isExpanded: Bool {
+        isFocused || !presenter.viewModel.draft.isEmpty
+    }
+
+    /// The switches that shape a reply: web search, how hard to think, and reading aloud.
+    @ViewBuilder private var optionChips: some View {
+        if presenter.isSearchToggleVisible {
+            searchToggle
+        }
+        if presenter.viewModel.selectedModel?.canThink == true {
+            thinkingMenu
+        }
+        if presenter.isSpeechAvailable {
+            readAloudToggle
         }
     }
 
@@ -143,18 +160,6 @@ struct ComposerFooter: View {
         .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 
-    private var hideKeyboardButton: some View {
-        Button(action: { isFocused = false }, label: {
-            Image(systemName: "keyboard.chevron.compact.down")
-                .font(.footnote.weight(.medium))
-                .foregroundStyle(HearthColor.mute)
-                .frame(width: 38, height: 32)
-                .contentShape(Rectangle())
-        })
-        .buttonStyle(.plain)
-        .accessibilityLabel(Strings.hideKeyboard)
-    }
-
     private var dictationButton: some View {
         let isDictating = presenter.viewModel.isDictating
         return Button(action: { Task { await presenter.dictationAction() } }, label: {
@@ -191,6 +196,8 @@ struct ComposerFooter: View {
         if viewModel.isStreaming {
             Task { await presenter.stopAction() }
         } else if viewModel.canSend {
+            // Sending puts the keyboard away, leaving the whole screen for the reply.
+            isFocused = false
             Task { await presenter.sendAction() }
         } else {
             isFocused = false

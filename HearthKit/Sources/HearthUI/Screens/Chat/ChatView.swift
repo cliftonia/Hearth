@@ -14,8 +14,7 @@ struct ChatView: View {
                 EmptyChatSection(
                     isServerConfigured: presenter.isServerConfigured,
                     isPrivate: viewModel.conversation.isPrivate,
-                    settingsAction: presenter.settingsAction,
-                    privateAction: presenter.togglePrivateAction
+                    settingsAction: presenter.settingsAction
                 )
                     .opacity(viewModel.conversation.messages.isEmpty ? 1 : 0)
                     .allowsHitTesting(viewModel.conversation.messages.isEmpty)
@@ -149,7 +148,6 @@ private struct EmptyChatSection: View {
     let isServerConfigured: Bool
     let isPrivate: Bool
     let settingsAction: () -> Void
-    let privateAction: () -> Void
 
     var body: some View {
         VStack(spacing: 16) {
@@ -159,17 +157,6 @@ private struct EmptyChatSection: View {
                 .foregroundStyle(HearthColor.ink)
                 .multilineTextAlignment(.center)
             if isServerConfigured {
-                Button(action: privateAction) {
-                    Label(Strings.privateChat, systemImage: isPrivate ? "eye.slash.fill" : "eye.slash")
-                        .font(.footnote.weight(isPrivate ? .semibold : .regular))
-                        .foregroundStyle(isPrivate ? HearthColor.pine : HearthColor.mute)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(isPrivate ? HearthColor.pineSoft : .clear, in: Capsule())
-                        .overlay { Capsule().strokeBorder(isPrivate ? .clear : HearthColor.line, lineWidth: 1) }
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(isPrivate ? .isSelected : [])
                 Text(Strings.privateChatNote)
                     .font(.footnote)
                     .foregroundStyle(HearthColor.mute)

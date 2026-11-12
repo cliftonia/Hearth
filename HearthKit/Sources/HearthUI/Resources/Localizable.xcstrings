@@ -254,17 +254,6 @@
         }
       }
     },
-    "composer.hideKeyboard": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide keyboard"
-          }
-        }
-      }
-    },
     "composer.photoLibrary": {
       "extractionState": "manual",
       "localizations": {

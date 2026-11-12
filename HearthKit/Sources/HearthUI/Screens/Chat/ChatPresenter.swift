@@ -166,6 +166,7 @@ final class ChatPresenter {
         await stopAction()
         await stopSpeaking()
         cancelEditAction()
+        viewModel.draft = ""
         viewModel.followUps = []
         viewModel.memoryNotice = nil
         viewModel.conversation = Conversation(modelID: viewModel.selectedModel?.id)

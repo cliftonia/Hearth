@@ -18,7 +18,6 @@ struct SidebarView: View {
             .padding(.top, 8)
             .padding(.bottom, 14)
             searchField(text: $viewModel.query)
-            newChatButton
             ZStack(alignment: .top) {
                 conversationList(groups: groups)
                 Text(Strings.noChats)
@@ -29,7 +28,7 @@ struct SidebarView: View {
                     .accessibilityHidden(!groups.isEmpty)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            statusFooter
+            .overlay(alignment: .bottom) { floatingControls }
         }
         .background(HearthColor.paper.ignoresSafeArea())
         .alert(Strings.renameChat, isPresented: $viewModel.isRenaming) {
@@ -57,22 +56,6 @@ struct SidebarView: View {
         .padding(.horizontal, 14)
     }
 
-    private var newChatButton: some View {
-        Button(action: presenter.newChatAction) {
-            Label(Strings.newChat, systemImage: "plus")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(HearthColor.pine)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(HearthColor.pineSoft, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        }
-        .buttonStyle(.plain)
-        .padding(.horizontal, 14)
-        .padding(.top, 10)
-        .padding(.bottom, 6)
-    }
-
     private func conversationList(groups: [SidebarGroupViewConfiguration]) -> some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 2) {
@@ -91,7 +74,8 @@ struct SidebarView: View {
                     }
                 }
             }
-            .padding(.bottom, 12)
+            // Room for the last chat to be scrolled clear of the floating controls.
+            .padding(.bottom, 84)
         }
         .scrollDismissesKeyboard(.immediately)
     }
@@ -147,35 +131,58 @@ struct SidebarView: View {
         [row.isPinned ? Strings.pinned : "", row.isPrivate ? Strings.privateChat : ""].filter { !$0.isEmpty }.joined(separator: ", ")
     }
 
-    private var statusFooter: some View {
-        let status = presenter.status
-        return Button(action: presenter.settingsAction) {
-            HStack(spacing: 10) {
-                Circle()
-                    .fill(status.isOnline ? HearthColor.online : HearthColor.mute)
-                    .frame(width: 8, height: 8)
-                    .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(status.host)
-                        .font(.subheadline)
-                        .foregroundStyle(HearthColor.ink)
-                        .lineLimit(1)
-                    Text(status.detail)
-                        .font(.caption)
-                        .foregroundStyle(HearthColor.mute)
-                }
+    /// The settings and the new chat button, floating over the end of the list.
+    private var floatingControls: some View {
+        HStack(spacing: 12) {
+            settingsButton
                 .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "gearshape")
-                    .font(.body)
-                    .foregroundStyle(HearthColor.mute)
-                    .accessibilityHidden(true)
-            }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 14)
-            .contentShape(Rectangle())
+            newChatButton
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 28)
+        .padding(.bottom, 10)
+        .background {
+            LinearGradient(colors: [HearthColor.paper.opacity(0), HearthColor.paper], startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.4))
+                // The fade runs to the very bottom of the screen, so no chat shows beneath the buttons.
+                .ignoresSafeArea(edges: .bottom)
+                .allowsHitTesting(false)
+        }
+    }
+
+    private var newChatButton: some View {
+        Button(action: presenter.newChatAction) {
+            Label(Strings.newChat, systemImage: "plus")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(HearthColor.onPine)
+                .padding(.horizontal, 18)
+                .frame(height: 48)
+                .background(HearthColor.pine, in: Capsule())
+                .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 3)
         }
         .buttonStyle(.plain)
-        .overlay(alignment: .top) { Rectangle().fill(HearthColor.line).frame(height: 1) }
+    }
+
+    /// Opens the settings. Its dot shows whether the server can be reached.
+    private var settingsButton: some View {
+        let status = presenter.status
+        return Button(action: presenter.settingsAction) {
+            Image(systemName: "gearshape")
+                .font(.body)
+                .foregroundStyle(HearthColor.ink)
+                .frame(width: 48, height: 48)
+                .background(HearthColor.card, in: Circle())
+                .overlay { Circle().strokeBorder(HearthColor.line, lineWidth: 1) }
+                .overlay(alignment: .topTrailing) {
+                    Circle()
+                        .fill(status.isOnline ? HearthColor.online : HearthColor.mute)
+                        .frame(width: 10, height: 10)
+                        .overlay { Circle().strokeBorder(HearthColor.paper, lineWidth: 2) }
+                        .padding(2)
+                        .accessibilityHidden(true)
+                }
+                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 3)
+        }
+        .buttonStyle(.plain)
         .accessibilityLabel(Strings.settings)
         .accessibilityValue("\(status.host), \(status.detail)")
     }

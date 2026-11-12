@@ -1,7 +1,7 @@
 import HearthDomain
 import SwiftUI
 
-/// The bar above the chat: the chat list, the model picker and a new chat.
+/// The bar above the chat: the chat list, the model picker and the private chat switch.
 struct ChatHeader: View {
     let presenter: ChatPresenter
 
@@ -17,12 +17,33 @@ struct ChatHeader: View {
                 .accessibilityHidden(!hasDrawer)
             modelMenu
                 .frame(maxWidth: .infinity)
-            IconButton(systemImage: "square.and.pencil", label: Strings.newChat) {
-                Task { await presenter.newChatAction() }
-            }
+            privateToggle
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
+    }
+
+    /// Makes a chat that has not yet begun private. Once the chat has begun it only shows that the chat is private.
+    private var privateToggle: some View {
+        let conversation = presenter.viewModel.conversation
+        let isPrivate = conversation.isPrivate
+        let canChange = conversation.messages.isEmpty && presenter.isServerConfigured
+        let isShown = canChange || isPrivate
+        return Button(action: presenter.togglePrivateAction) {
+            Image(systemName: isPrivate ? "eye.slash.fill" : "eye.slash")
+                .font(.system(.body, weight: .medium))
+                .foregroundStyle(isPrivate ? HearthColor.pine : HearthColor.ink)
+                .frame(width: 40, height: 40)
+                .background(isPrivate ? HearthColor.pineSoft : .clear, in: Circle())
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Strings.privateChat)
+        .accessibilityAddTraits(isPrivate ? .isSelected : [])
+        .opacity(isShown ? 1 : 0)
+        .allowsHitTesting(canChange)
+        .accessibilityHidden(!isShown)
+        .animation(.snappy, value: isPrivate)
     }
 
     private var modelMenu: some View {
@@ -32,12 +53,6 @@ struct ChatHeader: View {
             modelSection(title: Strings.cloudModels, models: presenter.models.filter(\.isCloud))
         } label: {
             HStack(spacing: 6) {
-                if presenter.viewModel.conversation.isPrivate {
-                    Image(systemName: "eye.slash.fill")
-                        .font(.caption)
-                        .foregroundStyle(HearthColor.pine)
-                        .accessibilityLabel(Strings.privateChat)
-                }
                 Text(selected?.displayName ?? Strings.noModel)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(HearthColor.ink)

@@ -32,7 +32,6 @@ enum Strings {
     static let thinkingLight = String(localized: "composer.thinkingLight", defaultValue: "Light", bundle: .module)
     static let thinkingMedium = String(localized: "composer.thinkingMedium", defaultValue: "Medium", bundle: .module)
     static let thinkingHigh = String(localized: "composer.thinkingHigh", defaultValue: "High", bundle: .module)
-    static let hideKeyboard = String(localized: "composer.hideKeyboard", defaultValue: "Hide keyboard", bundle: .module)
     static let followUps = String(localized: "chat.followUps", defaultValue: "Suggested questions", bundle: .module)
     static let followUpHint = String(localized: "chat.followUpHint", defaultValue: "Asks this question", bundle: .module)
     static let suggestFollowUps = String(localized: "settings.followUps", defaultValue: "Suggest follow-up questions", bundle: .module)
