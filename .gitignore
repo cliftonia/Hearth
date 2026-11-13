@@ -5,6 +5,7 @@ DerivedData/
 *.xcworkspace/xcuserdata/
 xcuserdata/
 App/Info.plist
+Widgets/Info.plist
 
 # SwiftPM
 .build/

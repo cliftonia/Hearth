@@ -10,6 +10,7 @@ struct HearthApp: App {
     var body: some Scene {
         WindowGroup {
             Self.coordinator.start()
+                .onOpenURL { Self.coordinator.open($0) }
         }
     }
 }

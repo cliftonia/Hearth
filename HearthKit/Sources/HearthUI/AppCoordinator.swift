@@ -68,6 +68,23 @@ public final class AppCoordinator {
         lockPresenter.delegate = self
     }
 
+    /// Follows a link into the app, as a widget sends: `hearth://new` for a fresh chat, `hearth://voice` to talk.
+    /// Any other link is ignored.
+    public func open(_ url: URL) {
+        guard url.scheme?.lowercased() == "hearth" else {
+            return
+        }
+        let destination = url.host()?.lowercased()
+        if destination == "new" {
+            router.isSidebarOpen = false
+            router.isSettingsPresented = false
+            router.isVoicePresented = false
+            Task { await chatPresenter.newChatAction() }
+        } else if destination == "voice" {
+            startVoice()
+        }
+    }
+
     /// Goes straight to a voice conversation, as a shortcut or the Action button asks.
     public func startVoice() {
         guard !lockPresenter.viewModel.isLocked else {
