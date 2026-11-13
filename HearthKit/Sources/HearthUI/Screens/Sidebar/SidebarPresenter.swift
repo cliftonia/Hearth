@@ -86,6 +86,7 @@ final class SidebarPresenter {
             try await conversationStore.setPinned(!row.isPinned, for: row.id)
         } catch {
             logger.error("Pinning a conversation failed: \(error.localizedDescription, privacy: .public)")
+            viewModel.isShowingSaveFailure = true
         }
     }
 
@@ -108,6 +109,7 @@ final class SidebarPresenter {
             delegate?.sidebarPresenter(self, didRename: id, to: title)
         } catch {
             logger.error("Renaming a conversation failed: \(error.localizedDescription, privacy: .public)")
+            viewModel.isShowingSaveFailure = true
         }
     }
 
@@ -123,6 +125,7 @@ final class SidebarPresenter {
             delegate?.sidebarPresenter(self, didDelete: id)
         } catch {
             logger.error("Deleting a conversation failed: \(error.localizedDescription, privacy: .public)")
+            viewModel.isShowingSaveFailure = true
         }
     }
 }

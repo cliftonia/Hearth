@@ -11,4 +11,6 @@ final class SidebarViewModel {
     var isRenaming = false
     var renameDraft = ""
     var renamingID: Conversation.ID?
+    /// Whether to say that a change to a chat could not be saved.
+    var isShowingSaveFailure = false
 }

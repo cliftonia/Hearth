@@ -159,21 +159,33 @@ final class ChatPresenter {
         await regenerateAction()
     }
 
-    /// Throws away the last reply and asks for another to the same message.
+    /// Asks for another reply to the same message. The last reply is kept behind the new one as an earlier version.
     func regenerateAction() async {
         guard !viewModel.isStreaming, let model = viewModel.selectedModel else {
             return
         }
         var messages = viewModel.conversation.messages
+        var previous: Message?
         if messages.last?.role == .assistant {
-            messages.removeLast()
+            previous = messages.removeLast()
         }
         guard messages.last?.role == .user else {
             return
         }
         viewModel.conversation = viewModel.conversation.updating(messages: messages)
-        await reply(model: model, style: .chat, onDelta: nil)
+        await reply(model: model, style: .chat, replacing: previous, onDelta: nil)
         await suggestFollowUps(model: model)
+    }
+
+    /// Shows another version of a reply that was asked for more than once.
+    func selectVersionAction(_ index: Int, of id: Message.ID) async {
+        guard !viewModel.isStreaming, let message = viewModel.conversation.messages.first(where: { $0.id == id }) else {
+            return
+        }
+        await stopSpeaking()
+        viewModel.followUps = []
+        viewModel.conversation = viewModel.conversation.replacing(message.showingVersion(index))
+        await save(viewModel.conversation)
     }
 
     /// Stops whatever is under way and clears the screen for a fresh conversation with the same model.

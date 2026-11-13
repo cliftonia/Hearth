@@ -63,7 +63,8 @@ struct ChatView: View {
                             searchingQuery: message.id == messages.last?.id ? viewModel.searchingQuery : nil,
                             speakAction: presenter.isSpeechAvailable ? { Task { await presenter.speakAction(message.id) } } : nil,
                             editAction: viewModel.isStreaming ? nil : { presenter.editAction(message.id) },
-                            retryAction: message.id == messages.last?.id ? { Task { await presenter.regenerateAction() } } : nil
+                            retryAction: message.id == messages.last?.id ? { Task { await presenter.regenerateAction() } } : nil,
+                            versionAction: viewModel.isStreaming ? nil : { index in Task { await presenter.selectVersionAction(index, of: message.id) } }
                         )
                         .id(message.id)
                     }

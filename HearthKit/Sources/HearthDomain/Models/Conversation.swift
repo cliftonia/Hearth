@@ -43,6 +43,21 @@ public struct AttachedDocument: Identifiable, Hashable, Codable, Sendable {
     }
 }
 
+/// One attempt at a reply. Asking again keeps the earlier attempts, so they can be looked back at.
+public struct ReplyVersion: Hashable, Codable, Sendable {
+    public let text: String
+    public let thinking: String
+    public let thinkingSeconds: Int?
+    public let sources: [SearchSource]
+
+    public init(text: String, thinking: String = "", thinkingSeconds: Int? = nil, sources: [SearchSource] = []) {
+        self.text = text
+        self.thinking = thinking
+        self.thinkingSeconds = thinkingSeconds
+        self.sources = sources
+    }
+}
+
 /// One message of a conversation: what the user sent, or a reply to it.
 public struct Message: Identifiable, Hashable, Codable, Sendable {
     public typealias ID = Tagged<Message, UUID>
@@ -59,6 +74,10 @@ public struct Message: Identifiable, Hashable, Codable, Sendable {
     /// Photos attached to the message, as JPEG data.
     public let imagesJPEG: [Data]
     public let documents: [AttachedDocument]
+    /// The other attempts at this reply, in the order they were made, without the one that is shown.
+    public let otherVersions: [ReplyVersion]
+    /// Where the shown attempt stands among them all, counting from zero.
+    public let versionIndex: Int
     public let createdAt: Date
 
     public init(
@@ -70,6 +89,8 @@ public struct Message: Identifiable, Hashable, Codable, Sendable {
         sources: [SearchSource] = [],
         imagesJPEG: [Data] = [],
         documents: [AttachedDocument] = [],
+        otherVersions: [ReplyVersion] = [],
+        versionIndex: Int = 0,
         createdAt: Date = Date()
     ) {
         self.id = id
@@ -80,6 +101,8 @@ public struct Message: Identifiable, Hashable, Codable, Sendable {
         self.sources = sources
         self.imagesJPEG = imagesJPEG
         self.documents = documents
+        self.otherVersions = otherVersions
+        self.versionIndex = min(max(versionIndex, 0), otherVersions.count)
         self.createdAt = createdAt
     }
 
@@ -95,6 +118,8 @@ public struct Message: Identifiable, Hashable, Codable, Sendable {
             sources: try container.decodeIfPresent([SearchSource].self, forKey: .sources) ?? [],
             imagesJPEG: try container.decodeIfPresent([Data].self, forKey: .imagesJPEG) ?? [],
             documents: try container.decodeIfPresent([AttachedDocument].self, forKey: .documents) ?? [],
+            otherVersions: try container.decodeIfPresent([ReplyVersion].self, forKey: .otherVersions) ?? [],
+            versionIndex: try container.decodeIfPresent(Int.self, forKey: .versionIndex) ?? 0,
             createdAt: try container.decode(Date.self, forKey: .createdAt)
         )
     }
@@ -115,6 +140,62 @@ public struct Message: Identifiable, Hashable, Codable, Sendable {
             sources: sources ?? self.sources,
             imagesJPEG: imagesJPEG,
             documents: documents,
+            otherVersions: otherVersions,
+            versionIndex: versionIndex,
+            createdAt: createdAt
+        )
+    }
+}
+
+// MARK: - Versions of a reply
+
+public extension Message {
+    /// How many attempts at this reply there are, the shown one included.
+    var versionCount: Int { otherVersions.count + 1 }
+
+    /// Every attempt in the order it was made, the shown one in its place.
+    var allVersions: [ReplyVersion] {
+        var versions = otherVersions
+        versions.insert(ReplyVersion(text: text, thinking: thinking, thinkingSeconds: thinkingSeconds, sources: sources), at: versionIndex)
+        return versions
+    }
+
+    /// An empty reply to be filled by asking again, with this reply and its other attempts kept behind it.
+    func startingNewVersion() -> Message {
+        let kept = text.isEmpty && thinking.isEmpty ? otherVersions : allVersions
+        return Message(role: role, text: "", otherVersions: kept, versionIndex: kept.count)
+    }
+
+    /// The same reply showing another of its attempts. An index outside the attempts changes nothing.
+    func showingVersion(_ index: Int) -> Message {
+        let versions = allVersions
+        guard versions.indices.contains(index), index != versionIndex else {
+            return self
+        }
+        return showing(versions[index], at: index, others: versions.enumerated().filter { $0.offset != index }.map(\.element))
+    }
+
+    /// The reply without the attempt that is shown, showing the latest of the others instead; `nil` if there are none.
+    /// It is what is left when asking again came to nothing.
+    func droppingShownVersion() -> Message? {
+        guard let latest = otherVersions.last else {
+            return nil
+        }
+        return showing(latest, at: otherVersions.count - 1, others: Array(otherVersions.dropLast()))
+    }
+
+    private func showing(_ version: ReplyVersion, at index: Int, others: [ReplyVersion]) -> Message {
+        Message(
+            id: id,
+            role: role,
+            text: version.text,
+            thinking: version.thinking,
+            thinkingSeconds: version.thinkingSeconds,
+            sources: version.sources,
+            imagesJPEG: imagesJPEG,
+            documents: documents,
+            otherVersions: others,
+            versionIndex: index,
             createdAt: createdAt
         )
     }

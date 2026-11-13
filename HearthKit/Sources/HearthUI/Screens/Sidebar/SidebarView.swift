@@ -45,6 +45,9 @@ struct SidebarView: View {
             Button(Strings.cancel, role: .cancel) {}
             Button(Strings.save) { Task { await presenter.commitRenameAction() } }
         }
+        .alert(Strings.errorChangeFailed, isPresented: $viewModel.isShowingSaveFailure) {
+            Button(Strings.ok, role: .cancel) {}
+        }
     }
 
     // MARK: Search and list

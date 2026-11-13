@@ -38,6 +38,7 @@ and your conversations stay on the device.
   the reply: web search, how hard to think, and reading aloud
 - **Attachments**: photos from the library or camera for models that can see, PDFs and text files for any model
 - **Edit and resend** a message you already sent
+- **Reply versions**: asking again keeps the earlier reply, and arrows under the reply step between them
 - **Custom instructions** given to the model at the start of every conversation
 - **Memory**: lasting facts you tell a model, or ask it to remember, are kept on the device and carried into every
   conversation. A notice shows whenever something is remembered, and the list can be read, added to and cleared in Settings
@@ -52,6 +53,7 @@ and your conversations stay on the device.
 - **Hear this voice**: Settings plays a short sample of the chosen voice before you keep it
 - **Dictation** into the message field, recognised on the device where the phone supports it
 - **Shortcut**: "Start Voice Conversation" from Siri, Shortcuts, Spotlight or the Action button
+- **Widgets** for the home screen and the lock screen that open a new chat or a voice conversation
 
 ### Your conversations
 

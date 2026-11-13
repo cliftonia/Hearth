@@ -5,8 +5,10 @@ import HearthDomain
 extension ChatPresenter {
     /// Adds an empty reply to the conversation and fills it as the model answers. Returns once the turn is over,
     /// whether it finished, failed or was stopped, with what arrived saved.
-    func reply(model: ChatModel, style: ReplyStyle, onDelta: (@MainActor (String) -> Void)?) async {
-        let reply = Message(role: .assistant, text: "")
+    ///
+    /// - Parameter replacing: The reply this one is another attempt at, whose versions it keeps behind it.
+    func reply(model: ChatModel, style: ReplyStyle, replacing previous: Message? = nil, onDelta: (@MainActor (String) -> Void)?) async {
+        let reply = previous?.startingNewVersion() ?? Message(role: .assistant, text: "")
         let usesMemory = settings.allowsMemory(in: viewModel.conversation)
         let turn = ChatInteractor.Turn(
             history: viewModel.conversation.messages,
@@ -96,11 +98,17 @@ extension ChatPresenter {
         viewModel.conversation = viewModel.conversation.replacing(updated)
     }
 
-    /// A reply that never produced anything is removed rather than left as an empty row.
+    /// A reply that never produced anything is removed rather than left as an empty row. If it was another attempt
+    /// at an earlier reply, that earlier reply is shown again.
     func discardingEmptyReply(_ replyID: Message.ID) -> Conversation {
         let conversation = viewModel.conversation
         guard let reply = conversation.messages.first(where: { $0.id == replyID }), reply.text.isEmpty, reply.thinking.isEmpty else {
             return conversation
+        }
+        if let earlier = reply.droppingShownVersion() {
+            let restored = conversation.replacing(earlier)
+            viewModel.conversation = restored
+            return restored
         }
         let trimmed = conversation.updating(messages: conversation.messages.filter { $0.id != replyID })
         viewModel.conversation = trimmed

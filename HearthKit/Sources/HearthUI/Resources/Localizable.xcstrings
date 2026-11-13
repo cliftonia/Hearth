@@ -199,6 +199,17 @@
         }
       }
     },
+    "common.ok": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
     "composer.attach": {
       "extractionState": "manual",
       "localizations": {
@@ -452,6 +463,17 @@
         }
       }
     },
+    "error.changeFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That change could not be saved. The chat is as it was."
+          }
+        }
+      }
+    },
     "error.dictationDenied": {
       "extractionState": "manual",
       "localizations": {
@@ -459,6 +481,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Allow microphone and speech recognition access in the Settings app to dictate."
+          }
+        }
+      }
+    },
+    "error.dictationDenied.mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow microphone and speech recognition access in System Settings to dictate."
           }
         }
       }
@@ -848,6 +881,28 @@
         }
       }
     },
+    "message.nextVersion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next version"
+          }
+        }
+      }
+    },
+    "message.previousVersion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous version"
+          }
+        }
+      }
+    },
     "message.retry": {
       "extractionState": "manual",
       "localizations": {
@@ -943,6 +998,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Thought briefly"
+          }
+        }
+      }
+    },
+    "message.versionPosition": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %1$lld of %2$lld"
           }
         }
       }
@@ -1592,6 +1658,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Allow microphone and speech recognition access in the Settings app to talk."
+          }
+        }
+      }
+    },
+    "voice.permissionDenied.mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow microphone and speech recognition access in System Settings to talk."
           }
         }
       }

@@ -53,6 +53,8 @@ enum Strings {
     static let exportUser = String(localized: "export.user", defaultValue: "You", bundle: .module)
     static let readAloud = String(localized: "message.speak", defaultValue: "Read aloud", bundle: .module)
     static let stopReading = String(localized: "message.stopSpeaking", defaultValue: "Stop reading", bundle: .module)
+    static let previousVersion = String(localized: "message.previousVersion", defaultValue: "Previous version", bundle: .module)
+    static let nextVersion = String(localized: "message.nextVersion", defaultValue: "Next version", bundle: .module)
     static let tryAgain = String(localized: "message.retry", defaultValue: "Try again", bundle: .module)
     static let thinking = String(localized: "message.thinking", defaultValue: "Thinking…", bundle: .module)
     static let thoughtBriefly = String(localized: "message.thoughtBriefly", defaultValue: "Thought briefly", bundle: .module)
@@ -69,11 +71,16 @@ enum Strings {
     static let errorNoModel = String(localized: "error.noModel", defaultValue: "Choose a model first.", bundle: .module)
     static let errorUnreachable = String(localized: "error.unreachable", defaultValue: "Could not reach the server. Check that your VPN is connected.", bundle: .module)
     static let errorSpeechNotConfigured = String(localized: "error.speechNotConfigured", defaultValue: "No speech server address is set. Add one in Settings.", bundle: .module)
+    #if targetEnvironment(macCatalyst)
+    static let errorDictationDenied = String(localized: "error.dictationDenied.mac", defaultValue: "Allow microphone and speech recognition access in System Settings to dictate.", bundle: .module)
+    #else
     static let errorDictationDenied = String(localized: "error.dictationDenied", defaultValue: "Allow microphone and speech recognition access in the Settings app to dictate.", bundle: .module)
+    #endif
     static let errorDictationUnavailable = String(localized: "error.dictationUnavailable", defaultValue: "Dictation is not available right now.", bundle: .module)
     static let errorSpeechFailed = String(localized: "error.speechFailed", defaultValue: "The reply could not be spoken.", bundle: .module)
     static let interruptedTitle = String(localized: "error.interruptedTitle", defaultValue: "Reply interrupted", bundle: .module)
     static let interruptedMessage = String(localized: "error.interruptedMessage", defaultValue: "Hearth was in the background for too long and iOS paused it. What arrived is kept.", bundle: .module)
+    static let errorChangeFailed = String(localized: "error.changeFailed", defaultValue: "That change could not be saved. The chat is as it was.", bundle: .module)
     static let errorSaveFailed = String(localized: "error.saveFailed", defaultValue: "This chat could not be saved.", bundle: .module)
 
     static let searchChats = String(localized: "sidebar.search", defaultValue: "Search chats", bundle: .module)
@@ -94,6 +101,7 @@ enum Strings {
     static let notConnected = String(localized: "sidebar.notConnected", defaultValue: "Not connected", bundle: .module)
     static let noServer = String(localized: "sidebar.noServer", defaultValue: "No server set", bundle: .module)
 
+    static let ok = String(localized: "common.ok", defaultValue: "OK", bundle: .module)
     static let done = String(localized: "settings.done", defaultValue: "Done", bundle: .module)
     static let cancel = String(localized: "settings.cancel", defaultValue: "Cancel", bundle: .module)
     static let servers = String(localized: "settings.servers", defaultValue: "Servers", bundle: .module)
@@ -148,7 +156,15 @@ enum Strings {
     static let interrupt = String(localized: "voice.interrupt", defaultValue: "Interrupt and listen", bundle: .module)
     static let voiceHint = String(localized: "voice.hint", defaultValue: "Speak when you are ready.", bundle: .module)
     static let voiceMutedHint = String(localized: "voice.mutedHint", defaultValue: "Unmute to carry on.", bundle: .module)
+    #if targetEnvironment(macCatalyst)
+    static let voicePermissionDenied = String(localized: "voice.permissionDenied.mac", defaultValue: "Allow microphone and speech recognition access in System Settings to talk.", bundle: .module)
+    #else
     static let voicePermissionDenied = String(localized: "voice.permissionDenied", defaultValue: "Allow microphone and speech recognition access in the Settings app to talk.", bundle: .module)
+    #endif
+
+    static func versionPosition(number: Int, total: Int) -> String {
+        String(localized: "message.versionPosition", defaultValue: "Version \(number) of \(total)", bundle: .module)
+    }
 
     static func messageModel(_ name: String) -> String {
         String(localized: "composer.placeholderModel", defaultValue: "Message \(name)", bundle: .module)

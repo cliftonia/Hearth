@@ -22,6 +22,8 @@ struct MessageSection: View {
     let speakAction: (() -> Void)?
     let editAction: (() -> Void)?
     let retryAction: (() -> Void)?
+    /// Shows the version of the reply at the given place, for a reply that was asked for more than once.
+    let versionAction: ((Int) -> Void)?
 
     @State private var copyCount = 0
 
@@ -129,8 +131,28 @@ struct MessageSection: View {
             if let retryAction {
                 actionButton(systemImage: "arrow.counterclockwise", label: Strings.tryAgain, action: retryAction)
             }
+            if let versionAction, message.versionCount > 1 {
+                versionStepper(versionAction)
+            }
         }
         .sensoryFeedback(.success, trigger: copyCount)
+    }
+
+    /// Steps back and forth through the versions of a reply, with the place of the one shown between the arrows.
+    private func versionStepper(_ action: @escaping (Int) -> Void) -> some View {
+        let index = message.versionIndex
+        return HStack(spacing: 0) {
+            actionButton(systemImage: "chevron.left", label: Strings.previousVersion) { action(index - 1) }
+                .disabled(index == 0)
+                .opacity(index == 0 ? 0.35 : 1)
+            Text(verbatim: "\(index + 1)/\(message.versionCount)")
+                .font(.footnote.monospacedDigit())
+                .foregroundStyle(HearthColor.mute)
+                .accessibilityLabel(Strings.versionPosition(number: index + 1, total: message.versionCount))
+            actionButton(systemImage: "chevron.right", label: Strings.nextVersion) { action(index + 1) }
+                .disabled(index == message.versionCount - 1)
+                .opacity(index == message.versionCount - 1 ? 0.35 : 1)
+        }
     }
 
     private func actionButton(systemImage: String, label: String, action: @escaping () -> Void) -> some View {

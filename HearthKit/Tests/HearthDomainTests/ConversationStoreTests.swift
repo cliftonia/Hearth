@@ -11,13 +11,23 @@ struct ConversationStoreTests {
         let saved: Recorder<Conversation>
     }
 
+    /// What a disk that cannot be written to throws.
+    private struct DiskFull: Error {}
+
     /// A store whose disk already holds the given conversations.
-    private func makeTestSubject(stored: [Conversation] = []) -> Fixture {
+    ///
+    /// - Parameter failsWrites: Whether every save and delete fails, as on a full disk.
+    private func makeTestSubject(stored: [Conversation] = [], failsWrites: Bool = false) -> Fixture {
         let saved = Recorder<Conversation>()
         let provider = ConversationDataProvider(
             loadAll: { stored },
-            save: { saved.record($0) },
-            delete: { _ in }
+            save: {
+                if failsWrites { throw DiskFull() }
+                saved.record($0)
+            },
+            delete: { _ in
+                if failsWrites { throw DiskFull() }
+            }
         )
         return Fixture(subject: ConversationStore(provider: provider), saved: saved)
     }
@@ -31,6 +41,32 @@ struct ConversationStoreTests {
         try await fixture.subject.load()
 
         #expect(fixture.subject.conversations.map(\.title) == ["Newer", "Older"])
+    }
+
+    @Test func `a failed save leaves the list as it is on disk`() async throws {
+        let fixture = makeTestSubject(stored: [older, newer], failsWrites: true)
+        try await fixture.subject.load()
+
+        await #expect(throws: DiskFull.self) {
+            try await fixture.subject.save(older.updating(title: "Changed"))
+        }
+        await #expect(throws: DiskFull.self) {
+            try await fixture.subject.save(Conversation(title: "Brand new"))
+        }
+
+        #expect(fixture.subject.conversations.map(\.title) == ["Newer", "Older"])
+    }
+
+    @Test func `a failed pin, rename or delete is undone`() async throws {
+        let fixture = makeTestSubject(stored: [older, newer], failsWrites: true)
+        try await fixture.subject.load()
+
+        await #expect(throws: DiskFull.self) { try await fixture.subject.setPinned(true, for: older.id) }
+        await #expect(throws: DiskFull.self) { try await fixture.subject.rename(older.id, to: "Renamed") }
+        await #expect(throws: DiskFull.self) { try await fixture.subject.delete(newer.id) }
+
+        #expect(fixture.subject.conversations.map(\.title) == ["Newer", "Older"])
+        #expect(fixture.subject.conversations.map(\.isPinned) == [false, false])
     }
 
     @Test func `pinning is written to disk and leaves the order alone`() async throws {
@@ -95,5 +131,42 @@ struct ConversationStoreTests {
         let decoded = try JSONDecoder().decode(Conversation.self, from: JSONEncoder().encode(pinned))
 
         #expect(decoded == pinned)
+    }
+
+    @Test func `asking again keeps the earlier reply as a version that can be shown again`() {
+        let first = Message(role: .assistant, text: "One", thinking: "Hm")
+
+        let second = first.startingNewVersion().updating(text: "Two")
+        let third = second.startingNewVersion().updating(text: "Three")
+
+        #expect(third.versionCount == 3)
+        #expect(third.versionIndex == 2)
+        #expect(third.allVersions.map(\.text) == ["One", "Two", "Three"])
+        let back = third.showingVersion(0)
+        #expect(back.text == "One")
+        #expect(back.thinking == "Hm")
+        #expect(back.id == third.id)
+        #expect(back.allVersions.map(\.text) == ["One", "Two", "Three"])
+        #expect(back.showingVersion(7) == back)
+    }
+
+    @Test func `an attempt that came to nothing gives way to the reply before it`() throws {
+        let first = Message(role: .assistant, text: "One")
+        let empty = first.startingNewVersion()
+
+        let restored = try #require(empty.droppingShownVersion())
+
+        #expect(restored.text == "One")
+        #expect(restored.versionCount == 1)
+        #expect(first.droppingShownVersion() == nil)
+    }
+
+    @Test func `the versions of a reply survive a round trip through JSON`() throws {
+        let reply = Message(role: .assistant, text: "One").startingNewVersion().updating(text: "Two")
+
+        let decoded = try JSONDecoder().decode(Message.self, from: JSONEncoder().encode(reply))
+
+        #expect(decoded == reply)
+        #expect(decoded.allVersions.map(\.text) == ["One", "Two"])
     }
 }
