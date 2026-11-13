@@ -11,8 +11,12 @@ hands-free with replies spoken by your own Kokoro voice. Nothing goes through an
 and your conversations stay on the device.
 
 <p align="center">
-  <img src="docs/chat.png" alt="A reply with folded thinking, web sources and suggested follow-up questions" width="24%">
-  <img src="docs/drawer.png" alt="The drawer of conversations, with a pinned chat and chats grouped by day" width="24%">
+  <img src="docs/chat.png" alt="A reply with folded thinking, a command in a code block, web sources and suggested follow-up questions" width="24%">
+  <img src="docs/picture.png" alt="A picture of a lighthouse at sunset, made from a description, with Save and Share" width="24%">
+  <img src="docs/picture-change.png" alt="The same lighthouse changed to a snowy winter night by a follow-up message" width="24%">
+  <img src="docs/drawer.png" alt="The drawer of conversations, with a pinned chat, a private chat and chats grouped by day" width="24%">
+</p>
+<p align="center">
   <img src="docs/table.png" alt="A reply with a table and a formula, in the dark theme" width="24%">
   <img src="docs/voice.png" alt="The hands-free voice conversation screen, listening" width="24%">
 </p>
