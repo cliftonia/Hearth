@@ -19,12 +19,3 @@ Config/Local.xcconfig
 # macOS
 .DS_Store
 *.swp
-
-# Local tooling state
-.claude/
-CLAUDE.md
-AGENTS.md
-GEMINI.md
-.cursor/
-.cursorrules
-.superpowers/
