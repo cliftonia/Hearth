@@ -11,7 +11,7 @@ for key, value in pattern.findall(open(SOURCE, encoding="utf-8").read()):
     # Interpolations become positional format specifiers, as the compiler writes them.
     arguments = re.findall(r"\\\(([^)]+)\)", value)
     for position, argument in enumerate(arguments, start=1):
-        specifier = "lld" if argument in ("seconds", "modelCount", "number", "total") else "@"
+        specifier = "lld" if argument in ("seconds", "modelCount", "number", "total", "ahead") else "@"
         prefix = f"%{position}$" if len(arguments) > 1 else "%"
         value = value.replace(f"\\({argument})", prefix + specifier, 1)
     strings[key] = {"extractionState": "manual", "localizations": {"en": {"stringUnit": {"state": "translated", "value": value}}}}

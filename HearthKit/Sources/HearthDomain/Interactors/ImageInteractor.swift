@@ -20,7 +20,13 @@ public final class ImageInteractor: Sendable {
     ///
     /// The chat server is asked to unload its models first, since both servers share one graphics card, and the
     /// picture server is asked to free its memory afterwards, whether the picture was made or not.
-    public func make(_ request: ImageRequest, settings: ServerSettings) async throws -> Data {
+    ///
+    /// - Parameter onProgress: Told whether the picture is waiting behind other work or being made.
+    public func make(
+        _ request: ImageRequest,
+        settings: ServerSettings,
+        onProgress: @escaping ImageDataProvider.ProgressHandler = { _ in }
+    ) async throws -> Data {
         guard let baseURL = settings.imageURL else {
             throw ImageError.serverNotConfigured
         }
@@ -30,11 +36,13 @@ public final class ImageInteractor: Sendable {
             await provider.unloadChatModels(chatURL)
         }
         do {
-            let picture = try await provider.render(baseURL, request, model)
+            let picture = try await provider.render(baseURL, request, model, onProgress)
             await provider.free(baseURL)
             return picture
         } catch {
-            await provider.free(baseURL)
+            // Stopping a picture cancels this task, and a cancelled task cannot make requests; freeing goes in its own.
+            let free = provider.free
+            await Task.detached { await free(baseURL) }.value
             throw error
         }
     }

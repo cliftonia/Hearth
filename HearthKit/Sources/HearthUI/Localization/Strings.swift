@@ -87,6 +87,7 @@ enum Strings {
     static let pictureModelPickerLabel = String(localized: "picture.modelPicker", defaultValue: "Choose picture model", bundle: .module)
     static let pictureMode = String(localized: "picture.mode", defaultValue: "Make a picture", bundle: .module)
     static let picturePlaceholder = String(localized: "picture.placeholder", defaultValue: "Describe a picture", bundle: .module)
+    static let pictureFollowUpPlaceholder = String(localized: "picture.followUpPlaceholder", defaultValue: "Change it, or describe a new one", bundle: .module)
     static let pictureChangePlaceholder = String(localized: "picture.changePlaceholder", defaultValue: "Say what to change, or send to enlarge", bundle: .module)
     static let pictureCreating = String(localized: "picture.creating", defaultValue: "Making your picture…", bundle: .module)
     static let pictureChanging = String(localized: "picture.changing", defaultValue: "Changing your picture…", bundle: .module)
@@ -190,6 +191,10 @@ enum Strings {
     #else
     static let voicePermissionDenied = String(localized: "voice.permissionDenied", defaultValue: "Allow microphone and speech recognition access in the Settings app to talk.", bundle: .module)
     #endif
+
+    static func pictureWaiting(ahead: Int) -> String {
+        String(localized: "picture.waiting", defaultValue: "Waiting in line, \(ahead) ahead…", bundle: .module)
+    }
 
     static func pictureCreated(seconds: Int) -> String {
         String(localized: "picture.created", defaultValue: "Made in \(seconds) seconds", bundle: .module)

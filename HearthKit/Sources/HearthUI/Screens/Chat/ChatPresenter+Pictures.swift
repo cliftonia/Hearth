@@ -71,7 +71,9 @@ extension ChatPresenter {
     private func makePicture(_ request: ImageRequest, replyID: Message.ID) async {
         let startedAt = Date()
         do {
-            let png = try await dependencies.image.make(request, settings: settings)
+            let png = try await dependencies.image.make(request, settings: settings) { [weak self] progress in
+                Task { @MainActor in self?.showPictureProgress(progress, for: request) }
+            }
             guard let jpeg = UIImage(data: png)?.jpegData(compressionQuality: Self.pictureQuality) else {
                 throw ImageError.failed(message: "")
             }
@@ -92,6 +94,19 @@ extension ChatPresenter {
         } catch {
             logger.error("Making a picture failed: \(error.localizedDescription, privacy: .public)")
             viewModel.error = ErrorViewConfiguration(from: error)
+        }
+    }
+
+    /// Says that the picture is waiting its turn, or what is being done to it, while it is still on its way.
+    private func showPictureProgress(_ progress: ImageProgress, for request: ImageRequest) {
+        guard viewModel.pictureStatus != nil else {
+            return
+        }
+        switch progress {
+        case .waiting(let ahead):
+            viewModel.pictureStatus = Strings.pictureWaiting(ahead: ahead)
+        case .working:
+            viewModel.pictureStatus = Self.status(for: request)
         }
     }
 

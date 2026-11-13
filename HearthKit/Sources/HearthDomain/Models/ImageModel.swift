@@ -36,6 +36,14 @@ public enum ImageRequest: Hashable, Sendable {
     case enlarge(imageJPEG: Data)
 }
 
+/// How a picture stands while it is being made.
+public enum ImageProgress: Hashable, Sendable {
+    /// The picture server is busy; this many jobs come first.
+    case waiting(ahead: Int)
+    /// The picture is being made now.
+    case working
+}
+
 /// Why a picture could not be made.
 public enum ImageError: Error, Sendable, Equatable {
     /// No usable address has been given for the picture server.

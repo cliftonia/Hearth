@@ -30,7 +30,10 @@ struct ImageTests {
         #expect(planner.request(text: long, imagesJPEG: [photo]) == .edit(imageJPEG: photo, instruction: long))
     }
 
-    @Test(arguments: ["Make it photo realistic", "now at night", "add a red hat", "Change the background to a beach", "can you turn it into a painting"])
+    @Test(arguments: [
+        "Make it photo realistic", "now at night", "add a red hat", "Change the background to a beach", "can you turn it into a painting",
+        "improve the photo again", "Improve photo", "make this picture casual", "brighter", "fix the hands", "more smiling", "zoom out a little"
+    ])
     func `words that carry on from the last picture change that picture`(text: String) {
         let request = ImageRequestPlanner().request(text: text, imagesJPEG: [], previousPictureJPEG: photo)
 
@@ -41,8 +44,14 @@ struct ImageTests {
         let planner = ImageRequestPlanner()
 
         #expect(planner.request(text: "make it 4k", imagesJPEG: [], previousPictureJPEG: photo) == .enlarge(imageJPEG: photo))
-        let fresh = planner.request(text: "a dog on a beach", imagesJPEG: [], previousPictureJPEG: photo)
-        #expect(fresh == .create(prompt: "a dog on a beach", width: 1024, height: 1024))
+        for fresh in ["a dog on a beach", "Draw a castle", "create a logo for a bakery", "another picture of a boat", "Make a poster of a ship"] {
+            let request = planner.request(text: fresh, imagesJPEG: [], previousPictureJPEG: photo)
+            guard case .create(let prompt, _, _) = request else {
+                Issue.record("\(fresh) should start a new picture, but gave \(request)")
+                continue
+            }
+            #expect(prompt == fresh)
+        }
         // A photo attached now always wins over the last picture made.
         let other = Data([7])
         #expect(planner.request(text: "make it blue", imagesJPEG: [other], previousPictureJPEG: photo) == .edit(imageJPEG: other, instruction: "make it blue"))
@@ -54,7 +63,8 @@ struct ImageTests {
         let steps = Recorder<String>()
         let subject = ImageInteractor(provider: ImageDataProvider(
             fetchCapabilities: { _ in ImageCapabilities(models: [.krea2Turbo, .zImageTurbo], canEdit: true, canEnlarge: false) },
-            render: { _, _, model in
+            render: { _, _, model, onProgress in
+                onProgress(.waiting(ahead: 2))
                 steps.record("render \(model.rawValue)")
                 return Data([9])
             },
@@ -62,9 +72,11 @@ struct ImageTests {
             unloadChatModels: { _ in steps.record("unload") }
         ))
 
-        let picture = try await subject.make(.create(prompt: "a fox", width: 1024, height: 1024), settings: settings)
+        let progress = Recorder<ImageProgress>()
+        let picture = try await subject.make(.create(prompt: "a fox", width: 1024, height: 1024), settings: settings) { progress.record($0) }
 
         #expect(picture == Data([9]))
+        #expect(progress.values == [.waiting(ahead: 2)])
         // With no model chosen, the first the server offers is used.
         #expect(steps.values == ["unload", "render krea2Turbo", "free"])
     }
@@ -73,7 +85,7 @@ struct ImageTests {
         let steps = Recorder<String>()
         let subject = ImageInteractor(provider: ImageDataProvider(
             fetchCapabilities: { _ in ImageCapabilities(models: [.zImageTurbo], canEdit: true, canEnlarge: false) },
-            render: { _, _, _ in throw ImageError.failed(message: "out of memory") },
+            render: { _, _, _, _ in throw ImageError.failed(message: "out of memory") },
             free: { _ in steps.record("free") }
         ))
 

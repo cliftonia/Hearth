@@ -5,8 +5,11 @@ import HearthData
 public struct ImageDataProvider: Sendable {
     /// What the picture server at the address can do.
     public let fetchCapabilities: @Sendable (URL) async throws -> ImageCapabilities
-    /// Server, request and model in; the picture out, as PNG data.
-    public let render: @Sendable (URL, ImageRequest, ImageModelKind) async throws -> Data
+    /// What `render` is given to report progress through.
+    public typealias ProgressHandler = @Sendable (ImageProgress) -> Void
+
+    /// Server, request and model in; the picture out, as PNG data. Progress is reported as it is learned.
+    public let render: @Sendable (URL, ImageRequest, ImageModelKind, @escaping ProgressHandler) async throws -> Data
     /// Tells the picture server to give back the memory it used.
     public let free: @Sendable (URL) async -> Void
     /// Tells the chat server at the address to unload its models, making room for a picture.
@@ -14,7 +17,7 @@ public struct ImageDataProvider: Sendable {
 
     public init(
         fetchCapabilities: @escaping @Sendable (URL) async throws -> ImageCapabilities,
-        render: @escaping @Sendable (URL, ImageRequest, ImageModelKind) async throws -> Data,
+        render: @escaping @Sendable (URL, ImageRequest, ImageModelKind, @escaping ProgressHandler) async throws -> Data,
         free: @escaping @Sendable (URL) async -> Void = { _ in },
         unloadChatModels: @escaping @Sendable (URL) async -> Void = { _ in }
     ) {
@@ -40,9 +43,16 @@ public extension ImageDataProvider {
                     canEnlarge: files.canEnlarge
                 )
             },
-            render: { baseURL, request, model in
+            render: { baseURL, request, model, onProgress in
                 do {
-                    return try await service.render(baseURL: baseURL, job: job(for: request, model: model))
+                    return try await service.render(baseURL: baseURL, job: job(for: request, model: model)) { progress in
+                        switch progress {
+                        case .waiting(let ahead):
+                            onProgress(.waiting(ahead: ahead))
+                        case .working:
+                            onProgress(.working)
+                        }
+                    }
                 } catch ImageServiceError.failed(let message) {
                     throw ImageError.failed(message: message)
                 } catch ImageServiceError.noPicture {

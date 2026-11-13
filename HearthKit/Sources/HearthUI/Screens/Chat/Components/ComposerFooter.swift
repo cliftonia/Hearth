@@ -101,7 +101,12 @@ struct ComposerFooter: View {
 
     private var placeholder: String {
         if presenter.viewModel.isPictureMode {
-            return presenter.viewModel.pendingImagesJPEG.isEmpty ? Strings.picturePlaceholder : Strings.pictureChangePlaceholder
+            if !presenter.viewModel.pendingImagesJPEG.isEmpty {
+                return Strings.pictureChangePlaceholder
+            }
+            // With a picture already made, what is written is taken to be about it.
+            let hasPicture = presenter.viewModel.conversation.messages.contains(where: \.isPicture)
+            return hasPicture ? Strings.pictureFollowUpPlaceholder : Strings.picturePlaceholder
         }
         return presenter.viewModel.selectedModel.map { Strings.messageModel($0.displayName) } ?? Strings.composerPlaceholder
     }

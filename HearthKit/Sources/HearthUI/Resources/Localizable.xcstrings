@@ -1222,6 +1222,17 @@
         }
       }
     },
+    "picture.followUpPlaceholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change it, or describe a new one"
+          }
+        }
+      }
+    },
     "picture.footer": {
       "extractionState": "manual",
       "localizations": {
@@ -1372,6 +1383,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Picture"
+          }
+        }
+      }
+    },
+    "picture.waiting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting in line, %lld ahead…"
           }
         }
       }
