@@ -96,7 +96,6 @@ enum Strings {
     static let pictureModelAutomatic = String(localized: "picture.modelAutomatic", defaultValue: "Automatic", bundle: .module)
     static let pictureModelZImage = String(localized: "picture.model.zImage", defaultValue: "Z-Image Turbo · fast, all-round", bundle: .module)
     static let pictureModelKrea = String(localized: "picture.model.krea", defaultValue: "Krea 2 Turbo · most photographic, slower", bundle: .module)
-    static let pictureModelFlux = String(localized: "picture.model.flux", defaultValue: "FLUX schnell · fast, stylised", bundle: .module)
     static let pictureModelJuggernaut = String(localized: "picture.model.juggernaut", defaultValue: "Juggernaut XL · painterly", bundle: .module)
     static let pictureCanChange = String(localized: "picture.canChange", defaultValue: "Can change a picture you show it", bundle: .module)
     static let pictureCanEnlarge = String(localized: "picture.canEnlarge", defaultValue: "Can enlarge a picture", bundle: .module)

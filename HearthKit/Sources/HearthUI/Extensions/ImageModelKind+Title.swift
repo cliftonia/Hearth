@@ -8,8 +8,6 @@ extension ImageModelKind {
             Strings.pictureModelZImage
         case .krea2Turbo:
             Strings.pictureModelKrea
-        case .fluxSchnell:
-            Strings.pictureModelFlux
         case .juggernautXL:
             Strings.pictureModelJuggernaut
         }
@@ -22,8 +20,6 @@ extension ImageModelKind {
             "Z-Image Turbo"
         case .krea2Turbo:
             "Krea 2 Turbo"
-        case .fluxSchnell:
-            "FLUX schnell"
         case .juggernautXL:
             "Juggernaut XL"
         }

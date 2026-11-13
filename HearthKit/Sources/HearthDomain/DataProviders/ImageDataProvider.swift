@@ -81,8 +81,6 @@ private extension ImageModelKind {
             .zImageTurbo
         case .krea2Turbo:
             .krea2Turbo
-        case .fluxSchnell:
-            .fluxSchnell
         case .juggernautXL:
             .juggernautXL
         }

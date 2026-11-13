@@ -1255,17 +1255,6 @@
         }
       }
     },
-    "picture.model.flux": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "FLUX schnell · fast, stylised"
-          }
-        }
-      }
-    },
     "picture.model.juggernaut": {
       "extractionState": "manual",
       "localizations": {

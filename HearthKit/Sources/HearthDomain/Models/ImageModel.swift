@@ -6,7 +6,6 @@ public enum ImageModelKind: String, Codable, Sendable, CaseIterable {
     case zImageTurbo
     /// The most photographic, and the slowest.
     case krea2Turbo
-    case fluxSchnell
     /// An older, painterly model.
     case juggernautXL
 }

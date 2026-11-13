@@ -4,7 +4,6 @@ import Foundation
 public enum ImageEngineDTO: String, Sendable, CaseIterable {
     case zImageTurbo
     case krea2Turbo
-    case fluxSchnell
     case juggernautXL
 
     /// The file that holds the model on the server. The engine is offered only when the server has it.
@@ -14,8 +13,6 @@ public enum ImageEngineDTO: String, Sendable, CaseIterable {
             "z_image_turbo_int8_convrot.safetensors"
         case .krea2Turbo:
             "krea2_turbo_fp8_scaled.safetensors"
-        case .fluxSchnell:
-            "flux1-schnell-fp8.safetensors"
         case .juggernautXL:
             "juggernautXL_v9.safetensors"
         }
@@ -26,7 +23,7 @@ public enum ImageEngineDTO: String, Sendable, CaseIterable {
         switch self {
         case .zImageTurbo, .krea2Turbo:
             false
-        case .fluxSchnell, .juggernautXL:
+        case .juggernautXL:
             true
         }
     }
@@ -71,11 +68,6 @@ enum ImageGraph {
             nodes["12"] = node("VAELoader", ["vae_name": "qwen_image_vae.safetensors"])
             nodes["13"] = node("ModelSamplingFlux", ["model": model, "max_shift": 1.15, "base_shift": 0.5, "width": width, "height": height])
             model = ["13", 0]
-        case .fluxSchnell:
-            nodes["10"] = node("CheckpointLoaderSimple", ["ckpt_name": engine.modelFile])
-            clip = ["10", 1]
-            vae = ["10", 2]
-            sampling["steps"] = 4
         case .juggernautXL:
             nodes["10"] = node("CheckpointLoaderSimple", ["ckpt_name": engine.modelFile])
             clip = ["10", 1]
