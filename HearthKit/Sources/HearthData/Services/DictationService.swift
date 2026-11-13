@@ -22,6 +22,7 @@ public final class DictationService {
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?
     private var continuation: AsyncStream<DictationUpdateDTO>.Continuation?
+    private var routeObserver: (any NSObjectProtocol)?
 
     public init() {}
 
@@ -51,27 +52,65 @@ public final class DictationService {
             throw DictationError.microphoneUnavailable
         }
         engine.prepare()
-        try engine.start()
+        do {
+            try engine.start()
+        } catch {
+            engine.inputNode.removeTap(onBus: 0)
+            throw error
+        }
 
         let (stream, continuation) = AsyncStream.makeStream(of: DictationUpdateDTO.self)
         self.request = request
         self.continuation = continuation
         self.task = Self.recognize(with: recognizer, request: request, continuation: continuation)
+        observeRouteChanges()
         return stream
     }
 
     /// Stops listening and ends the stream. Harmless when nothing is running.
     public func stop() {
-        if engine.isRunning {
-            engine.stop()
-            engine.inputNode.removeTap(onBus: 0)
+        if let routeObserver {
+            NotificationCenter.default.removeObserver(routeObserver)
         }
+        routeObserver = nil
+        engine.stop()
+        engine.inputNode.removeTap(onBus: 0)
         request?.endAudio()
         task?.cancel()
         continuation?.finish()
         request = nil
         task = nil
         continuation = nil
+    }
+
+    /// Watches for the microphone changing under the engine, as when headphones are put in or taken out.
+    private func observeRouteChanges() {
+        routeObserver = NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange,
+            object: engine,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.resumeAfterRouteChange() }
+        }
+    }
+
+    /// The engine stops itself when the microphone changes. Listening carries on with the new one, feeding the same
+    /// recognition, so what was already said is kept. If the new microphone cannot be used, listening ends.
+    private func resumeAfterRouteChange() {
+        guard let request else {
+            return
+        }
+        engine.stop()
+        guard Self.installTap(on: engine.inputNode, feeding: request) else {
+            stop()
+            return
+        }
+        engine.prepare()
+        do {
+            try engine.start()
+        } catch {
+            stop()
+        }
     }
 }
 
