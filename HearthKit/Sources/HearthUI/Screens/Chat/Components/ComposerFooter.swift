@@ -35,7 +35,10 @@ struct ComposerFooter: View {
                     .padding(.horizontal, HearthSpacing.s4)
                 HStack(spacing: HearthSpacing.s8) {
                     AttachmentMenu(presenter: presenter)
-                    if isExpanded {
+                    if viewModel.isPictureMode {
+                        pictureModeChip
+                    }
+                    if isExpanded, !viewModel.isPictureMode {
                         optionChips
                     }
                 }
@@ -86,8 +89,21 @@ struct ComposerFooter: View {
         }
     }
 
+    /// Shows that the next message asks for a picture; tapping it goes back to chatting.
+    private var pictureModeChip: some View {
+        Button(action: presenter.togglePictureModeAction) {
+            OptionChip(systemImage: "paintbrush.fill", isOn: true)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Strings.pictureMode)
+        .accessibilityAddTraits(.isSelected)
+    }
+
     private var placeholder: String {
-        presenter.viewModel.selectedModel.map { Strings.messageModel($0.displayName) } ?? Strings.composerPlaceholder
+        if presenter.viewModel.isPictureMode {
+            return presenter.viewModel.pendingImagesJPEG.isEmpty ? Strings.picturePlaceholder : Strings.pictureChangePlaceholder
+        }
+        return presenter.viewModel.selectedModel.map { Strings.messageModel($0.displayName) } ?? Strings.composerPlaceholder
     }
 
     // MARK: Editing

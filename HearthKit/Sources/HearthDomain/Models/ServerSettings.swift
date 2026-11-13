@@ -23,6 +23,10 @@ public struct ServerSettings: Hashable, Codable, Sendable {
     public let ollamaAddress: String
     public let searchAddress: String
     public let speechAddress: String
+    /// Where pictures are made: a ComfyUI server. Blank means the app offers no pictures.
+    public let imageAddress: String
+    /// The model new pictures are made with. With none chosen, the first the server offers is used.
+    public let imageModel: ImageModelKind?
     /// The voice replies are spoken in, by its name on the speech server.
     public let voice: String
     /// The model a new conversation starts with, if one has been chosen.
@@ -46,6 +50,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         ollamaAddress: String = "",
         searchAddress: String = "",
         speechAddress: String = "",
+        imageAddress: String = "",
+        imageModel: ImageModelKind? = nil,
         voice: String = ServerSettings.defaultVoice,
         defaultModelID: ChatModel.ID? = nil,
         appearance: AppearanceKind = .system,
@@ -60,6 +66,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         self.ollamaAddress = ollamaAddress
         self.searchAddress = searchAddress
         self.speechAddress = speechAddress
+        self.imageAddress = imageAddress
+        self.imageModel = imageModel
         self.voice = voice
         self.defaultModelID = defaultModelID
         self.appearance = appearance
@@ -79,6 +87,9 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             ollamaAddress: try container.decodeIfPresent(String.self, forKey: .ollamaAddress) ?? "",
             searchAddress: try container.decodeIfPresent(String.self, forKey: .searchAddress) ?? "",
             speechAddress: try container.decodeIfPresent(String.self, forKey: .speechAddress) ?? "",
+            imageAddress: try container.decodeIfPresent(String.self, forKey: .imageAddress) ?? "",
+            // A model the app no longer knows is read as no choice, not as a failure to read the settings.
+            imageModel: (try? container.decodeIfPresent(ImageModelKind.self, forKey: .imageModel)) ?? nil,
             voice: try container.decodeIfPresent(String.self, forKey: .voice) ?? Self.defaultVoice,
             defaultModelID: try container.decodeIfPresent(ChatModel.ID.self, forKey: .defaultModelID),
             appearance: try container.decodeIfPresent(AppearanceKind.self, forKey: .appearance) ?? .system,
@@ -96,6 +107,7 @@ public struct ServerSettings: Hashable, Codable, Sendable {
     public var ollamaURL: URL? { Self.url(from: ollamaAddress) }
     public var searchURL: URL? { Self.url(from: searchAddress) }
     public var speechURL: URL? { Self.url(from: speechAddress) }
+    public var imageURL: URL? { Self.url(from: imageAddress) }
 
     /// The host of the chat server, for display.
     public var ollamaHost: String? { ollamaURL?.host() }
@@ -105,12 +117,15 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         defaultModelID: ChatModel.ID? = nil,
         appearance: AppearanceKind? = nil,
         isAutoReadEnabled: Bool? = nil,
-        thinkingLevel: ThinkingLevelKind? = nil
+        thinkingLevel: ThinkingLevelKind? = nil,
+        imageAddress: String? = nil
     ) -> ServerSettings {
         ServerSettings(
             ollamaAddress: ollamaAddress,
             searchAddress: searchAddress,
             speechAddress: speechAddress,
+            imageAddress: imageAddress ?? self.imageAddress,
+            imageModel: imageModel,
             voice: voice,
             defaultModelID: defaultModelID ?? self.defaultModelID,
             appearance: appearance ?? self.appearance,
@@ -119,6 +134,27 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             isLockEnabled: isLockEnabled,
             isFollowUpsEnabled: isFollowUpsEnabled,
             thinkingLevel: thinkingLevel ?? self.thinkingLevel,
+            isPageReadingEnabled: isPageReadingEnabled,
+            isMemoryEnabled: isMemoryEnabled
+        )
+    }
+
+    /// A copy that makes new pictures with the given model, or leaves the choice to the app when given none.
+    public func choosing(imageModel: ImageModelKind?) -> ServerSettings {
+        ServerSettings(
+            ollamaAddress: ollamaAddress,
+            searchAddress: searchAddress,
+            speechAddress: speechAddress,
+            imageAddress: imageAddress,
+            imageModel: imageModel,
+            voice: voice,
+            defaultModelID: defaultModelID,
+            appearance: appearance,
+            customInstructions: customInstructions,
+            isAutoReadEnabled: isAutoReadEnabled,
+            isLockEnabled: isLockEnabled,
+            isFollowUpsEnabled: isFollowUpsEnabled,
+            thinkingLevel: thinkingLevel,
             isPageReadingEnabled: isPageReadingEnabled,
             isMemoryEnabled: isMemoryEnabled
         )

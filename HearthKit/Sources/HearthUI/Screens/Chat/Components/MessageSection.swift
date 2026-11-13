@@ -18,6 +18,8 @@ struct MessageSection: View {
     let isSpeaking: Bool
     /// What the web is being searched for while this reply is on its way.
     let searchingQuery: String?
+    /// What the picture server is doing while this reply is on its way.
+    let pictureStatus: String?
     /// Each action is `nil` when it does not apply to this message, and its button is then left out.
     let speakAction: (() -> Void)?
     let editAction: (() -> Void)?
@@ -68,8 +70,16 @@ struct MessageSection: View {
             if !message.thinking.isEmpty {
                 ThinkingSection(thinking: message.thinking, seconds: message.thinkingSeconds, isActive: isStreaming && message.text.isEmpty)
             }
-            if message.text.isEmpty, message.thinking.isEmpty, isStreaming, searchingQuery == nil {
+            if message.text.isEmpty, message.thinking.isEmpty, isStreaming, searchingQuery == nil, pictureStatus == nil {
                 WritingIndicator()
+            }
+            if let pictureStatus, isStreaming {
+                Label(pictureStatus, systemImage: "paintbrush")
+                    .font(.footnote)
+                    .foregroundStyle(HearthColor.mute)
+            }
+            if let pictureJPEG = message.imagesJPEG.first {
+                PictureSection(pictureJPEG: pictureJPEG)
             }
             if let searchingQuery, isStreaming {
                 Label(Strings.searching(for: searchingQuery), systemImage: "globe")
@@ -77,9 +87,15 @@ struct MessageSection: View {
                     .foregroundStyle(HearthColor.mute)
                     .lineLimit(2)
             }
-            if !message.text.isEmpty {
+            if !message.text.isEmpty, message.imagesJPEG.isEmpty {
                 MarkdownSection(markdown: message.text)
                     .textSelection(.enabled)
+            }
+            // Under a picture the text is only a note on how it was made.
+            if !message.text.isEmpty, !message.imagesJPEG.isEmpty {
+                Text(message.text)
+                    .font(.footnote)
+                    .foregroundStyle(HearthColor.mute)
             }
             if !message.sources.isEmpty {
                 SourcesSection(sources: message.sources)
@@ -112,21 +128,9 @@ struct MessageSection: View {
     /// The row of buttons under a finished reply.
     private var actions: some View {
         HStack(spacing: HearthSpacing.s4) {
-            actionButton(systemImage: "doc.on.doc", label: Strings.copy, action: copyAction)
-            ShareLink(item: message.text) {
-                Image(systemName: "square.and.arrow.up")
-                    .font(.footnote)
-                    .foregroundStyle(HearthColor.mute)
-                    .frame(size: HearthSize.messageAction)
-                    .contentShape(Rectangle())
-            }
-            .accessibilityLabel(Strings.share)
-            if let speakAction {
-                actionButton(
-                    systemImage: isSpeaking ? "stop.circle" : "speaker.wave.2",
-                    label: isSpeaking ? Strings.stopReading : Strings.readAloud,
-                    action: speakAction
-                )
+            // A picture has its own ways to be kept, and its note is not worth copying or reading out.
+            if message.imagesJPEG.isEmpty {
+                textActions
             }
             if let retryAction {
                 actionButton(systemImage: "arrow.counterclockwise", label: Strings.tryAgain, action: retryAction)
@@ -136,6 +140,26 @@ struct MessageSection: View {
             }
         }
         .sensoryFeedback(.success, trigger: copyCount)
+    }
+
+    /// Copy, share and read aloud, for a reply made of words.
+    @ViewBuilder private var textActions: some View {
+        actionButton(systemImage: "doc.on.doc", label: Strings.copy, action: copyAction)
+        ShareLink(item: message.text) {
+            Image(systemName: "square.and.arrow.up")
+                .font(.footnote)
+                .foregroundStyle(HearthColor.mute)
+                .frame(size: HearthSize.messageAction)
+                .contentShape(Rectangle())
+        }
+        .accessibilityLabel(Strings.share)
+        if let speakAction {
+            actionButton(
+                systemImage: isSpeaking ? "stop.circle" : "speaker.wave.2",
+                label: isSpeaking ? Strings.stopReading : Strings.readAloud,
+                action: speakAction
+            )
+        }
     }
 
     /// Steps back and forth through the versions of a reply, with the place of the one shown between the arrows.

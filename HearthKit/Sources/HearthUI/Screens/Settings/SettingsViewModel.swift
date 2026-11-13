@@ -25,6 +25,9 @@ final class SettingsViewModel {
     var ollamaAddress = ""
     var searchAddress = ""
     var speechAddress = ""
+    var imageAddress = ""
+    /// The model new pictures are made with; `nil` leaves the choice to the app.
+    var imageModel: ImageModelKind?
     var voice = ServerSettings.defaultVoice
     var appearance: AppearanceKind = .system
     var customInstructions = ""
@@ -39,6 +42,8 @@ final class SettingsViewModel {
     /// The voices the speech server offers. Empty until it answers, in which case the voice is typed by name.
     var voices: [String] = []
     var voicePreview: VoicePreviewKind = .idle
+    /// What the picture server can do. Empty until it answers.
+    var imageCapabilities = ImageCapabilities()
     /// A memory being written by hand, not yet added.
     var newMemoryText = ""
     var isConfirmingClearMemories = false

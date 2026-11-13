@@ -19,6 +19,9 @@ targets:
       - package: HearthKit
         product: HearthUI
       - target: HearthWidgets
+      # The Mac has its own ways to hand things to an app, so the share extension is for iPhone and iPad.
+      - target: HearthShare
+        platformFilter: iOS
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(HEARTH_BUNDLE_ID)
@@ -34,6 +37,7 @@ targets:
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
         # Only the Mac build carries these; iPhone and iPad ask for the microphone through Info.plist alone.
         "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": App/HearthMac.entitlements
+        "CODE_SIGN_ENTITLEMENTS[sdk=iphone*]": App/Hearth.entitlements
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
     info:
@@ -55,6 +59,7 @@ targets:
             CFBundleURLSchemes:
               - hearth
         NSFaceIDUsageDescription: Hearth uses Face ID to unlock your conversations.
+        NSPhotoLibraryAddUsageDescription: Hearth saves a picture to your photo library when you ask it to.
         NSCameraUsageDescription: Hearth uses the camera when you take a photo to attach to a message.
         NSMicrophoneUsageDescription: Hearth listens when you dictate a message or hold a voice conversation.
         NSSpeechRecognitionUsageDescription: Hearth turns what you say into text for your message.
@@ -67,7 +72,9 @@ targets:
         HearthDefaultOllamaAddress: $(HEARTH_OLLAMA_ADDRESS)
         HearthDefaultSearchAddress: $(HEARTH_SEARCH_ADDRESS)
         HearthDefaultSpeechAddress: $(HEARTH_SPEECH_ADDRESS)
+        HearthDefaultImageAddress: $(HEARTH_IMAGE_ADDRESS)
         HearthDefaultModel: $(HEARTH_DEFAULT_MODEL)
+        HearthAppGroup: $(HEARTH_APP_GROUP)
   # Home screen and lock screen shortcuts to a new chat and to a voice conversation.
   HearthWidgets:
     type: app-extension
@@ -92,6 +99,37 @@ targets:
         CFBundleDisplayName: Hearth
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
+  # "Hearth" in the share sheet: hands text, links, pictures and files to the app.
+  HearthShare:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Share
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(HEARTH_BUNDLE_ID).share
+        DEVELOPMENT_TEAM: $(HEARTH_DEVELOPMENT_TEAM)
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_ENTITLEMENTS: Share/HearthShare.entitlements
+        GENERATE_INFOPLIST_FILE: YES
+    info:
+      path: Share/Info.plist
+      properties:
+        CFBundleDisplayName: Hearth
+        HearthAppGroup: $(HEARTH_APP_GROUP)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsWebPageWithMaxCount: 1
+              NSExtensionActivationSupportsImageWithMaxCount: 6
+              NSExtensionActivationSupportsFileWithMaxCount: 6
 schemes:
   Hearth:
     build:

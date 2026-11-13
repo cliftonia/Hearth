@@ -1,6 +1,7 @@
 included:
   - App
   - Widgets
+  - Share
   - HearthKit/Sources
   - HearthKit/Tests
 

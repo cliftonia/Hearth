@@ -81,6 +81,36 @@ enum Strings {
     static let interruptedTitle = String(localized: "error.interruptedTitle", defaultValue: "Reply interrupted", bundle: .module)
     static let interruptedMessage = String(localized: "error.interruptedMessage", defaultValue: "Hearth was in the background for too long and iOS paused it. What arrived is kept.", bundle: .module)
     static let errorChangeFailed = String(localized: "error.changeFailed", defaultValue: "That change could not be saved. The chat is as it was.", bundle: .module)
+    static let picture = String(localized: "picture.title", defaultValue: "Picture", bundle: .module)
+    static let pictures = String(localized: "picture.section", defaultValue: "Pictures", bundle: .module)
+    static let pictureModels = String(localized: "picture.models", defaultValue: "Picture models", bundle: .module)
+    static let pictureModelPickerLabel = String(localized: "picture.modelPicker", defaultValue: "Choose picture model", bundle: .module)
+    static let pictureMode = String(localized: "picture.mode", defaultValue: "Make a picture", bundle: .module)
+    static let picturePlaceholder = String(localized: "picture.placeholder", defaultValue: "Describe a picture", bundle: .module)
+    static let pictureChangePlaceholder = String(localized: "picture.changePlaceholder", defaultValue: "Say what to change, or send to enlarge", bundle: .module)
+    static let pictureCreating = String(localized: "picture.creating", defaultValue: "Making your picture…", bundle: .module)
+    static let pictureChanging = String(localized: "picture.changing", defaultValue: "Changing your picture…", bundle: .module)
+    static let pictureEnlarging = String(localized: "picture.enlarging", defaultValue: "Enlarging your picture…", bundle: .module)
+    static let pictureSave = String(localized: "picture.save", defaultValue: "Save", bundle: .module)
+    static let pictureModel = String(localized: "picture.model", defaultValue: "Model", bundle: .module)
+    static let pictureModelAutomatic = String(localized: "picture.modelAutomatic", defaultValue: "Automatic", bundle: .module)
+    static let pictureModelZImage = String(localized: "picture.model.zImage", defaultValue: "Z-Image Turbo · fast, all-round", bundle: .module)
+    static let pictureModelKrea = String(localized: "picture.model.krea", defaultValue: "Krea 2 Turbo · most photographic, slower", bundle: .module)
+    static let pictureModelFlux = String(localized: "picture.model.flux", defaultValue: "FLUX schnell · fast, stylised", bundle: .module)
+    static let pictureModelJuggernaut = String(localized: "picture.model.juggernaut", defaultValue: "Juggernaut XL · painterly", bundle: .module)
+    static let pictureCanChange = String(localized: "picture.canChange", defaultValue: "Can change a picture you show it", bundle: .module)
+    static let pictureCanEnlarge = String(localized: "picture.canEnlarge", defaultValue: "Can enlarge a picture", bundle: .module)
+    static let pictureNoModels = String(localized: "picture.noModels", defaultValue: "Add a picture server address above to make pictures.", bundle: .module)
+    static let picturesFooter = String(localized: "picture.footer", defaultValue: "To make a picture, tap + in a chat and choose Make a picture. Attach a photo to change it or enlarge it. The picture server is asked to free its memory after every picture.", bundle: .module)
+    static let pictureAbilityThere = String(localized: "picture.abilityThere", defaultValue: "Available", bundle: .module)
+    static let pictureAbilityMissing = String(localized: "picture.abilityMissing", defaultValue: "Not available", bundle: .module)
+    static let imageAddress = String(localized: "settings.imageAddress", defaultValue: "Picture server (ComfyUI)", bundle: .module)
+    static let errorPictureNotConfigured = String(localized: "error.pictureNotConfigured", defaultValue: "Add a picture server address in Settings to make pictures.", bundle: .module)
+    static let errorPictureNoModel = String(localized: "error.pictureNoModel", defaultValue: "The picture server has none of the models Hearth can use.", bundle: .module)
+    static let errorPictureCannotChange = String(localized: "error.pictureCannotChange", defaultValue: "The picture server is not set up to change pictures.", bundle: .module)
+    static let errorPictureCannotEnlarge = String(localized: "error.pictureCannotEnlarge", defaultValue: "The picture server is not set up to enlarge pictures.", bundle: .module)
+    static let errorPictureFailed = String(localized: "error.pictureFailed", defaultValue: "The picture could not be made.", bundle: .module)
+    static let errorPictureTimedOut = String(localized: "error.pictureTimedOut", defaultValue: "The picture took too long and was stopped.", bundle: .module)
     static let errorSaveFailed = String(localized: "error.saveFailed", defaultValue: "This chat could not be saved.", bundle: .module)
 
     static let searchChats = String(localized: "sidebar.search", defaultValue: "Search chats", bundle: .module)
@@ -161,6 +191,18 @@ enum Strings {
     #else
     static let voicePermissionDenied = String(localized: "voice.permissionDenied", defaultValue: "Allow microphone and speech recognition access in the Settings app to talk.", bundle: .module)
     #endif
+
+    static func pictureCreated(seconds: Int) -> String {
+        String(localized: "picture.created", defaultValue: "Made in \(seconds) seconds", bundle: .module)
+    }
+
+    static func pictureChanged(seconds: Int) -> String {
+        String(localized: "picture.changed", defaultValue: "Changed in \(seconds) seconds", bundle: .module)
+    }
+
+    static func pictureEnlarged(seconds: Int) -> String {
+        String(localized: "picture.enlarged", defaultValue: "Enlarged in \(seconds) seconds", bundle: .module)
+    }
 
     static func versionPosition(number: Int, total: Int) -> String {
         String(localized: "message.versionPosition", defaultValue: "Version \(number) of \(total)", bundle: .module)

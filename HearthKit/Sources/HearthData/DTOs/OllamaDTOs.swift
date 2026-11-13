@@ -261,3 +261,23 @@ public struct OllamaChatChunkDTO: Decodable, Sendable, Equatable {
         self = try JSONDecoder().decode(OllamaChatChunkDTO.self, from: Data(line.utf8))
     }
 }
+
+/// The models the server has in memory right now.
+struct OllamaLoadedModelsDTO: Decodable, Sendable {
+    struct Model: Decodable, Sendable {
+        let name: String
+    }
+
+    let models: [Model]
+}
+
+/// A request that loads nothing and keeps nothing: it tells the server to unload the named model at once.
+struct OllamaUnloadRequestDTO: Encodable, Sendable {
+    let model: String
+    let keepAlive = 0
+
+    enum CodingKeys: String, CodingKey {
+        case model
+        case keepAlive = "keep_alive"
+    }
+}

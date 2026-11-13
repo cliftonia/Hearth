@@ -11,6 +11,13 @@ extension ChatPresenter {
         }
     }
 
+    /// Puts what was shared from another app into the message being written.
+    func receiveSharedAction(_ shared: SharedContent) {
+        viewModel.draft = [viewModel.draft, shared.text].filter { !$0.isEmpty }.joined(separator: "\n")
+        addImagesAction(shared.imagesJPEG)
+        addDocumentsAction(shared.documents, unreadableCount: shared.unreadableCount)
+    }
+
     func removeDocumentAction(_ id: AttachedDocument.ID) {
         viewModel.pendingDocuments.removeAll { $0.id == id }
     }

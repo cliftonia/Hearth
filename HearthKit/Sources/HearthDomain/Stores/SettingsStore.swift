@@ -15,8 +15,13 @@ public final class SettingsStore {
     ///   - save: Writes the settings.
     public init(defaults: ServerSettings, load: () -> Data?, save: @escaping (Data) -> Void) {
         let saved = load().flatMap { try? JSONDecoder().decode(ServerSettings.self, from: $0) }
-        // Settings saved before the user chose a model take the model the app was built to start with.
-        self.settings = saved.map { $0.defaultModelID == nil ? $0.updating(defaultModelID: defaults.defaultModelID) : $0 } ?? defaults
+        // Settings saved before the user chose a model, or before pictures existed, take what the app was built to start with.
+        self.settings = saved.map { saved in
+            saved.updating(
+                defaultModelID: saved.defaultModelID == nil ? defaults.defaultModelID : nil,
+                imageAddress: saved.imageAddress.isEmpty ? defaults.imageAddress : nil
+            )
+        } ?? defaults
         self.save = save
     }
 

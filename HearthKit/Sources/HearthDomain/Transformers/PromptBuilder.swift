@@ -58,7 +58,8 @@ public struct PromptBuilder: Sendable {
                 PromptMessage(
                     role: message.role == .user ? .user : .assistant,
                     text: text(of: message),
-                    imagesJPEG: message.imagesJPEG
+                    // A picture the app made is not sent back to the chat model; only what the user showed it is.
+                    imagesJPEG: message.role == .user ? message.imagesJPEG : []
                 )
             }
         return [system] + turns

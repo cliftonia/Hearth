@@ -16,8 +16,18 @@ struct ChatHeader: View {
                 label: isWide ? Strings.sidebarToggle : Strings.menuLabel,
                 action: presenter.sidebarAction
             )
-            modelMenu
-                .frame(maxWidth: .infinity)
+            // While pictures are being made the chat model takes no part, so the picture models are offered in its place.
+            ZStack {
+                modelMenu
+                    .opacity(presenter.viewModel.isPictureMode ? 0 : 1)
+                    .allowsHitTesting(!presenter.viewModel.isPictureMode)
+                    .accessibilityHidden(presenter.viewModel.isPictureMode)
+                pictureModelMenu
+                    .opacity(presenter.viewModel.isPictureMode ? 1 : 0)
+                    .allowsHitTesting(presenter.viewModel.isPictureMode)
+                    .accessibilityHidden(!presenter.viewModel.isPictureMode)
+            }
+            .frame(maxWidth: .infinity)
             privateToggle
         }
         .padding(.horizontal, HearthSpacing.s8)
@@ -73,6 +83,40 @@ struct ChatHeader: View {
         }
         .accessibilityLabel(Strings.modelPickerLabel)
         .accessibilityValue(selected?.displayName ?? Strings.noModel)
+    }
+
+    /// The model pictures are made with, in the same pill; tapping it lists the picture models the server has.
+    private var pictureModelMenu: some View {
+        let selected = presenter.selectedPictureModel
+        return Menu {
+            Section(Strings.pictureModels) {
+                ForEach(presenter.viewModel.pictureModels, id: \.self) { model in
+                    Button(action: { presenter.selectPictureModelAction(model) }, label: {
+                        Label(model.title, systemImage: model == selected ? "checkmark" : "")
+                    })
+                }
+            }
+        } label: {
+            HStack(spacing: HearthSpacing.s6) {
+                Image(systemName: "paintbrush.fill")
+                    .font(.caption)
+                    .foregroundStyle(HearthColor.pine)
+                    .accessibilityHidden(true)
+                Text(selected?.name ?? Strings.pictures)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(HearthColor.ink)
+                    .lineLimit(1)
+                Image(systemName: "chevron.down")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(HearthColor.mute)
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, HearthSpacing.s14)
+            .padding(.vertical, HearthSpacing.s8)
+            .capsuleSurface()
+        }
+        .accessibilityLabel(Strings.pictureModelPickerLabel)
+        .accessibilityValue(selected?.name ?? "")
     }
 
     private func modelSection(title: String, models: [ChatModel]) -> some View {

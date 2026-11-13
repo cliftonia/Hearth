@@ -14,6 +14,8 @@ struct SettingsView: View {
                     addressField(Strings.searchAddress, text: $viewModel.searchAddress)
                     addressField(Strings.speechAddress, text: $viewModel.speechAddress)
                         .onSubmit { Task { await presenter.loadVoicesAction() } }
+                    addressField(Strings.imageAddress, text: $viewModel.imageAddress)
+                        .onSubmit { Task { await presenter.loadImageModelsAction() } }
                 } header: {
                     Text(Strings.servers)
                 } footer: {
@@ -38,6 +40,7 @@ struct SettingsView: View {
                         .disabled(viewModel.speechAddress.trimmingCharacters(in: .whitespaces).isEmpty)
                     Toggle(Strings.readRepliesAloud, isOn: $viewModel.isAutoReadEnabled)
                 }
+                PictureSettingsSection(model: $viewModel.imageModel, capabilities: viewModel.imageCapabilities)
                 Section {
                     TextField(Strings.instructionsPlaceholder, text: $viewModel.customInstructions, axis: .vertical)
                         .lineLimit(3...10)

@@ -13,13 +13,14 @@ protocol ChatPresenterDelegate: AnyObject {
 
 /// Runs the chat screen: sends messages, streams replies, and keeps the open conversation saved.
 ///
-/// The work is spread over extensions by subject: `+Replying`, `+Editing`, `+FollowUps` and `+Voice`.
+/// The work is spread over extensions by subject: `+Replying`, `+Pictures`, `+Editing`, `+FollowUps` and `+Voice`.
 @MainActor
 final class ChatPresenter {
     /// What the chat is built from: the interactors, the dictation provider and the stores it shares with other screens.
     struct Dependencies {
         let chat: ChatInteractor
         let speech: SpeechInteractor
+        let image: ImageInteractor
         let dictation: DictationProvider
         let settingsStore: SettingsStore
         let modelStore: ModelStore
@@ -53,6 +54,7 @@ final class ChatPresenter {
     var isServerConfigured: Bool { settings.ollamaURL != nil }
     var isSearchAvailable: Bool { settings.searchURL != nil }
     var isSpeechAvailable: Bool { settings.speechURL != nil }
+    var isPictureAvailable: Bool { settings.imageURL != nil }
 
     // MARK: Loading
 
@@ -98,7 +100,11 @@ final class ChatPresenter {
         viewModel.draft = ""
         viewModel.pendingImagesJPEG = []
         viewModel.pendingDocuments = []
-        await submit(message)
+        if viewModel.isPictureMode {
+            await submitPicture(message)
+        } else {
+            await submit(message)
+        }
     }
 
     /// Sends words alone, as a voice conversation does. `onDelta` receives each piece of reply text as it arrives.
@@ -169,7 +175,13 @@ final class ChatPresenter {
         if messages.last?.role == .assistant {
             previous = messages.removeLast()
         }
-        guard messages.last?.role == .user else {
+        guard let asked = messages.last, asked.role == .user else {
+            return
+        }
+        // A picture is asked for again from the picture server, not from the chat model.
+        if previous?.isPicture == true || (previous == nil && viewModel.isPictureMode) {
+            viewModel.conversation = viewModel.conversation.updating(messages: Array(messages.dropLast()))
+            await submitPicture(asked)
             return
         }
         viewModel.conversation = viewModel.conversation.updating(messages: messages)

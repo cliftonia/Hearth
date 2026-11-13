@@ -21,10 +21,29 @@ struct ErrorViewConfiguration: Hashable {
             self.init(from: chatError)
         case SpeechError.serverNotConfigured:
             self.init(message: Strings.errorSpeechNotConfigured, retryActionLabel: nil)
+        case let imageError as ImageError:
+            self.init(from: imageError)
         case is URLError:
             self.init(message: Strings.errorUnreachable)
         default:
             self.init(message: error.localizedDescription)
+        }
+    }
+
+    private init(from error: ImageError) {
+        switch error {
+        case .serverNotConfigured:
+            self.init(title: Strings.picture, message: Strings.errorPictureNotConfigured, retryActionLabel: nil)
+        case .noModel:
+            self.init(title: Strings.picture, message: Strings.errorPictureNoModel, retryActionLabel: nil)
+        case .cannotEdit:
+            self.init(title: Strings.picture, message: Strings.errorPictureCannotChange, retryActionLabel: nil)
+        case .cannotEnlarge:
+            self.init(title: Strings.picture, message: Strings.errorPictureCannotEnlarge, retryActionLabel: nil)
+        case .failed(let message):
+            self.init(title: Strings.picture, message: message.isEmpty ? Strings.errorPictureFailed : message)
+        case .timedOut:
+            self.init(title: Strings.picture, message: Strings.errorPictureTimedOut)
         }
     }
 

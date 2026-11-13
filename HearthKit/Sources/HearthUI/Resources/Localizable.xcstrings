@@ -551,6 +551,72 @@
         }
       }
     },
+    "error.pictureCannotChange": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The picture server is not set up to change pictures."
+          }
+        }
+      }
+    },
+    "error.pictureCannotEnlarge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The picture server is not set up to enlarge pictures."
+          }
+        }
+      }
+    },
+    "error.pictureFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The picture could not be made."
+          }
+        }
+      }
+    },
+    "error.pictureNoModel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The picture server has none of the models Hearth can use."
+          }
+        }
+      }
+    },
+    "error.pictureNotConfigured": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a picture server address in Settings to make pictures."
+          }
+        }
+      }
+    },
+    "error.pictureTimedOut": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The picture took too long and was stopped."
+          }
+        }
+      }
+    },
     "error.retry": {
       "extractionState": "manual",
       "localizations": {
@@ -1035,6 +1101,292 @@
         }
       }
     },
+    "picture.abilityMissing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not available"
+          }
+        }
+      }
+    },
+    "picture.abilityThere": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available"
+          }
+        }
+      }
+    },
+    "picture.canChange": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can change a picture you show it"
+          }
+        }
+      }
+    },
+    "picture.canEnlarge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can enlarge a picture"
+          }
+        }
+      }
+    },
+    "picture.changePlaceholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Say what to change, or send to enlarge"
+          }
+        }
+      }
+    },
+    "picture.changed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changed in %lld seconds"
+          }
+        }
+      }
+    },
+    "picture.changing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changing your picture…"
+          }
+        }
+      }
+    },
+    "picture.created": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Made in %lld seconds"
+          }
+        }
+      }
+    },
+    "picture.creating": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Making your picture…"
+          }
+        }
+      }
+    },
+    "picture.enlarged": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlarged in %lld seconds"
+          }
+        }
+      }
+    },
+    "picture.enlarging": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlarging your picture…"
+          }
+        }
+      }
+    },
+    "picture.footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To make a picture, tap + in a chat and choose Make a picture. Attach a photo to change it or enlarge it. The picture server is asked to free its memory after every picture."
+          }
+        }
+      }
+    },
+    "picture.mode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make a picture"
+          }
+        }
+      }
+    },
+    "picture.model": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model"
+          }
+        }
+      }
+    },
+    "picture.model.flux": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FLUX schnell · fast, stylised"
+          }
+        }
+      }
+    },
+    "picture.model.juggernaut": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Juggernaut XL · painterly"
+          }
+        }
+      }
+    },
+    "picture.model.krea": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Krea 2 Turbo · most photographic, slower"
+          }
+        }
+      }
+    },
+    "picture.model.zImage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Z-Image Turbo · fast, all-round"
+          }
+        }
+      }
+    },
+    "picture.modelAutomatic": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic"
+          }
+        }
+      }
+    },
+    "picture.modelPicker": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose picture model"
+          }
+        }
+      }
+    },
+    "picture.models": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Picture models"
+          }
+        }
+      }
+    },
+    "picture.noModels": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a picture server address above to make pictures."
+          }
+        }
+      }
+    },
+    "picture.placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describe a picture"
+          }
+        }
+      }
+    },
+    "picture.save": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        }
+      }
+    },
+    "picture.section": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pictures"
+          }
+        }
+      }
+    },
+    "picture.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Picture"
+          }
+        }
+      }
+    },
     "settings.cancel": {
       "extractionState": "manual",
       "localizations": {
@@ -1075,6 +1427,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Suggest follow-up questions"
+          }
+        }
+      }
+    },
+    "settings.imageAddress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Picture server (ComfyUI)"
           }
         }
       }

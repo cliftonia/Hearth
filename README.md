@@ -19,8 +19,8 @@ and your conversations stay on the device.
 
 - **Platform**: iOS and iPadOS 17+, and the Mac through Mac Catalyst; SwiftUI, Swift 5.9+ with strict concurrency checking
 - **Dependencies**: none. SwiftUI, Speech, AVFoundation, PDFKit, LocalAuthentication and App Intents only
-- **Talks to**: Ollama for chat, [SearXNG](https://github.com/searxng/searxng) for web search and
-  [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) for speech; the last two are optional
+- **Talks to**: Ollama for chat, [SearXNG](https://github.com/searxng/searxng) for web search,
+  [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) for speech and ComfyUI for pictures; the last three are optional
 
 ## What it does
 
@@ -39,6 +39,11 @@ and your conversations stay on the device.
 - **Attachments**: photos from the library or camera for models that can see, PDFs and text files for any model
 - **Edit and resend** a message you already sent
 - **Reply versions**: asking again keeps the earlier reply, and arrows under the reply step between them
+- **Pictures**, made on your own [ComfyUI](https://github.com/comfyanonymous/ComfyUI): tap + and choose Make a picture, then
+  describe one. Attach a photo to have it changed as you ask, or enlarged; a follow-up such as "make it night" changes
+  the last picture. The menu at the top then offers the picture models the server has. The chat model is unloaded
+  before each picture and the picture server frees its memory after it
+- **Share to Hearth** from Safari, Photos or Files: the link, text, picture or file lands in the message being written
 - **Custom instructions** given to the model at the start of every conversation
 - **Memory**: lasting facts you tell a model, or ask it to remember, are kept on the device and carried into every
   conversation. A notice shows whenever something is remembered, and the list can be read, added to and cleared in Settings

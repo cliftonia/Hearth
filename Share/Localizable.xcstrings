@@ -1,0 +1,39 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "share.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hearth could not take that."
+          }
+        }
+      }
+    },
+    "share.saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added. Open Hearth to carry on."
+          }
+        }
+      }
+    },
+    "share.saving": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending to Hearth…"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -6,6 +6,7 @@ import HearthDomain
 public struct AppDependencies {
     let chat: ChatInteractor
     let speech: SpeechInteractor
+    let image: ImageInteractor
     let dictation: DictationProvider
     let authentication: AuthenticationProvider
     /// Lists the models at a server address, for testing a connection without touching the model store.
@@ -22,11 +23,13 @@ public struct AppDependencies {
             ollamaAddress: defaults.ollamaAddress,
             searchAddress: defaults.searchAddress,
             speechAddress: defaults.speechAddress,
+            imageAddress: defaults.imageAddress,
             defaultModelID: defaults.modelName.isEmpty ? nil : ChatModel.ID(defaults.modelName)
         )
         return AppDependencies(
             chat: ChatInteractor(chat: chatProvider, search: .live()),
             speech: SpeechInteractor(speech: .live(), playback: .live()),
+            image: ImageInteractor(provider: .live()),
             dictation: .live(),
             authentication: .live(),
             fetchModels: chatProvider.fetchModels,

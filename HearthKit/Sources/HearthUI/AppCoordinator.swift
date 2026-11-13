@@ -25,6 +25,7 @@ public final class AppCoordinator {
         let chatPresenter = ChatPresenter(dependencies: ChatPresenter.Dependencies(
             chat: dependencies.chat,
             speech: dependencies.speech,
+            image: dependencies.image,
             dictation: dependencies.dictation,
             settingsStore: dependencies.settingsStore,
             modelStore: dependencies.modelStore,
@@ -45,6 +46,7 @@ public final class AppCoordinator {
         self.settingsPresenter = SettingsPresenter(
             settingsStore: settingsStore,
             speech: dependencies.speech,
+            image: dependencies.image,
             authentication: dependencies.authentication,
             memoryStore: dependencies.memoryStore
         ) { settings in
@@ -83,6 +85,17 @@ public final class AppCoordinator {
         } else if destination == "voice" {
             startVoice()
         }
+    }
+
+    /// Takes in what the share sheet left for the app: text and links go into the message being written, and
+    /// pictures and files are attached to it. Nothing is sent until the user sends it.
+    public func importShared(from inbox: URL) async {
+        let shared = await SharedInbox.take(from: inbox)
+        guard !shared.isEmpty else {
+            return
+        }
+        router.isSidebarOpen = false
+        chatPresenter.receiveSharedAction(shared)
     }
 
     /// Goes straight to a voice conversation, as a shortcut or the Action button asks.

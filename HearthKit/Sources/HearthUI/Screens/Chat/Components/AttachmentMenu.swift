@@ -2,7 +2,8 @@ import PhotosUI
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The plus button: photos from the library or the camera for models that can see, and files for any model.
+/// The plus button: photos from the library or the camera for models that can see, files for any model,
+/// and the switch that makes the next message ask for a picture.
 struct AttachmentMenu: View {
     private static let maximumPhotoCount = 4
 
@@ -14,8 +15,16 @@ struct AttachmentMenu: View {
     @State private var isFileImporterPresented = false
 
     var body: some View {
-        let canSee = presenter.viewModel.selectedModel?.canSee == true
+        let isPictureMode = presenter.viewModel.isPictureMode
+        // A photo can be shown to a model that sees, or handed to the picture server to change or enlarge.
+        let canSee = presenter.viewModel.selectedModel?.canSee == true || isPictureMode
         Menu {
+            if presenter.isPictureAvailable {
+                Button(action: presenter.togglePictureModeAction) {
+                    Label(Strings.pictureMode, systemImage: isPictureMode ? "checkmark" : "paintbrush")
+                }
+                .accessibilityAddTraits(isPictureMode ? .isSelected : [])
+            }
             Button(action: { isFileImporterPresented = true }, label: {
                 Label(Strings.chooseFile, systemImage: "doc")
             })

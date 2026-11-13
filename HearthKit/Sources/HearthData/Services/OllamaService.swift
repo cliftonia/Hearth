@@ -15,6 +15,18 @@ public struct OllamaService: Sendable {
         return try await session.decoded(OllamaTagsDTO.self, for: request).models
     }
 
+    /// Asks the server to let go of every model it has loaded, so its memory is free for other work.
+    /// A model that was unloaded is loaded again the next time it is spoken to.
+    public func unloadModels(baseURL: URL) async throws {
+        var request = URLRequest(url: baseURL.appending(path: "api/ps"))
+        request.timeoutInterval = 15
+        for model in try await session.decoded(OllamaLoadedModelsDTO.self, for: request).models {
+            var unload = try URLRequest.jsonPost(url: baseURL.appending(path: "api/generate"), body: OllamaUnloadRequestDTO(model: model.name))
+            unload.timeoutInterval = 30
+            _ = try await session.validatedData(for: unload)
+        }
+    }
+
     /// A single, non-streamed reply.
     public func chat(baseURL: URL, request: OllamaChatRequestDTO) async throws -> OllamaChatChunkDTO {
         let urlRequest = try URLRequest.jsonPost(url: baseURL.appending(path: "api/chat"), body: request)

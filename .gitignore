@@ -6,6 +6,7 @@ DerivedData/
 xcuserdata/
 App/Info.plist
 Widgets/Info.plist
+Share/Info.plist
 
 # SwiftPM
 .build/

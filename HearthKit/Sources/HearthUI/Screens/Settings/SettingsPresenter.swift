@@ -19,6 +19,7 @@ final class SettingsPresenter {
 
     private let settingsStore: SettingsStore
     private let speech: SpeechInteractor
+    private let image: ImageInteractor
     private let fetchModels: @Sendable (ServerSettings) async throws -> Int
     private let authentication: AuthenticationProvider
     private let memoryStore: MemoryStore
@@ -29,12 +30,14 @@ final class SettingsPresenter {
     init(
         settingsStore: SettingsStore,
         speech: SpeechInteractor,
+        image: ImageInteractor,
         authentication: AuthenticationProvider,
         memoryStore: MemoryStore,
         fetchModels: @escaping @Sendable (ServerSettings) async throws -> Int
     ) {
         self.settingsStore = settingsStore
         self.speech = speech
+        self.image = image
         self.authentication = authentication
         self.memoryStore = memoryStore
         self.fetchModels = fetchModels
@@ -48,6 +51,8 @@ final class SettingsPresenter {
         viewModel.ollamaAddress = settings.ollamaAddress
         viewModel.searchAddress = settings.searchAddress
         viewModel.speechAddress = settings.speechAddress
+        viewModel.imageAddress = settings.imageAddress
+        viewModel.imageModel = settings.imageModel
         viewModel.voice = settings.voice
         viewModel.appearance = settings.appearance
         viewModel.customInstructions = settings.customInstructions
@@ -60,6 +65,12 @@ final class SettingsPresenter {
         viewModel.connectionCheck = .idle
         viewModel.voicePreview = .idle
         await loadVoicesAction()
+        await loadImageModelsAction()
+    }
+
+    /// Asks the picture server what it can do, which fills the list of models. Asking wakes the server if it is asleep.
+    func loadImageModelsAction() async {
+        viewModel.imageCapabilities = (try? await image.capabilities(settings: draft)) ?? ImageCapabilities()
     }
 
     /// The list of voices is a convenience; without it the voice is typed by name.
@@ -201,6 +212,8 @@ final class SettingsPresenter {
             ollamaAddress: viewModel.ollamaAddress.trimmingCharacters(in: .whitespaces),
             searchAddress: viewModel.searchAddress.trimmingCharacters(in: .whitespaces),
             speechAddress: viewModel.speechAddress.trimmingCharacters(in: .whitespaces),
+            imageAddress: viewModel.imageAddress.trimmingCharacters(in: .whitespaces),
+            imageModel: viewModel.imageModel,
             voice: viewModel.voice.trimmingCharacters(in: .whitespaces),
             defaultModelID: settingsStore.settings.defaultModelID,
             appearance: viewModel.appearance,

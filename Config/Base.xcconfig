@@ -3,10 +3,14 @@
 HEARTH_BUNDLE_ID = app.hearth.Hearth
 HEARTH_DEVELOPMENT_TEAM =
 
+// The folder the app shares with its share extension. It must begin with "group." and be unique to you.
+HEARTH_APP_GROUP = group.$(HEARTH_BUNDLE_ID)
+
 // The addresses the app starts with. Left empty, the app asks for them in Settings on first launch.
 HEARTH_OLLAMA_ADDRESS =
 HEARTH_SEARCH_ADDRESS =
 HEARTH_SPEECH_ADDRESS =
+HEARTH_IMAGE_ADDRESS =
 
 // The model the app starts with, by its name on the server. Left empty, the first model is used.
 HEARTH_DEFAULT_MODEL =

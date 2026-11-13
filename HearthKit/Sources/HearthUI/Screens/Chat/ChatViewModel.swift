@@ -23,6 +23,10 @@ final class ChatViewModel {
     /// The search toggle, for models that cannot ask for a search themselves.
     var isSearchEnabled = false
     var isDictating = false
+    /// Whether what is sent asks for a picture, not for a reply from the chat model.
+    var isPictureMode = false
+    /// The picture models the server offers, for the menu at the top while pictures are being made. Empty until it answers.
+    var pictureModels: [ImageModelKind] = []
 
     /// Whether there is anything to send: words, a photo or a file.
     var canSend: Bool {
@@ -38,6 +42,8 @@ final class ChatViewModel {
     var error: ErrorViewConfiguration?
     /// What the web is being searched for right now, while a reply is on its way.
     var searchingQuery: String?
+    /// What the picture server is doing right now, while a picture is on its way.
+    var pictureStatus: String?
     /// What was just remembered, changed or forgotten, shown under the latest reply.
     var memoryNotice: String?
     /// Questions suggested under the latest reply.
