@@ -1,13 +1,15 @@
-"""Rebuilds Localizable.xcstrings from Strings.swift. Run with `python3 Tools/sync_strings.py`."""
+"""Rebuilds Localizable.xcstrings from Strings.swift and its extensions. Run with `python3 Tools/sync_strings.py`."""
+import glob
 import json
 import re
 
-SOURCE = "HearthKit/Sources/HearthUI/Localization/Strings.swift"
+SOURCES = "HearthKit/Sources/HearthUI/Localization/Strings*.swift"
 CATALOG = "HearthKit/Sources/HearthUI/Resources/Localizable.xcstrings"
 
 pattern = re.compile(r'String\(localized: "([^"]+)", defaultValue: "((?:[^"\\]|\\.)*)"')
 strings = {}
-for key, value in pattern.findall(open(SOURCE, encoding="utf-8").read()):
+text = "".join(open(path, encoding="utf-8").read() for path in sorted(glob.glob(SOURCES)))
+for key, value in pattern.findall(text):
     # Interpolations become positional format specifiers, as the compiler writes them.
     arguments = re.findall(r"\\\(([^)]+)\)", value)
     for position, argument in enumerate(arguments, start=1):

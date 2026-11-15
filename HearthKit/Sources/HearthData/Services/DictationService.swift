@@ -22,6 +22,8 @@ public final class DictationService {
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?
     private var continuation: AsyncStream<DictationUpdateDTO>.Continuation?
+    private var levelStream: AsyncStream<Double>?
+    private var levelContinuation: AsyncStream<Double>.Continuation?
     private var routeObserver: (any NSObjectProtocol)?
 
     public init() {}
@@ -48,7 +50,9 @@ public final class DictationService {
         request.shouldReportPartialResults = true
         // Keep speech on the phone wherever the recogniser can manage without Apple's servers.
         request.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
-        guard Self.installTap(on: engine.inputNode, feeding: request) else {
+        // Only the latest level is kept: a listener that falls behind wants how loud it is now, not how loud it was.
+        let (levelStream, levelContinuation) = AsyncStream.makeStream(of: Double.self, bufferingPolicy: .bufferingNewest(1))
+        guard Self.installTap(on: engine.inputNode, feeding: request, levels: levelContinuation) else {
             throw DictationError.microphoneUnavailable
         }
         engine.prepare()
@@ -58,6 +62,8 @@ public final class DictationService {
             engine.inputNode.removeTap(onBus: 0)
             throw error
         }
+        self.levelStream = levelStream
+        self.levelContinuation = levelContinuation
 
         let (stream, continuation) = AsyncStream.makeStream(of: DictationUpdateDTO.self)
         self.request = request
@@ -67,7 +73,14 @@ public final class DictationService {
         return stream
     }
 
-    /// Stops listening and ends the stream. Harmless when nothing is running.
+    /// How loud the voice is, from 0 to 1, for as long as the listening now under way lasts.
+    ///
+    /// The stream ends when listening does, and is already over when nothing is listening. It has one reader.
+    public func levels() -> AsyncStream<Double> {
+        levelStream ?? AsyncStream { $0.finish() }
+    }
+
+    /// Stops listening and ends the streams. Harmless when nothing is running.
     public func stop() {
         if let routeObserver {
             NotificationCenter.default.removeObserver(routeObserver)
@@ -78,9 +91,12 @@ public final class DictationService {
         request?.endAudio()
         task?.cancel()
         continuation?.finish()
+        levelContinuation?.finish()
         request = nil
         task = nil
         continuation = nil
+        levelStream = nil
+        levelContinuation = nil
     }
 
     /// Watches for the microphone changing under the engine, as when headphones are put in or taken out.
@@ -97,11 +113,11 @@ public final class DictationService {
     /// The engine stops itself when the microphone changes. Listening carries on with the new one, feeding the same
     /// recognition, so what was already said is kept. If the new microphone cannot be used, listening ends.
     private func resumeAfterRouteChange() {
-        guard let request else {
+        guard let request, let levelContinuation else {
             return
         }
         engine.stop()
-        guard Self.installTap(on: engine.inputNode, feeding: request) else {
+        guard Self.installTap(on: engine.inputNode, feeding: request, levels: levelContinuation) else {
             stop()
             return
         }
@@ -124,8 +140,13 @@ private extension DictationService {
         }
     }
 
-    /// Feeds the microphone's audio to the recogniser. False when the microphone has no usable format.
-    nonisolated static func installTap(on node: AVAudioInputNode, feeding request: SFSpeechAudioBufferRecognitionRequest) -> Bool {
+    /// Feeds the microphone's audio to the recogniser, and reports how loud each piece of it is.
+    /// False when the microphone has no usable format.
+    nonisolated static func installTap(
+        on node: AVAudioInputNode,
+        feeding request: SFSpeechAudioBufferRecognitionRequest,
+        levels: AsyncStream<Double>.Continuation
+    ) -> Bool {
         let format = node.outputFormat(forBus: 0)
         guard format.sampleRate > 0, format.channelCount > 0 else {
             return false
@@ -133,8 +154,17 @@ private extension DictationService {
         node.removeTap(onBus: 0)
         node.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
             request.append(buffer)
+            levels.yield(level(of: buffer))
         }
         return true
+    }
+
+    /// How loud the buffer's first channel is, from 0 to 1. Audio that is not floating point counts as silence.
+    nonisolated static func level(of buffer: AVAudioPCMBuffer) -> Double {
+        guard let channel = buffer.floatChannelData?[0] else {
+            return 0
+        }
+        return VoiceLevelMeter.level(of: UnsafeBufferPointer(start: channel, count: Int(buffer.frameLength)))
     }
 
     /// Passes on each transcription as it firms up, and ends the stream on the last one or on a failure.

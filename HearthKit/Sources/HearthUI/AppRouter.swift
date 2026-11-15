@@ -1,6 +1,16 @@
 import Foundation
 import Observation
 
+/// The sheets that have to do with projects. Only one shows at a time, and one may give way to the other.
+enum ProjectSheetKind: Hashable, Identifiable {
+    /// The sheet that makes or edits a project.
+    case editor
+    /// The sheet that chooses a project for a chat.
+    case picker
+
+    var id: Self { self }
+}
+
 /// What is on screen besides the chat itself. The coordinator changes it and the root view presents what it says.
 @MainActor
 @Observable
@@ -23,5 +33,10 @@ final class AppRouter {
         isSidebarPinned = !defaults.bool(forKey: Self.sidebarHiddenKey)
     }
     var isSettingsPresented = false
+    /// Whether the app is in front of the user. The root view keeps this current; a reply that finishes while it
+    /// is `false` may be announced with a notification.
+    var isSceneActive = true
     var isVoicePresented = false
+    /// The project sheet that is showing, if one is.
+    var projectSheet: ProjectSheetKind?
 }

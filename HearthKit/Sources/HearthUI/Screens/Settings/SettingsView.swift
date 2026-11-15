@@ -1,7 +1,10 @@
 import HearthDomain
 import SwiftUI
 
-/// The settings sheet: servers, voice, instructions, memory, the lock and the theme.
+/// The settings sheet: the profile, servers, voice, pictures, memory, notifications, the lock, haptics and the theme.
+///
+/// The profile and the notifications are pages pushed from here. What is typed on them is part of the same draft,
+/// kept by Done; `SettingsPresenter` says which switches take effect at once.
 struct SettingsView: View {
     let presenter: SettingsPresenter
 
@@ -9,6 +12,7 @@ struct SettingsView: View {
         @Bindable var viewModel = presenter.viewModel
         NavigationStack {
             Form {
+                ProfileSection(presenter: presenter)
                 Section {
                     addressField(Strings.ollamaAddress, text: $viewModel.ollamaAddress)
                     addressField(Strings.searchAddress, text: $viewModel.searchAddress)
@@ -41,17 +45,8 @@ struct SettingsView: View {
                     Toggle(Strings.readRepliesAloud, isOn: $viewModel.isAutoReadEnabled)
                 }
                 PictureSettingsSection(model: $viewModel.imageModel, capabilities: viewModel.imageCapabilities)
-                Section {
-                    TextField(Strings.instructionsPlaceholder, text: $viewModel.customInstructions, axis: .vertical)
-                        .lineLimit(3...10)
-                        .accessibilityLabel(Strings.instructions)
-                    Toggle(Strings.suggestFollowUps, isOn: $viewModel.isFollowUpsEnabled)
-                } header: {
-                    Text(Strings.instructions)
-                } footer: {
-                    Text(Strings.instructionsFooter)
-                }
                 MemorySection(presenter: presenter)
+                NotificationsSection(presenter: presenter)
                 Section {
                     Toggle(Strings.requireUnlock, isOn: $viewModel.isLockEnabled)
                         .onChange(of: viewModel.isLockEnabled) { Task { await presenter.lockAction() } }
@@ -59,6 +54,12 @@ struct SettingsView: View {
                     Text(Strings.privacy)
                 } footer: {
                     Text(Strings.requireUnlockFooter)
+                }
+                Section {
+                    Toggle(Strings.haptics, isOn: $viewModel.isHapticsEnabled)
+                        .onChange(of: viewModel.isHapticsEnabled) { presenter.hapticsAction() }
+                } footer: {
+                    Text(Strings.hapticsFooter)
                 }
                 Section(Strings.theme) {
                     Picker(Strings.theme, selection: $viewModel.appearance) {

@@ -213,6 +213,8 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
     public let isPinned: Bool
     /// A private conversation is given no memories and writes none.
     public let isPrivate: Bool
+    /// The project the conversation belongs to; `nil` when it is in none.
+    public let projectID: Project.ID?
     public let createdAt: Date
     /// When the conversation was last active; the list is ordered by it.
     public let updatedAt: Date
@@ -224,6 +226,7 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
         messages: [Message] = [],
         isPinned: Bool = false,
         isPrivate: Bool = false,
+        projectID: Project.ID? = nil,
         createdAt: Date = Date(),
         updatedAt: Date = Date()
     ) {
@@ -233,11 +236,13 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
         self.messages = messages
         self.isPinned = isPinned
         self.isPrivate = isPrivate
+        self.projectID = projectID
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
 
-    /// Conversations saved before pinning or private chats existed carry neither mark; they are read as neither.
+    /// Conversations saved before pinning, private chats or projects existed carry none of those marks; they are
+    /// read as not pinned, not private and in no project.
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
@@ -247,27 +252,35 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
             messages: try container.decode([Message].self, forKey: .messages),
             isPinned: try container.decodeIfPresent(Bool.self, forKey: .isPinned) ?? false,
             isPrivate: try container.decodeIfPresent(Bool.self, forKey: .isPrivate) ?? false,
+            projectID: try container.decodeIfPresent(Project.ID.self, forKey: .projectID),
             createdAt: try container.decode(Date.self, forKey: .createdAt),
             updatedAt: try container.decode(Date.self, forKey: .updatedAt)
         )
     }
 
     /// A copy with the given parts replaced; anything left `nil` is kept.
+    ///
+    /// - Parameter project: Where the copy belongs. Since `nil` already means "keep", taking a conversation out of
+    ///   its project is spelled out as `.noProject`, and putting it in one as `.project(id)`.
     public func updating(
         title: String? = nil,
         modelID: ChatModel.ID? = nil,
         messages: [Message]? = nil,
         isPinned: Bool? = nil,
         isPrivate: Bool? = nil,
+        project: ProjectMembership? = nil,
         updatedAt: Date? = nil
     ) -> Conversation {
-        Conversation(
+        // A membership that was given wins, even when it says "no project"; none given keeps what is there.
+        let projectID = if let project { project.projectID } else { self.projectID }
+        return Conversation(
             id: id,
             title: title ?? self.title,
             modelID: modelID ?? self.modelID,
             messages: messages ?? self.messages,
             isPinned: isPinned ?? self.isPinned,
             isPrivate: isPrivate ?? self.isPrivate,
+            projectID: projectID,
             createdAt: createdAt,
             updatedAt: updatedAt ?? self.updatedAt
         )

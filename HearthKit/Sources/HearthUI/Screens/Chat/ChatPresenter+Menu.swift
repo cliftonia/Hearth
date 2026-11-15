@@ -45,6 +45,34 @@ extension ChatPresenter {
         }
     }
 
+    // MARK: Project
+
+    /// The project the open chat belongs to; `nil` when it is in none, and when its project has been deleted.
+    ///
+    /// Once a chat has been saved the store says where it belongs, since the chat list can move it while it is
+    /// open. Until then the open copy is all there is.
+    var chatProject: Project? {
+        let open = viewModel.conversation
+        guard let stored = dependencies.conversationStore.conversation(for: open.id) else {
+            return dependencies.projectStore.project(for: open.projectID)
+        }
+        return dependencies.projectStore.project(for: stored.projectID)
+    }
+
+    /// Asks which project the open chat should go in.
+    func projectAction() {
+        delegate?.chatPresenter(self, didRequestProjectFor: viewModel.conversation.id)
+    }
+
+    /// Keeps the open copy in step when the chat was filed elsewhere: by the picker or by a new project made for it.
+    /// A chat not yet saved carries the choice here until its first save.
+    func conversationWasMoved(_ id: Conversation.ID, to projectID: Project.ID?) {
+        guard viewModel.conversation.id == id else {
+            return
+        }
+        viewModel.conversation = viewModel.conversation.updating(project: ProjectMembership(projectID))
+    }
+
     /// Deletes the open chat and starts a new one in its place.
     func deleteChatAction() async {
         let id = viewModel.conversation.id

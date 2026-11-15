@@ -18,7 +18,8 @@ extension ChatPresenter {
             style: style,
             memories: usesMemory ? dependencies.memoryStore.memories : [],
             remember: usesMemory ? rememberClosure : nil,
-            isPrivate: viewModel.conversation.isPrivate
+            isPrivate: viewModel.conversation.isPrivate,
+            project: chatProject
         )
         viewModel.conversation = viewModel.conversation.updating(messages: viewModel.conversation.messages + [reply], updatedAt: Date())
         viewModel.error = nil
@@ -42,6 +43,7 @@ extension ChatPresenter {
         }
         turnTask = task
         await task.value
+        await notifyReplyFinished(reply.id)
         backgroundActivity.end()
     }
 

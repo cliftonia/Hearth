@@ -71,7 +71,10 @@ private struct MemoryListView: View {
         .navigationTitle(Strings.savedMemories)
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog(Strings.clearMemoriesQuestion, isPresented: $viewModel.isConfirmingClearMemories, titleVisibility: .visible) {
-            Button(Strings.clearMemories, role: .destructive) { Task { await presenter.clearMemoriesAction() } }
+            Button(Strings.clearMemories, role: .destructive) {
+                Haptics.play(.warning)
+                Task { await presenter.clearMemoriesAction() }
+            }
             Button(Strings.cancel, role: .cancel) {}
         }
     }

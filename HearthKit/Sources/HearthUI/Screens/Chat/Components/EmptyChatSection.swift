@@ -3,6 +3,8 @@ import SwiftUI
 /// What an empty chat shows: an invitation to talk, or, with no server set, the way to Settings.
 struct EmptyChatSection: View {
     let isServerConfigured: Bool
+    /// The short line that invites a message, chosen afresh for each new chat.
+    let greeting: String
     let isPrivate: Bool
     let settingsAction: () -> Void
 
@@ -21,7 +23,7 @@ struct EmptyChatSection: View {
             if hasMark {
                 HearthMark(sideLength: 56)
             }
-            Text(isServerConfigured ? Strings.emptyTitle : Strings.connectTitle)
+            Text(isServerConfigured ? greeting : Strings.connectTitle)
                 .font(HearthFont.display)
                 .foregroundStyle(HearthColor.ink)
                 .multilineTextAlignment(.center)

@@ -1,10 +1,13 @@
 import HearthDomain
 import SwiftUI
 
-/// The chat list: the brand, a search field, the chats grouped by day, and Settings and New chat floating at the foot.
+/// The chat list: the brand, a search field, the projects, the chats grouped by day, and Settings and New chat
+/// floating at the foot.
+///
+/// The projects, and the heading of a project whose chats are being looked at, are drawn in `SidebarView+Projects`.
 struct SidebarView: View {
     /// The vertical padding that gives the search field and each chat their height.
-    private static let rowVerticalPadding: CGFloat = 9
+    static let rowVerticalPadding: CGFloat = 9
     /// Room for the last chat to be scrolled clear of the floating controls.
     private static let listBottomClearance: CGFloat = 84
     private static let statusDotRingWidth: CGFloat = 2
@@ -27,17 +30,9 @@ struct SidebarView: View {
             .padding(.top, HearthSpacing.s8)
             .padding(.bottom, HearthSpacing.s14)
             searchField(text: $viewModel.query)
-            ZStack(alignment: .top) {
-                conversationList(groups: groups)
-                Text(Strings.noChats)
-                    .font(.subheadline)
-                    .foregroundStyle(HearthColor.mute)
-                    .padding(.top, HearthSpacing.s32)
-                    .opacity(groups.isEmpty ? 1 : 0)
-                    .accessibilityHidden(!groups.isEmpty)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .overlay(alignment: .bottom) { floatingControls }
+            conversationList(groups: groups)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .overlay(alignment: .bottom) { floatingControls }
         }
         .background(HearthColor.paper.ignoresSafeArea())
         .alert(Strings.renameChat, isPresented: $viewModel.isRenaming) {
@@ -72,29 +67,46 @@ struct SidebarView: View {
     private func conversationList(groups: [SidebarGroupViewConfiguration]) -> some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: HearthSpacing.s2) {
+                projectsSection
                 ForEach(groups) { group in
-                    Text(group.title)
-                        .font(.caption.weight(.medium))
-                        .textCase(.uppercase)
-                        .kerning(0.6)
-                        .foregroundStyle(HearthColor.mute)
-                        .padding(.horizontal, HearthSpacing.s18)
-                        .padding(.top, HearthSpacing.s14)
-                        .padding(.bottom, HearthSpacing.s4)
-                        .accessibilityAddTraits(.isHeader)
+                    heading(group.title)
                     ForEach(group.rows) { row in
                         conversationRow(row)
                     }
                 }
+                // The note keeps its place in the list when hidden, beneath the projects, which are always there.
+                Text(presenter.selectedProject == nil ? Strings.noChats : Strings.noProjectChats)
+                    .font(.subheadline)
+                    .foregroundStyle(HearthColor.mute)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, HearthSpacing.s32)
+                    .opacity(groups.isEmpty ? 1 : 0)
+                    .frame(height: groups.isEmpty ? nil : 0)
+                    .accessibilityHidden(!groups.isEmpty)
             }
             .padding(.bottom, Self.listBottomClearance)
         }
         .scrollDismissesKeyboard(.immediately)
     }
 
-    /// One chat. A long press offers to pin, rename, share or delete it.
+    /// The small capitals above a group of rows.
+    func heading(_ title: String) -> some View {
+        Text(title)
+            .font(.caption.weight(.medium))
+            .textCase(.uppercase)
+            .kerning(0.6)
+            .foregroundStyle(HearthColor.mute)
+            .padding(.horizontal, HearthSpacing.s18)
+            .padding(.top, HearthSpacing.s14)
+            .padding(.bottom, HearthSpacing.s4)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    /// One chat. A long press offers to pin or rename it, file it in a project, share it or delete it.
     private func conversationRow(_ row: SidebarRowViewConfiguration) -> some View {
         let isSelected = row.id == presenter.selectedID
+        // Among a project's own chats the mark would say nothing, so it shows only where every chat is listed.
+        let hasProjectMark = row.isInProject && presenter.selectedProject == nil
         return Button(action: { presenter.selectAction(row.id) }, label: {
             HStack(spacing: HearthSpacing.s6) {
                 Text(row.title)
@@ -102,6 +114,12 @@ struct SidebarView: View {
                     .foregroundStyle(HearthColor.ink)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "folder")
+                    .font(.caption2)
+                    .foregroundStyle(HearthColor.mute)
+                    .opacity(hasProjectMark ? 1 : 0)
+                    .frame(width: hasProjectMark ? nil : 0)
+                    .accessibilityHidden(true)
                 Image(systemName: "eye.slash")
                     .font(.caption2)
                     .foregroundStyle(HearthColor.mute)
@@ -123,30 +141,51 @@ struct SidebarView: View {
         .padding(.horizontal, HearthSpacing.s8)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityValue(Self.spokenMarks(for: row))
-        .contextMenu {
-            Button(action: { Task { await presenter.pinAction(row) } }, label: {
-                Label(row.isPinned ? Strings.unpin : Strings.pin, systemImage: row.isPinned ? "pin.slash" : "pin")
-            })
-            Button(action: { presenter.renameAction(row) }, label: {
-                Label(Strings.rename, systemImage: "pencil")
-            })
-            ShareLink(item: presenter.exportText(for: row.id)) {
-                Label(Strings.share, systemImage: "square.and.arrow.up")
-            }
-            Button(role: .destructive, action: { Task { await presenter.deleteAction(row.id) } }, label: {
-                Label(Strings.delete, systemImage: "trash")
-            })
-        }
+        .contextMenu { conversationMenu(for: row) }
     }
 
-    /// What VoiceOver adds after a chat's title: whether it is pinned, private, or both.
+    /// What a long press on a chat offers: pin, rename, a project to file it in or leave, share and delete.
+    @ViewBuilder
+    private func conversationMenu(for row: SidebarRowViewConfiguration) -> some View {
+        Button(action: {
+            Haptics.play(.light)
+            Task { await presenter.pinAction(row) }
+        }, label: {
+            Label(row.isPinned ? Strings.unpin : Strings.pin, systemImage: row.isPinned ? "pin.slash" : "pin")
+        })
+        Button(action: { presenter.renameAction(row) }, label: {
+            Label(Strings.rename, systemImage: "pencil")
+        })
+        Button(action: { presenter.addToProjectAction(row) }, label: {
+            Label(Strings.addToProjectEllipsis, systemImage: "folder.badge.plus")
+        })
+        if row.isInProject {
+            Button(action: { Task { await presenter.removeFromProjectAction(row) } }, label: {
+                Label(Strings.removeFromProject, systemImage: "folder.badge.minus")
+            })
+        }
+        ShareLink(item: presenter.exportText(for: row.id)) {
+            Label(Strings.share, systemImage: "square.and.arrow.up")
+        }
+        Button(role: .destructive, action: {
+            Haptics.play(.warning)
+            Task { await presenter.deleteAction(row.id) }
+        }, label: {
+            Label(Strings.delete, systemImage: "trash")
+        })
+    }
+
+    /// What VoiceOver adds after a chat's title: whether it is pinned, private, in a project, or several of these.
     private static func spokenMarks(for row: SidebarRowViewConfiguration) -> String {
-        [row.isPinned ? Strings.pinned : "", row.isPrivate ? Strings.privateChat : ""].filter { !$0.isEmpty }.joined(separator: ", ")
+        [row.isPinned ? Strings.pinned : "", row.isPrivate ? Strings.privateChat : "", row.isInProject ? Strings.inProject : ""]
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
     }
 
     // MARK: Floating controls
 
-    /// The settings and the new chat button, floating over the end of the list.
+    /// The settings and the new chat button, floating over the end of the list. While a project's chats are being
+    /// looked at, the new chat is begun in that project.
     private var floatingControls: some View {
         HStack(spacing: HearthSpacing.s12) {
             settingsButton

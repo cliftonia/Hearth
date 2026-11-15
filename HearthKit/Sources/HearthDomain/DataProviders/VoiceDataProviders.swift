@@ -47,15 +47,21 @@ public struct DictationProvider: Sendable {
     /// Starts listening. The stream ends when recognition finishes or `stop` is called.
     public let start: @Sendable () async throws -> AsyncStream<DictationUpdate>
     public let stop: @Sendable () async -> Void
+    /// How loud the voice is, from 0 to 1, for as long as the listening now under way lasts. The stream ends when
+    /// listening does, and is already over when nothing is listening.
+    public let levels: @Sendable () async -> AsyncStream<Double>
 
+    /// - Parameter levels: Left out, the voice's loudness is never reported: the stream is over as soon as it is read.
     public init(
         requestAuthorization: @escaping @Sendable () async -> Bool,
         start: @escaping @Sendable () async throws -> AsyncStream<DictationUpdate>,
-        stop: @escaping @Sendable () async -> Void
+        stop: @escaping @Sendable () async -> Void,
+        levels: @escaping @Sendable () async -> AsyncStream<Double> = { AsyncStream { $0.finish() } }
     ) {
         self.requestAuthorization = requestAuthorization
         self.start = start
         self.stop = stop
+        self.levels = levels
     }
 }
 
@@ -104,7 +110,8 @@ public extension DictationProvider {
                     continuation.onTermination = { _ in task.cancel() }
                 }
             },
-            stop: { await service.stop() }
+            stop: { await service.stop() },
+            levels: { await service.levels() }
         )
     }
 }

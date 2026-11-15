@@ -53,6 +53,8 @@ public final class ChatInteractor: Sendable {
         public let remember: (@Sendable (MemoryRequest) async -> MemoryOutcome)?
         /// Whether the conversation is private; the model is then told that nothing here will be remembered.
         public let isPrivate: Bool
+        /// The project the conversation belongs to, if any; its instructions and reference files go into the turn.
+        public let project: Project?
 
         public init(
             history: [Message],
@@ -62,7 +64,8 @@ public final class ChatInteractor: Sendable {
             style: ReplyStyle,
             memories: [Memory] = [],
             remember: (@Sendable (MemoryRequest) async -> MemoryOutcome)? = nil,
-            isPrivate: Bool = false
+            isPrivate: Bool = false,
+            project: Project? = nil
         ) {
             self.history = history
             self.model = model
@@ -72,6 +75,7 @@ public final class ChatInteractor: Sendable {
             self.memories = memories
             self.remember = remember
             self.isPrivate = isPrivate
+            self.project = project
         }
     }
 
@@ -167,12 +171,8 @@ private extension ChatInteractor {
         }
         let searchURL = turn.settings.searchURL
         let isAutomatic = turn.searchMode == .automatic && searchURL != nil && turn.model.canUseTools
-        // Memory is written only from what the user types. A file, a photo (which may hold text) or a web search
-        // anywhere in the conversation stays in front of the model for the rest of it, so memory is allowed
-        // only while the conversation holds nothing but plain typed text and replies to it.
-        let carriesOutsideText = turn.history.contains { !$0.documents.isEmpty || !$0.sources.isEmpty || !$0.imagesJPEG.isEmpty }
-        let canRemember = turn.remember != nil && turn.model.canUseTools && !carriesOutsideText
-        let builder = PromptBuilder(instructions: turn.settings.customInstructions, memories: turn.memories, isPrivate: turn.isPrivate)
+        let canRemember = turn.remember != nil && turn.model.canUseTools && !Self.carriesOutsideText(turn)
+        let builder = Self.promptBuilder(for: turn)
         var sources: [SearchSource] = []
         if turn.searchMode == .always, let searchURL, let query = builder.searchQuery(history: turn.history) {
             sources = await found(for: SearchRequest(query: query), at: searchURL, excluding: [], report: report)
@@ -213,6 +213,29 @@ private extension ChatInteractor {
                 return
             }
         }
+    }
+
+    /// Whether the turn puts anything in front of the model that the user did not type.
+    ///
+    /// Memory is written only from what the user types. A file, a photo (which may hold text) or a web search
+    /// anywhere in the conversation stays in front of the model for the rest of it, so memory is allowed only
+    /// while the conversation holds nothing but plain typed text and replies to it. A project's reference files
+    /// are in front of the model in the same way, so a project that has any closes memory too; a project with
+    /// instructions alone does not, since the user typed those.
+    static func carriesOutsideText(_ turn: Turn) -> Bool {
+        turn.history.contains { !$0.documents.isEmpty || !$0.sources.isEmpty || !$0.imagesJPEG.isEmpty }
+            || turn.project?.documents.isEmpty == false
+    }
+
+    /// The builder of the turn's prompts, carrying everything that stands before the conversation itself.
+    static func promptBuilder(for turn: Turn) -> PromptBuilder {
+        PromptBuilder(
+            instructions: turn.settings.customInstructions,
+            profile: turn.settings.profile,
+            memories: turn.memories,
+            isPrivate: turn.isPrivate,
+            project: turn.project
+        )
     }
 
     /// Makes the memory changes the model asked for, within the turn's allowance, and tells it what became of each.

@@ -9,30 +9,40 @@ protocol SidebarPresenterDelegate: AnyObject {
     func sidebarPresenter(_ presenter: SidebarPresenter, didSelect id: Conversation.ID)
     func sidebarPresenter(_ presenter: SidebarPresenter, didDelete id: Conversation.ID)
     func sidebarPresenter(_ presenter: SidebarPresenter, didRename id: Conversation.ID, to title: String)
-    func sidebarPresenterDidRequestNewChat(_ presenter: SidebarPresenter)
+    /// A new chat is wanted: in the given project, or in none.
+    func sidebarPresenter(_ presenter: SidebarPresenter, didRequestNewChatIn projectID: Project.ID?)
     func sidebarPresenterDidRequestSettings(_ presenter: SidebarPresenter)
+    func sidebarPresenterDidRequestNewProject(_ presenter: SidebarPresenter)
+    func sidebarPresenter(_ presenter: SidebarPresenter, didRequestEditing projectID: Project.ID)
+    /// A project is to be chosen for the chat.
+    func sidebarPresenter(_ presenter: SidebarPresenter, didRequestProjectFor id: Conversation.ID)
 }
 
-/// Lists the saved chats, searches them, and pins, renames, shares and deletes them.
+/// Lists the projects and the saved chats, searches them, and pins, renames, files, shares and deletes chats.
+///
+/// What it does with projects is in `SidebarPresenter+Projects`.
 @MainActor
 final class SidebarPresenter {
     let viewModel = SidebarViewModel()
     weak var delegate: (any SidebarPresenterDelegate)?
 
-    private let conversationStore: ConversationStore
+    let conversationStore: ConversationStore
+    let projectStore: ProjectStore
     private let modelStore: ModelStore
     private let settingsStore: SettingsStore
     /// The chat that is open, which belongs to the chat screen; the list only highlights it.
     private let selectedConversationID: @MainActor () -> Conversation.ID
-    private let logger = Logger(for: SidebarPresenter.self)
+    let logger = Logger(for: SidebarPresenter.self)
 
     init(
         conversationStore: ConversationStore,
+        projectStore: ProjectStore,
         modelStore: ModelStore,
         settingsStore: SettingsStore,
         selectedConversationID: @escaping @MainActor () -> Conversation.ID
     ) {
         self.conversationStore = conversationStore
+        self.projectStore = projectStore
         self.modelStore = modelStore
         self.settingsStore = settingsStore
         self.selectedConversationID = selectedConversationID
@@ -40,9 +50,15 @@ final class SidebarPresenter {
 
     // MARK: What the list shows
 
-    /// The chats that match the search, sorted into dated groups.
+    /// The chats that match the search, sorted into dated groups: every chat, or those of the project being looked at.
     var groups: [SidebarGroupViewConfiguration] {
-        ConversationGrouper().groups(from: conversationStore.conversations, query: viewModel.query, now: Date())
+        ConversationGrouper().groups(
+            from: conversationStore.conversations,
+            in: selectedProject?.id,
+            projects: projectStore.projects,
+            query: viewModel.query,
+            now: Date()
+        )
     }
 
     var selectedID: Conversation.ID { selectedConversationID() }
@@ -70,8 +86,9 @@ final class SidebarPresenter {
         delegate?.sidebarPresenter(self, didSelect: id)
     }
 
+    /// Starts a chat. While a project's chats are being looked at, the new chat belongs to that project.
     func newChatAction() {
-        delegate?.sidebarPresenterDidRequestNewChat(self)
+        delegate?.sidebarPresenter(self, didRequestNewChatIn: selectedProject?.id)
     }
 
     func settingsAction() {

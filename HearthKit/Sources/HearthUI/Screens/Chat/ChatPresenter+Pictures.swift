@@ -64,6 +64,7 @@ extension ChatPresenter {
         }
         turnTask = task
         await task.value
+        await notifyReplyFinished(reply.id)
         backgroundActivity.end()
     }
 

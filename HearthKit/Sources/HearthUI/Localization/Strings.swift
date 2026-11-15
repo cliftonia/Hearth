@@ -28,7 +28,6 @@ enum Strings {
     static let cloudTag = String(localized: "chat.cloudTag", defaultValue: "cloud", bundle: .module)
     static let privateChat = String(localized: "chat.private", defaultValue: "Private chat", bundle: .module)
     static let privateChatNote = String(localized: "chat.privateNote", defaultValue: "This chat uses no memories and adds none.", bundle: .module)
-    static let emptyTitle = String(localized: "chat.emptyTitle", defaultValue: "What shall we talk about?", bundle: .module)
     static let connectTitle = String(localized: "chat.connectTitle", defaultValue: "Connect to your server", bundle: .module)
     static let connectMessage = String(localized: "chat.connectMessage", defaultValue: "Add the address of your Ollama server to begin.", bundle: .module)
     static let openSettings = String(localized: "chat.openSettings", defaultValue: "Open Settings", bundle: .module)
@@ -157,9 +156,7 @@ enum Strings {
     static let playVoiceSample = String(localized: "settings.voiceSamplePlay", defaultValue: "Hear this voice", bundle: .module)
     static let stopVoiceSample = String(localized: "settings.voiceSampleStop", defaultValue: "Stop", bundle: .module)
     static let voiceSampleFailed = String(localized: "settings.voiceSampleFailed", defaultValue: "The voice could not be played. Check the speech address and the voice name.", bundle: .module)
-    static let instructions = String(localized: "settings.instructions", defaultValue: "Custom instructions", bundle: .module)
     static let instructionsPlaceholder = String(localized: "settings.instructionsPlaceholder", defaultValue: "For example: answer briefly. I live in Brisbane.", bundle: .module)
-    static let instructionsFooter = String(localized: "settings.instructionsFooter", defaultValue: "Instructions are given to the model at the start of every conversation. Suggestions cost one extra short request per reply.", bundle: .module)
     static let readRepliesAloud = String(localized: "settings.readReplies", defaultValue: "Read replies aloud", bundle: .module)
     static let privacy = String(localized: "settings.privacy", defaultValue: "Privacy", bundle: .module)
     static let requireUnlock = String(localized: "settings.requireUnlock", defaultValue: "Require Face ID or passcode", bundle: .module)
@@ -262,6 +259,40 @@ enum Strings {
 
     static func source(number: Int, host: String) -> String {
         String(localized: "message.source", defaultValue: "Source \(number): \(host)", bundle: .module)
+    }
+}
+
+// Projects: the list above the chats, the sheet that edits one, and filing a chat in one.
+extension Strings {
+    static let projects = String(localized: "project.title", defaultValue: "Projects", bundle: .module)
+    static let newProject = String(localized: "project.new", defaultValue: "New project", bundle: .module)
+    static let newProjectEllipsis = String(localized: "project.newEllipsis", defaultValue: "New project…", bundle: .module)
+    static let editProject = String(localized: "project.edit", defaultValue: "Edit project", bundle: .module)
+    static let allChats = String(localized: "project.allChats", defaultValue: "All chats", bundle: .module)
+    static let newChatInProject = String(localized: "project.newChat", defaultValue: "New chat in project", bundle: .module)
+    static let projectSettings = String(localized: "project.settings", defaultValue: "Project settings", bundle: .module)
+    static let noProjectChats = String(localized: "project.noChats", defaultValue: "No chats in this project yet", bundle: .module)
+    static let inProject = String(localized: "project.inProject", defaultValue: "In a project", bundle: .module)
+    static let addToProject = String(localized: "project.add", defaultValue: "Add to project", bundle: .module)
+    static let addToProjectEllipsis = String(localized: "project.addEllipsis", defaultValue: "Add to project…", bundle: .module)
+    static let moveToProject = String(localized: "project.move", defaultValue: "Move to project", bundle: .module)
+    static let removeFromProject = String(localized: "project.remove", defaultValue: "Remove from project", bundle: .module)
+    static let noProjects = String(localized: "project.none", defaultValue: "No projects yet", bundle: .module)
+    static let projectName = String(localized: "project.name", defaultValue: "Name", bundle: .module)
+    static let projectNamePlaceholder = String(localized: "project.namePlaceholder", defaultValue: "What the project is about", bundle: .module)
+    static let projectInstructions = String(localized: "project.instructions", defaultValue: "Instructions", bundle: .module)
+    static let projectInstructionsPlaceholder = String(localized: "project.instructionsPlaceholder", defaultValue: "How should chats in this project be answered?", bundle: .module)
+    static let projectInstructionsFooter = String(localized: "project.instructionsFooter", defaultValue: "Given to the model at the start of every chat in this project, along with your own instructions in Settings.", bundle: .module)
+    static let projectFiles = String(localized: "project.files", defaultValue: "Reference files", bundle: .module)
+    static let projectAddFiles = String(localized: "project.addFiles", defaultValue: "Add files", bundle: .module)
+    static let projectNoFiles = String(localized: "project.noFiles", defaultValue: "No files yet", bundle: .module)
+    static let projectFilesFooter = String(localized: "project.filesFooter", defaultValue: "PDFs and text files. Every chat in this project can draw on what they say. Swipe a file to remove it.", bundle: .module)
+    static let deleteProject = String(localized: "project.delete", defaultValue: "Delete project", bundle: .module)
+    static let deleteProjectQuestion = String(localized: "project.deleteQuestion", defaultValue: "Delete this project? Its chats are kept.", bundle: .module)
+    static let projectSaveFailed = String(localized: "project.saveFailed", defaultValue: "The project could not be saved. It is as it was.", bundle: .module)
+
+    static func chatInProject(_ name: String) -> String {
+        String(localized: "project.chatIn", defaultValue: "In project \(name)", bundle: .module)
     }
 }
 // swiftlint:enable line_length

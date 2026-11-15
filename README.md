@@ -40,6 +40,9 @@ and your conversations stay on the device.
 - **Suggested follow-up questions** under each reply; tap one to ask it
 - **A composer that stays out of the way**: one row at rest, opening out while you write to show the options for
   the reply: web search, how hard to think, and reading aloud
+- **Hold to talk**: press and hold the resting composer to dictate, with dots that follow your voice; let go and
+  the words are in the message, ready to read and send. The microphone button still dictates with a tap
+- **A greeting by name** on an empty chat, which varies from chat to chat and sometimes names the day
 - **Attachments**: photos from the library or camera for models that can see, PDFs and text files for any model
 - **Edit and resend** a message you already sent
 - **Reply versions**: asking again keeps the earlier reply, and arrows under the reply step between them
@@ -48,7 +51,9 @@ and your conversations stay on the device.
   the last picture. The menu at the top then offers the picture models the server has. The chat model is unloaded
   before each picture and the picture server frees its memory after it
 - **Share to Hearth** from Safari, Photos or Files: the link, text, picture or file lands in the message being written
-- **Custom instructions** given to the model at the start of every conversation
+- **A profile**: your full name, a nickname and a photo, kept on the device. An empty chat greets you by your
+  nickname, and the model is told what to call you
+- **Custom instructions**, on the profile page, given to the model at the start of every conversation
 - **Memory**: lasting facts you tell a model, or ask it to remember, are kept on the device and carried into every
   conversation. A notice shows whenever something is remembered, and the list can be read, added to and cleared in Settings
 - **Private chat**: the eye-slash button at the top right of an empty chat makes it private, so it uses no memories
@@ -70,12 +75,21 @@ and your conversations stay on the device.
 - **Settings and New chat** float at the bottom of the chat list; a dot on the Settings button shows whether the
   server can be reached
 - **Pin, rename, share as Markdown, delete** from a long press
+- **Projects** gather chats around one subject: every chat in a project is given the project's instructions,
+  on top of your own, and can draw on its reference files (PDFs and text). File a chat from a long press or from
+  its menu; deleting a project keeps its chats
 - **Lock** behind Face ID, Touch ID or the passcode; the lock covers the app switcher and every sheet
+- **Notifications** when a reply or a picture finishes while Hearth is not on screen, made on the device itself.
+  Tapping one opens its chat; a private chat's says only that a reply is ready
+- **Erase all data on this device**: there are no accounts, so the profile page offers to erase the chats, projects,
+  memories, profile and saved settings instead, leaving the app as it was when first opened
 - **On the device only**: JSON files in the app's own folder, synced nowhere
 
 ### Look
 
 - **Theme**: follow the system, or keep to light or dark
+- **Haptics**: a light tap as a message is sent, a reply finishes or something is switched, with one switch in
+  Settings to silence them all
 - **iPad**: conversations stay beside the chat on a wide screen
 - **Mac**: the same app, built with Mac Catalyst
 - Dynamic Type and VoiceOver labels throughout
@@ -157,7 +171,8 @@ swiftlint lint
 
 Tests are written with Swift Testing: the stream decoding, prompt building, sentence chunking for
 speech and the feed that reads a reply aloud, Markdown, maths and web page parsing, memory and its limits, follow-up questions, export, the chat interactor, the
-conversation store, file storage, which addresses a page may be read from, the app lock and the drawer's grouping. The codebase holds a
+conversation store, file storage, which addresses a page may be read from, the app lock, the drawer's grouping, the profile and
+the greeting, erasing everything, and when a finished reply is announced and in what words. The codebase holds a
 zero-warning SwiftLint bar.
 
 The same checks run on every push and pull request through GitHub Actions (`.github/workflows/ci.yml`), together with

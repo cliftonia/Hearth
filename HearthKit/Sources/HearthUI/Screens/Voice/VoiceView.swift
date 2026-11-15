@@ -37,7 +37,7 @@ struct VoiceView: View {
             controls(viewModel: viewModel)
         }
         .background(HearthColor.paper.ignoresSafeArea())
-        .sensoryFeedback(.impact(weight: .light), trigger: viewModel.state)
+        .haptic(.light, trigger: viewModel.state)
         .task { await presenter.startAction() }
     }
 

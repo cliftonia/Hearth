@@ -19,7 +19,9 @@ the values and `Components/` holds the few pieces built from them that are used 
 6. **Reach for a component before drawing a pattern again.** If the same shape appears a second time,
    it moves into `DesignSystem/Components`.
 7. **Every interactive control carries an accessibility label**; decoration is hidden from VoiceOver.
-8. **Changing a token changes the app.** Tokens with near-equal values, such as the radii 12 and 14, are
+8. **Every haptic is played through `Haptics`**, never with `.sensoryFeedback` or a UIKit generator directly,
+   so that the switch in Settings silences them all. See [Haptics](#haptics).
+9. **Changing a token changes the app.** Tokens with near-equal values, such as the radii 12 and 14, are
    kept apart on purpose; do not merge them without meaning to change the look.
 
 ## Tokens
@@ -116,6 +118,8 @@ Apply one with `.hearthShadow(.composer)`.
 | `IconButton(systemImage:label:action:)` | A round, borderless, 40-point button with one symbol | Header buttons. The label is what VoiceOver reads |
 | `OptionChip(systemImage:isOn:)` | An icon-only capsule, filled when on and outlined when off | The label of a `Button` or `Menu` that switches something |
 | `Hairline(axis:)` | A one-point line in the line colour | Dividers, horizontal by default |
+| `Avatar(photoJPEG:initials:diameter:)` | A round picture of a person: a photo, else initials, else a person symbol | The profile row and the profile page |
+| `Haptics.play(_:)`, `.haptic(_:trigger:when:)` | The one place a haptic is played from | Every haptic; see below |
 | `.surface(_:fill:border:)` | A filled shape with a hairline border inside its edge | Any bordered shape; the modifiers below are built on it |
 | `.cardSurface(radius:border:)` | A card-coloured rounded rectangle with a border | Code blocks, tables, the search field, the composer, the error banner |
 | `.capsuleSurface(fill:)` | A bordered pill | The model picker, sources, attached files |
@@ -137,6 +141,25 @@ HStack(spacing: HearthSpacing.s8) {
 .padding(.horizontal, HearthSpacing.s12)
 .cardSurface()
 ```
+
+## Haptics
+
+`Haptics` is the only thing in the app that plays a haptic. It asks `Haptics.isEnabled`, which the root view
+keeps in step with the Haptics switch in Settings, and does nothing on an iPad or a Mac, which have nothing to
+tap with. A kind is named for how it feels, not for what caused it:
+
+| `HapticKind` | Feels like | For |
+|---|---|---|
+| `light` | A light tap | Sending, pinning, opening or closing the chat list by its button, switching picture mode, a change of state in a voice conversation, starting to hold to talk |
+| `soft` | A softer, rounder tap | A reply finishing on screen; letting go after holding to talk |
+| `selection` | A tick | Choosing a model, stepping between versions of a reply |
+| `success` | Two rising taps | Copying, saving a picture, a picture arriving |
+| `warning` | A caution | Confirming something destructive |
+| `error` | Three sharp taps | The error banner appearing |
+
+Call `Haptics.play(.light)` from a button's action, or hang `.haptic(.success, trigger: copyCount)` on a value
+that changes; `when:` narrows it to the changes that count. Keep them light, play them from views and not from
+presenters, and never tie one to a value that changes while text streams.
 
 Views shared between screens that know about the domain, such as `MarkdownSection`, are not part of the
 design system; they live in `HearthUI/Components` and are built from it.

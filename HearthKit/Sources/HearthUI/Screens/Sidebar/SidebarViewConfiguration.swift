@@ -7,6 +7,15 @@ struct SidebarRowViewConfiguration: Hashable, Identifiable {
     let title: String
     let isPinned: Bool
     let isPrivate: Bool
+    /// Whether the chat belongs to a project that still exists.
+    let isInProject: Bool
+}
+
+/// One project, as a row: in the list above the chats, as the heading while its chats alone are shown, and in
+/// the sheet that files a chat.
+struct ProjectRowViewConfiguration: Hashable, Identifiable {
+    let id: Project.ID
+    let name: String
 }
 
 /// The headings chats are sorted under, in the order they appear.

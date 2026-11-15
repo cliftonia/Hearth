@@ -56,17 +56,6 @@
         }
       }
     },
-    "chat.emptyTitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What shall we talk about?"
-          }
-        }
-      }
-    },
     "chat.followUpHint": {
       "extractionState": "manual",
       "localizations": {
@@ -298,6 +287,17 @@
         }
       }
     },
+    "composer.holdToTalk.release": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Release to stop"
+          }
+        }
+      }
+    },
     "composer.photoLibrary": {
       "extractionState": "manual",
       "localizations": {
@@ -316,6 +316,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Message"
+          }
+        }
+      }
+    },
+    "composer.placeholder.resting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type or hold to talk"
           }
         }
       }
@@ -723,6 +734,325 @@
           "stringUnit": {
             "state": "translated",
             "value": "You"
+          }
+        }
+      }
+    },
+    "greet.afternoon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afternoon."
+          }
+        }
+      }
+    },
+    "greet.afternoon.named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afternoon, %@."
+          }
+        }
+      }
+    },
+    "greet.evening": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evening."
+          }
+        }
+      }
+    },
+    "greet.evening.named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evening, %@."
+          }
+        }
+      }
+    },
+    "greet.friday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Happy Friday."
+          }
+        }
+      }
+    },
+    "greet.friday.named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Happy Friday, %@."
+          }
+        }
+      }
+    },
+    "greet.goodToSeeYou.named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good to see you, %@."
+          }
+        }
+      }
+    },
+    "greet.letsTalk": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let's talk."
+          }
+        }
+      }
+    },
+    "greet.letsTalk.named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Let's talk, %@."
+          }
+        }
+      }
+    },
+    "greet.monday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Happy Monday."
+          }
+        }
+      }
+    },
+    "greet.monday.named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Happy Monday, %@."
+          }
+        }
+      }
+    },
+    "greet.morning": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning."
+          }
+        }
+      }
+    },
+    "greet.morning.named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning, %@."
+          }
+        }
+      }
+    },
+    "greet.night": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up late?"
+          }
+        }
+      }
+    },
+    "greet.night.named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up late, %@?"
+          }
+        }
+      }
+    },
+    "greet.onYourMind": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What's on your mind?"
+          }
+        }
+      }
+    },
+    "greet.onYourMind.named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What's on your mind, %@?"
+          }
+        }
+      }
+    },
+    "greet.saturday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Happy Saturday."
+          }
+        }
+      }
+    },
+    "greet.saturday.named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Happy Saturday, %@."
+          }
+        }
+      }
+    },
+    "greet.sunday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Happy Sunday."
+          }
+        }
+      }
+    },
+    "greet.sunday.named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Happy Sunday, %@."
+          }
+        }
+      }
+    },
+    "greet.thursday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Happy Thursday."
+          }
+        }
+      }
+    },
+    "greet.thursday.named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Happy Thursday, %@."
+          }
+        }
+      }
+    },
+    "greet.tuesday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Happy Tuesday."
+          }
+        }
+      }
+    },
+    "greet.tuesday.named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Happy Tuesday, %@."
+          }
+        }
+      }
+    },
+    "greet.wednesday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Happy Wednesday."
+          }
+        }
+      }
+    },
+    "greet.wednesday.named": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Happy Wednesday, %@."
+          }
+        }
+      }
+    },
+    "haptics.footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A light tap when a message is sent, a reply finishes or something is switched. iPad and Mac have none to give."
+          }
+        }
+      }
+    },
+    "haptics.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haptics"
           }
         }
       }
@@ -1189,6 +1519,138 @@
         }
       }
     },
+    "notifications.denied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are turned off for Hearth in the Settings app."
+          }
+        }
+      }
+    },
+    "notifications.denied.mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are turned off for Hearth in System Settings."
+          }
+        }
+      }
+    },
+    "notifications.footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are made on this device; nothing is sent through a server. A private chat's notification says only that a reply is ready."
+          }
+        }
+      }
+    },
+    "notifications.off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        }
+      }
+    },
+    "notifications.on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On"
+          }
+        }
+      }
+    },
+    "notifications.openSettings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the Settings app"
+          }
+        }
+      }
+    },
+    "notifications.openSettings.mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open System Settings"
+          }
+        }
+      }
+    },
+    "notifications.pictureReady": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your picture is ready"
+          }
+        }
+      }
+    },
+    "notifications.replies": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replies"
+          }
+        }
+      }
+    },
+    "notifications.repliesDetail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When a reply or a picture finishes while Hearth is not on screen."
+          }
+        }
+      }
+    },
+    "notifications.replyReady": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A reply is ready."
+          }
+        }
+      }
+    },
+    "notifications.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications"
+          }
+        }
+      }
+    },
     "picture.abilityMissing": {
       "extractionState": "manual",
       "localizations": {
@@ -1530,6 +1992,512 @@
         }
       }
     },
+    "profile.choosePhoto": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose from library"
+          }
+        }
+      }
+    },
+    "profile.editPhoto": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit photo"
+          }
+        }
+      }
+    },
+    "profile.eraseAll": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erase all data on this device"
+          }
+        }
+      }
+    },
+    "profile.eraseAllConfirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erase everything"
+          }
+        }
+      }
+    },
+    "profile.eraseAllFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not everything could be erased. Try again."
+          }
+        }
+      }
+    },
+    "profile.eraseAllFooter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hearth has no accounts. Everything it knows about you is kept on this device, and this removes it."
+          }
+        }
+      }
+    },
+    "profile.eraseAllMessage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your chats, projects, memories, profile and saved settings will be erased, server addresses included. Hearth will be as it was when first opened. This cannot be undone."
+          }
+        }
+      }
+    },
+    "profile.eraseAllQuestion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erase all data on this device?"
+          }
+        }
+      }
+    },
+    "profile.followUpsFooter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggestions cost one extra short request per reply."
+          }
+        }
+      }
+    },
+    "profile.fullName": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full name"
+          }
+        }
+      }
+    },
+    "profile.instructions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instructions"
+          }
+        }
+      }
+    },
+    "profile.instructionsFooter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instructions apply to every conversation."
+          }
+        }
+      }
+    },
+    "profile.namesFooter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hearth calls you by your nickname."
+          }
+        }
+      }
+    },
+    "profile.nickname": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nickname"
+          }
+        }
+      }
+    },
+    "profile.noName": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add your name"
+          }
+        }
+      }
+    },
+    "profile.photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile photo"
+          }
+        }
+      }
+    },
+    "profile.photoFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The photo could not be saved."
+          }
+        }
+      }
+    },
+    "profile.removePhoto": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove photo"
+          }
+        }
+      }
+    },
+    "profile.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile"
+          }
+        }
+      }
+    },
+    "project.add": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to project"
+          }
+        }
+      }
+    },
+    "project.addEllipsis": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to project…"
+          }
+        }
+      }
+    },
+    "project.addFiles": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add files"
+          }
+        }
+      }
+    },
+    "project.allChats": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All chats"
+          }
+        }
+      }
+    },
+    "project.chatIn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In project %@"
+          }
+        }
+      }
+    },
+    "project.delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete project"
+          }
+        }
+      }
+    },
+    "project.deleteQuestion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this project? Its chats are kept."
+          }
+        }
+      }
+    },
+    "project.edit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit project"
+          }
+        }
+      }
+    },
+    "project.files": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reference files"
+          }
+        }
+      }
+    },
+    "project.filesFooter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDFs and text files. Every chat in this project can draw on what they say. Swipe a file to remove it."
+          }
+        }
+      }
+    },
+    "project.inProject": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In a project"
+          }
+        }
+      }
+    },
+    "project.instructions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instructions"
+          }
+        }
+      }
+    },
+    "project.instructionsFooter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Given to the model at the start of every chat in this project, along with your own instructions in Settings."
+          }
+        }
+      }
+    },
+    "project.instructionsPlaceholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How should chats in this project be answered?"
+          }
+        }
+      }
+    },
+    "project.move": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to project"
+          }
+        }
+      }
+    },
+    "project.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        }
+      }
+    },
+    "project.namePlaceholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What the project is about"
+          }
+        }
+      }
+    },
+    "project.new": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New project"
+          }
+        }
+      }
+    },
+    "project.newChat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New chat in project"
+          }
+        }
+      }
+    },
+    "project.newEllipsis": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New project…"
+          }
+        }
+      }
+    },
+    "project.noChats": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No chats in this project yet"
+          }
+        }
+      }
+    },
+    "project.noFiles": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No files yet"
+          }
+        }
+      }
+    },
+    "project.none": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No projects yet"
+          }
+        }
+      }
+    },
+    "project.remove": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from project"
+          }
+        }
+      }
+    },
+    "project.saveFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The project could not be saved. It is as it was."
+          }
+        }
+      }
+    },
+    "project.settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Project settings"
+          }
+        }
+      }
+    },
+    "project.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projects"
+          }
+        }
+      }
+    },
     "settings.cancel": {
       "extractionState": "manual",
       "localizations": {
@@ -1581,28 +2549,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Picture server (ComfyUI)"
-          }
-        }
-      }
-    },
-    "settings.instructions": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Custom instructions"
-          }
-        }
-      }
-    },
-    "settings.instructionsFooter": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Instructions are given to the model at the start of every conversation. Suggestions cost one extra short request per reply."
           }
         }
       }

@@ -7,13 +7,17 @@ import Observation
 public final class SettingsStore {
     public private(set) var settings: ServerSettings
 
+    /// What the app was built to start with, gone back to when everything is erased.
+    private let defaults: ServerSettings
     private let save: (Data) -> Void
+    private let clear: () -> Void
 
     /// - Parameters:
     ///   - defaults: Used until the user saves settings of their own.
     ///   - load: Reads the saved settings, if any.
     ///   - save: Writes the settings.
-    public init(defaults: ServerSettings, load: () -> Data?, save: @escaping (Data) -> Void) {
+    ///   - clear: Removes the saved settings, so that the next launch finds none.
+    public init(defaults: ServerSettings, load: () -> Data?, save: @escaping (Data) -> Void, clear: @escaping () -> Void = {}) {
         let saved = load().flatMap { try? JSONDecoder().decode(ServerSettings.self, from: $0) }
         // Settings saved before the user chose a model, or before pictures existed, take what the app was built to start with.
         self.settings = saved.map { saved in
@@ -22,13 +26,21 @@ public final class SettingsStore {
                 imageAddress: saved.imageAddress.isEmpty ? defaults.imageAddress : nil
             )
         } ?? defaults
+        self.defaults = defaults
         self.save = save
+        self.clear = clear
     }
 
     /// Replaces the settings and writes them, so that they are there at the next launch.
     public func update(_ settings: ServerSettings) throws {
         self.settings = settings
         save(try JSONEncoder().encode(settings))
+    }
+
+    /// Forgets everything the user has saved and goes back to what the app starts with, as on first launch.
+    public func reset() {
+        clear()
+        settings = defaults
     }
 }
 
@@ -39,7 +51,8 @@ public extension SettingsStore {
         return SettingsStore(
             defaults: defaults,
             load: { userDefaults.data(forKey: key) },
-            save: { userDefaults.set($0, forKey: key) }
+            save: { userDefaults.set($0, forKey: key) },
+            clear: { userDefaults.removeObject(forKey: key) }
         )
     }
 }

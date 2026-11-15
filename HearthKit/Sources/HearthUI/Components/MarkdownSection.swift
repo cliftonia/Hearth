@@ -186,7 +186,7 @@ private struct CodeBlockSection: View {
             }
         }
         .cardSurface()
-        .sensoryFeedback(.success, trigger: copyCount)
+        .haptic(.success, trigger: copyCount)
     }
 
     private func copyAction() {

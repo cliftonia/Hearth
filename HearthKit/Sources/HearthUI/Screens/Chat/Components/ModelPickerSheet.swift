@@ -180,6 +180,7 @@ struct ModelPickerSheet: View {
     /// One model: its name, what it is good for, and a tick if it is the one chosen. Choosing closes the sheet.
     private func row(title: String, detail: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: {
+            Haptics.play(.selection)
             action()
             dismiss()
         }, label: {

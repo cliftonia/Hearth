@@ -14,17 +14,33 @@ public struct PromptBuilder: Sendable {
     public static let maximumDocumentLength = 60_000
 
     private let instructions: String
+    private let profile: UserProfile
     private let memories: [Memory]
     private let isPrivate: Bool
+    private let project: Project?
+    private let projectFence: String
 
     /// - Parameters:
     ///   - instructions: The user's standing instructions, if any.
+    ///   - profile: The user's name and what they like to be called, as given in Settings.
     ///   - memories: What is remembered about the user from earlier conversations.
     ///   - isPrivate: Whether the conversation is private, with no memory to read or write.
-    public init(instructions: String, memories: [Memory] = [], isPrivate: Bool = false) {
+    ///   - project: The project the conversation belongs to, whose instructions and reference files it is given.
+    ///   - projectFence: The marker that opens and closes each quoted reference file.
+    public init(
+        instructions: String,
+        profile: UserProfile = UserProfile(),
+        memories: [Memory] = [],
+        isPrivate: Bool = false,
+        project: Project? = nil,
+        projectFence: String = PromptBuilder.makeFence(prefix: "FILE")
+    ) {
         self.instructions = instructions.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.profile = profile
         self.memories = memories
         self.isPrivate = isPrivate
+        self.project = project
+        self.projectFence = projectFence
     }
 
     /// The system message, followed by every message of the conversation that has anything in it.
@@ -120,9 +136,9 @@ public struct PromptBuilder: Sendable {
         + "or a file, or sensitive details (health, politics, religion, finances, identity or account numbers) unless the "
         + "user asks you to. After using a tool, carry on with your reply."
 
-    /// A marker no web page can predict.
-    public static func makeFence() -> String {
-        "WEB-" + UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(16).lowercased()
+    /// A marker that no web page, and no file, can predict.
+    public static func makeFence(prefix: String = "WEB") -> String {
+        "\(prefix)-" + UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(16).lowercased()
     }
 
     /// The text to search the web for: the user's latest message, kept to a searchable length.
@@ -134,7 +150,24 @@ public struct PromptBuilder: Sendable {
         return query.isEmpty ? nil : String(query)
     }
 
-    /// The system message: who the model is and the date, then how to write, the user's instructions, memories and any search results.
+    /// Who the model is talking to, in one line; `nil` when the user has given no name.
+    ///
+    /// The name is a setting, not a memory, so a private conversation is told it too. It is quoted as a name and
+    /// kept to one line, so that it cannot pass itself off as anything else.
+    private var profileLine: String? {
+        let fullName = profile.fullName.replacingOccurrences(of: "\"", with: "'")
+        let nickname = profile.nickname.replacingOccurrences(of: "\"", with: "'")
+        if !fullName.isEmpty, !nickname.isEmpty, fullName != nickname {
+            return "The user's name is \"\(fullName)\", and they like to be called \"\(nickname)\"."
+        }
+        if !fullName.isEmpty {
+            return "The user's name is \"\(fullName)\"."
+        }
+        return nickname.isEmpty ? nil : "The user likes to be called \"\(nickname)\"."
+    }
+
+    /// The system message: who the model is and the date, then how to write, who the user is, the user's
+    /// instructions, the project's instructions and files, memories and any search results.
     private func systemText(sources: [SearchSource], style: ReplyStyle, now: Date) -> String {
         var parts = ["You are a helpful, direct assistant. Today is \(now.formatted(date: .complete, time: .omitted))."]
         switch style {
@@ -146,8 +179,14 @@ public struct PromptBuilder: Sendable {
                     + "Use no Markdown, lists, code or symbols."
             )
         }
+        if let profileLine {
+            parts.append(profileLine)
+        }
         if !instructions.isEmpty {
             parts.append("The user has given these standing instructions. Follow them:\n\(instructions)")
+        }
+        if let project {
+            parts += Self.projectParts(for: project, fence: projectFence)
         }
         if isPrivate {
             parts.append(

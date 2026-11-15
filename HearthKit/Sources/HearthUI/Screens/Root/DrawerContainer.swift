@@ -25,7 +25,10 @@ struct DrawerContainer<Drawer: View, Content: View>: View {
                     .opacity(Self.scrimOpacity * progress)
                     .ignoresSafeArea()
                     .allowsHitTesting(isOpen)
-                    .onTapGesture { isOpen = false }
+                    .onTapGesture {
+                        Haptics.play(.light)
+                        isOpen = false
+                    }
                     .accessibilityHidden(true)
                 drawer
                     .frame(width: width)

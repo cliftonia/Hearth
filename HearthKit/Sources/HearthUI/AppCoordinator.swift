@@ -4,15 +4,18 @@ import SwiftUI
 /// Builds the screens, wires them together and decides where each request leads.
 ///
 /// The app has one coordinator. Each presenter reports to it through a delegate protocol, which it conforms to in
-/// the extensions below; it answers by changing the `AppRouter` or by asking another presenter to act.
+/// the extensions below; it answers by changing the `AppRouter` or by asking another presenter to act. What it does
+/// for projects is in `AppCoordinator+Projects`.
 @MainActor
 public final class AppCoordinator {
-    let router = AppRouter()
+    let router: AppRouter
     /// Read by the root view for the chosen theme.
     let settingsStore: SettingsStore
     let chatPresenter: ChatPresenter
     let sidebarPresenter: SidebarPresenter
     let settingsPresenter: SettingsPresenter
+    let projectPresenter: ProjectPresenter
+    let projectPickerPresenter: ProjectPickerPresenter
     let voicePresenter: VoicePresenter
     let lockPresenter: LockPresenter
     /// A voice conversation asked for while locked, begun once the owner is in.
@@ -21,40 +24,37 @@ public final class AppCoordinator {
 
     public init(dependencies: AppDependencies) {
         let settingsStore = dependencies.settingsStore
+        let router = AppRouter()
         let lockPresenter = LockPresenter(authentication: dependencies.authentication) { settingsStore.settings.isLockEnabled }
         let chatPresenter = ChatPresenter(dependencies: ChatPresenter.Dependencies(
             chat: dependencies.chat,
             speech: dependencies.speech,
             image: dependencies.image,
             dictation: dependencies.dictation,
+            notifications: dependencies.notifications,
             settingsStore: dependencies.settingsStore,
             modelStore: dependencies.modelStore,
             conversationStore: dependencies.conversationStore,
             memoryStore: dependencies.memoryStore,
-            isLocked: { lockPresenter.viewModel.isLocked }
+            projectStore: dependencies.projectStore,
+            isLocked: { lockPresenter.viewModel.isLocked },
+            isOnScreen: { router.isSceneActive }
         ))
-        let fetchModels = dependencies.fetchModels
+        self.router = router
         self.settingsStore = settingsStore
         self.chatPresenter = chatPresenter
         self.sidebarPresenter = SidebarPresenter(
             conversationStore: dependencies.conversationStore,
+            projectStore: dependencies.projectStore,
             modelStore: dependencies.modelStore,
             settingsStore: settingsStore,
             selectedConversationID: { chatPresenter.viewModel.conversation.id }
         )
         self.lockPresenter = lockPresenter
-        self.settingsPresenter = SettingsPresenter(
-            settingsStore: settingsStore,
-            speech: dependencies.speech,
-            image: dependencies.image,
-            authentication: dependencies.authentication,
-            memoryStore: dependencies.memoryStore
-        ) { settings in
-            guard let baseURL = settings.ollamaURL else {
-                throw ChatError.serverNotConfigured
-            }
-            return try await fetchModels(baseURL).count
-        }
+        self.settingsPresenter = Self.makeSettingsPresenter(dependencies: dependencies, chatPresenter: chatPresenter)
+        let (projectStore, conversationStore) = (dependencies.projectStore, dependencies.conversationStore)
+        self.projectPresenter = ProjectPresenter(projectStore: projectStore, conversationStore: conversationStore, interactor: dependencies.projects)
+        self.projectPickerPresenter = ProjectPickerPresenter(projectStore: projectStore, conversationStore: conversationStore)
         self.voicePresenter = VoicePresenter(dependencies: VoicePresenter.Dependencies(
             dictation: dependencies.dictation,
             speech: dependencies.speech,
@@ -63,9 +63,56 @@ public final class AppCoordinator {
             runTurn: { words, onDelta in await chatPresenter.submit(text: words, style: .voice, onDelta: onDelta) },
             stopTurn: { await chatPresenter.stopAction() }
         ))
+        connectDelegates()
+        listenForNotificationTaps(dependencies.notifications)
+    }
+
+    private static func makeSettingsPresenter(dependencies: AppDependencies, chatPresenter: ChatPresenter) -> SettingsPresenter {
+        let fetchModels = dependencies.fetchModels
+        return SettingsPresenter(dependencies: SettingsPresenter.Dependencies(
+            settingsStore: dependencies.settingsStore,
+            memoryStore: dependencies.memoryStore,
+            profileStore: dependencies.profileStore,
+            speech: dependencies.speech,
+            image: dependencies.image,
+            eraser: dependencies.eraser,
+            authentication: dependencies.authentication,
+            notifications: dependencies.notifications,
+            fetchModels: { settings in
+                guard let baseURL = settings.ollamaURL else {
+                    throw ChatError.serverNotConfigured
+                }
+                return try await fetchModels(baseURL).count
+            },
+            quietChat: { await chatPresenter.quietAction() }
+        ))
+    }
+
+    /// Opens the chat of each notification the user taps, for as long as the app runs.
+    private func listenForNotificationTaps(_ notifications: NotificationProvider) {
+        let taps = notifications.taps()
+        Task { [weak self] in
+            for await id in taps {
+                self?.openConversation(id)
+            }
+        }
+    }
+
+    /// Goes straight to a chat, as a tapped notification asks. While the app is locked the chat opens behind the lock.
+    private func openConversation(_ id: Conversation.ID) {
+        router.isSidebarOpen = false
+        router.isSettingsPresented = false
+        router.projectSheet = nil
+        Task { await chatPresenter.openNotifiedConversationAction(id) }
+    }
+
+    /// Makes the coordinator the delegate of every presenter, so that each can ask it for what leads off its screen.
+    private func connectDelegates() {
         chatPresenter.delegate = self
         sidebarPresenter.delegate = self
         settingsPresenter.delegate = self
+        projectPresenter.delegate = self
+        projectPickerPresenter.delegate = self
         voicePresenter.delegate = self
         lockPresenter.delegate = self
     }
@@ -80,6 +127,7 @@ public final class AppCoordinator {
         if destination == "new" {
             router.isSidebarOpen = false
             router.isSettingsPresented = false
+            router.projectSheet = nil
             router.isVoicePresented = false
             Task { await chatPresenter.newChatAction() }
         } else if destination == "voice" {
@@ -106,6 +154,7 @@ public final class AppCoordinator {
         }
         router.isSidebarOpen = false
         router.isSettingsPresented = false
+        router.projectSheet = nil
         router.isVoicePresented = true
     }
 
@@ -140,6 +189,10 @@ extension AppCoordinator: ChatPresenterDelegate {
     func chatPresenterDidRequestSettings(_ presenter: ChatPresenter) {
         router.isSettingsPresented = true
     }
+
+    func chatPresenter(_ presenter: ChatPresenter, didRequestProjectFor id: Conversation.ID) {
+        presentProjectPicker(for: id)
+    }
 }
 
 // MARK: - SidebarPresenterDelegate
@@ -162,9 +215,23 @@ extension AppCoordinator: SidebarPresenterDelegate {
         chatPresenter.conversationWasRenamed(id, to: title)
     }
 
-    func sidebarPresenterDidRequestNewChat(_ presenter: SidebarPresenter) {
+    func sidebarPresenter(_ presenter: SidebarPresenter, didRequestNewChatIn projectID: Project.ID?) {
         router.isSidebarOpen = false
-        Task { await chatPresenter.newChatAction() }
+        Task { await chatPresenter.newChatAction(in: projectID) }
+    }
+
+    func sidebarPresenterDidRequestNewProject(_ presenter: SidebarPresenter) {
+        projectPresenter.begin()
+        router.projectSheet = .editor
+    }
+
+    func sidebarPresenter(_ presenter: SidebarPresenter, didRequestEditing projectID: Project.ID) {
+        projectPresenter.begin(editing: projectID)
+        router.projectSheet = .editor
+    }
+
+    func sidebarPresenter(_ presenter: SidebarPresenter, didRequestProjectFor id: Conversation.ID) {
+        presentProjectPicker(for: id)
     }
 
     func sidebarPresenterDidRequestSettings(_ presenter: SidebarPresenter) {
@@ -181,6 +248,16 @@ extension AppCoordinator: SettingsPresenterDelegate {
         if didSave {
             Task { await chatPresenter.refreshModelsAction() }
         }
+    }
+
+    /// With everything erased the app goes back to how it first opened: no sheet, every chat list choice
+    /// forgotten, an empty chat, and the models of the server it was built to start with.
+    func settingsPresenterDidErase(_ presenter: SettingsPresenter) {
+        router.isSettingsPresented = false
+        router.isSidebarOpen = false
+        router.isSidebarPinned = true
+        sidebarPresenter.viewModel.selectedProjectID = nil
+        Task { await chatPresenter.resetAction() }
     }
 }
 
@@ -199,6 +276,7 @@ extension AppCoordinator: LockPresenterDelegate {
     func lockPresenterDidLock(_ presenter: LockPresenter) {
         let wasInVoice = router.isVoicePresented
         router.isSettingsPresented = false
+        router.projectSheet = nil
         router.isVoicePresented = false
         router.isSidebarOpen = false
         sidebarPresenter.viewModel.isRenaming = false

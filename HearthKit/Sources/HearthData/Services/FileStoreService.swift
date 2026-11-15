@@ -29,6 +29,14 @@ public struct FileStoreService: Sendable {
             .map { try Data(contentsOf: $0) }
     }
 
+    /// Removes every blob, and the directory with them. Emptying a directory that is not there is not an error.
+    public func deleteAll() async throws {
+        guard FileManager.default.fileExists(atPath: directoryURL.path(percentEncoded: false)) else {
+            return
+        }
+        try FileManager.default.removeItem(at: directoryURL)
+    }
+
     /// Removes the named blob. Deleting one that is not there is not an error.
     public func delete(name: String) async throws {
         let fileURL = directoryURL.appending(path: name)

@@ -9,35 +9,123 @@ extension ChatPresenter {
             await stopDictation()
             return
         }
-        guard await dependencies.dictation.requestAuthorization() else {
-            viewModel.error = ErrorViewConfiguration(message: Strings.errorDictationDenied, retryActionLabel: nil)
+        // A press on the composer is already on its way to listening.
+        guard !viewModel.holdToTalk.isActive, let updates = await beginListening(isStillWanted: { true }) else {
             return
         }
-        await stopSpeaking()
-        do {
-            let updates = try await dependencies.dictation.start()
-            let existing = viewModel.draft
-            viewModel.isDictating = true
-            dictationTask = Task {
-                for await update in updates {
-                    self.viewModel.draft = [existing, update.text].filter { !$0.isEmpty }.joined(separator: " ")
-                }
-                self.viewModel.isDictating = false
+        let existing = viewModel.draft
+        viewModel.isDictating = true
+        dictationTask = Task {
+            for await update in updates {
+                self.viewModel.draft = [existing, update.text].filter { !$0.isEmpty }.joined(separator: " ")
             }
-        } catch {
-            logger.error("Dictation could not start: \(error.localizedDescription, privacy: .public)")
-            viewModel.error = ErrorViewConfiguration(message: Strings.errorDictationUnavailable, retryActionLabel: nil)
+            self.viewModel.isDictating = false
         }
     }
 
-    /// Ends dictation and waits for the last words to reach the draft.
+    /// Ends dictation, however it was begun, and waits for the last words to arrive.
     func stopDictation() async {
+        // A press still waiting for the recogniser learns here that it is no longer wanted.
+        viewModel.holdToTalk.release()
         guard viewModel.isDictating else {
             return
         }
         await dependencies.dictation.stop()
         await dictationTask?.value
         viewModel.isDictating = false
+    }
+
+    /// Asks for leave to listen, silences any reading aloud and starts the recogniser, showing why if it cannot.
+    ///
+    /// - Parameter isStillWanted: Asked after each wait, since leave may take as long as the user takes to answer.
+    ///   When it says no, the recogniser is not started, or is stopped again, and nothing is returned.
+    /// - Returns: What is heard, or `nil` if listening did not begin.
+    private func beginListening(isStillWanted: () -> Bool) async -> AsyncStream<DictationUpdate>? {
+        guard await dependencies.dictation.requestAuthorization() else {
+            viewModel.error = ErrorViewConfiguration(message: Strings.errorDictationDenied, retryActionLabel: nil)
+            return nil
+        }
+        guard isStillWanted() else {
+            return nil
+        }
+        await stopSpeaking()
+        guard isStillWanted() else {
+            return nil
+        }
+        do {
+            let updates = try await dependencies.dictation.start()
+            guard isStillWanted() else {
+                await dependencies.dictation.stop()
+                return nil
+            }
+            return updates
+        } catch {
+            logger.error("Dictation could not start: \(error.localizedDescription, privacy: .public)")
+            viewModel.error = ErrorViewConfiguration(message: Strings.errorDictationUnavailable, retryActionLabel: nil)
+            return nil
+        }
+    }
+
+    // MARK: Hold to talk
+
+    /// A finger has rested on the composer: starts recording, unless something is written or dictation is under way.
+    ///
+    /// The press is noted before anything is waited for, so that a release arriving straight after it is not missed.
+    func holdToTalkBeganAction() {
+        guard viewModel.holdToTalk.press(isDraftEmpty: viewModel.draft.isEmpty, isDictating: viewModel.isDictating) else {
+            return
+        }
+        Task { await self.holdToTalk() }
+    }
+
+    /// The finger lifted or slid away, or the stop control was tapped. Harmless when nothing is held.
+    func holdToTalkEndedAction() {
+        guard viewModel.holdToTalk.release() else {
+            return
+        }
+        Task { await self.stopDictation() }
+    }
+
+    /// Sees one press through from start to finish: listens until dictation is stopped, by the finger or by
+    /// anything else, then puts what was heard into the draft. However it ends, the composer is left at rest
+    /// or with words in it, never still recording.
+    private func holdToTalk() async {
+        let updates = await beginListening(isStillWanted: { self.viewModel.holdToTalk.isStillWanted })
+        guard let updates, viewModel.holdToTalk.begin() else {
+            // Refused, unavailable, or let go of before the recogniser was ready.
+            if updates != nil {
+                await dependencies.dictation.stop()
+            }
+            viewModel.holdToTalk.finish()
+            return
+        }
+        viewModel.isDictating = true
+        // The words wait in the press until it ends, so the composer keeps its resting shape under the finger.
+        let listening = Task {
+            for await update in updates {
+                self.viewModel.holdToTalk.hear(update.text)
+            }
+            self.viewModel.isDictating = false
+        }
+        dictationTask = listening
+        let levels = await dependencies.dictation.levels()
+        let meter = Task {
+            for await level in levels {
+                self.viewModel.voiceLevel = level
+            }
+        }
+        await listening.value
+        meter.cancel()
+        if !viewModel.holdToTalk.isStopRequested {
+            // The recogniser gave up by itself with the finger still down; let the microphone go.
+            await dependencies.dictation.stop()
+        }
+        viewModel.voiceLevel = 0
+        guard let words = viewModel.holdToTalk.finish() else {
+            return
+        }
+        viewModel.draft = [viewModel.draft, words].filter { !$0.isEmpty }.joined(separator: " ")
+        viewModel.dictatedDraftCount += 1
     }
 
     /// Reads a reply aloud, or stops if that reply is already being read.

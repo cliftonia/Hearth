@@ -139,7 +139,7 @@ struct MessageSection: View {
                 versionStepper(versionAction)
             }
         }
-        .sensoryFeedback(.success, trigger: copyCount)
+        .haptic(.success, trigger: copyCount)
     }
 
     /// Copy, share and read aloud, for a reply made of words.
@@ -166,14 +166,20 @@ struct MessageSection: View {
     private func versionStepper(_ action: @escaping (Int) -> Void) -> some View {
         let index = message.versionIndex
         return HStack(spacing: 0) {
-            actionButton(systemImage: "chevron.left", label: Strings.previousVersion) { action(index - 1) }
+            actionButton(systemImage: "chevron.left", label: Strings.previousVersion) {
+                Haptics.play(.selection)
+                action(index - 1)
+            }
                 .disabled(index == 0)
                 .opacity(index == 0 ? 0.35 : 1)
             Text(verbatim: "\(index + 1)/\(message.versionCount)")
                 .font(.footnote.monospacedDigit())
                 .foregroundStyle(HearthColor.mute)
                 .accessibilityLabel(Strings.versionPosition(number: index + 1, total: message.versionCount))
-            actionButton(systemImage: "chevron.right", label: Strings.nextVersion) { action(index + 1) }
+            actionButton(systemImage: "chevron.right", label: Strings.nextVersion) {
+                Haptics.play(.selection)
+                action(index + 1)
+            }
                 .disabled(index == message.versionCount - 1)
                 .opacity(index == message.versionCount - 1 ? 0.35 : 1)
         }

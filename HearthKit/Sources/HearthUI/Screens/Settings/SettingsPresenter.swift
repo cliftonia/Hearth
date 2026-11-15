@@ -3,44 +3,54 @@ import HearthCore
 import HearthDomain
 import os
 
-/// What the settings tell the coordinator: that the sheet should close, and whether anything was saved.
+/// What the settings tell the coordinator: that the sheet should close, and whether anything was saved or erased.
 @MainActor
 protocol SettingsPresenterDelegate: AnyObject {
     func settingsPresenterDidFinish(_ presenter: SettingsPresenter, didSave: Bool)
+    /// Everything on the device has been erased; the app is to start again as on first launch.
+    func settingsPresenterDidErase(_ presenter: SettingsPresenter)
 }
 
 /// Edits a draft of the settings, which is kept only when the user taps Done.
 ///
-/// The theme and the memories are the exceptions: they take effect at once.
+/// The pushed pages take part in the same draft: the names and the instructions on the profile page are kept by
+/// Done and let go by Cancel, like any field on the first page. The exceptions take effect at once, because they
+/// are acts more than settings or need to be felt to be judged: the theme, the memories, the profile photo, the
+/// haptics switch, the notification switches, and erasing everything. The work is spread over `+Profile` and
+/// `+Notifications`.
 @MainActor
 final class SettingsPresenter {
+    /// What the settings are built from.
+    struct Dependencies {
+        let settingsStore: SettingsStore
+        let memoryStore: MemoryStore
+        let profileStore: ProfileStore
+        let speech: SpeechInteractor
+        let image: ImageInteractor
+        let eraser: EraseInteractor
+        let authentication: AuthenticationProvider
+        let notifications: NotificationProvider
+        /// Counts the models the given settings can reach, without changing any shared state.
+        let fetchModels: @Sendable (ServerSettings) async throws -> Int
+        /// Stops whatever the chat is doing, so that nothing is written while everything is being erased.
+        let quietChat: @MainActor () async -> Void
+    }
+
     let viewModel = SettingsViewModel()
     weak var delegate: (any SettingsPresenterDelegate)?
 
-    private let settingsStore: SettingsStore
-    private let speech: SpeechInteractor
-    private let image: ImageInteractor
-    private let fetchModels: @Sendable (ServerSettings) async throws -> Int
-    private let authentication: AuthenticationProvider
-    private let memoryStore: MemoryStore
-    private let logger = Logger(for: SettingsPresenter.self)
+    let dependencies: Dependencies
+    let logger = Logger(for: SettingsPresenter.self)
     private var previewTask: Task<Void, Never>?
 
-    /// - Parameter fetchModels: Counts the models the given settings can reach, without changing any shared state.
-    init(
-        settingsStore: SettingsStore,
-        speech: SpeechInteractor,
-        image: ImageInteractor,
-        authentication: AuthenticationProvider,
-        memoryStore: MemoryStore,
-        fetchModels: @escaping @Sendable (ServerSettings) async throws -> Int
-    ) {
-        self.settingsStore = settingsStore
-        self.speech = speech
-        self.image = image
-        self.authentication = authentication
-        self.memoryStore = memoryStore
-        self.fetchModels = fetchModels
+    private var settingsStore: SettingsStore { dependencies.settingsStore }
+    private var speech: SpeechInteractor { dependencies.speech }
+    private var image: ImageInteractor { dependencies.image }
+    private var authentication: AuthenticationProvider { dependencies.authentication }
+    private var memoryStore: MemoryStore { dependencies.memoryStore }
+
+    init(dependencies: Dependencies) {
+        self.dependencies = dependencies
     }
 
     // MARK: Loading
@@ -53,6 +63,11 @@ final class SettingsPresenter {
         viewModel.speechAddress = settings.speechAddress
         viewModel.imageAddress = settings.imageAddress
         viewModel.imageModel = settings.imageModel
+        viewModel.fullName = settings.fullName
+        viewModel.nickname = settings.nickname
+        viewModel.isHapticsEnabled = settings.isHapticsEnabled
+        viewModel.isReplyNotificationsEnabled = settings.isReplyNotificationsEnabled
+        viewModel.profileError = nil
         viewModel.voice = settings.voice
         viewModel.appearance = settings.appearance
         viewModel.customInstructions = settings.customInstructions
@@ -64,6 +79,7 @@ final class SettingsPresenter {
         viewModel.newMemoryText = ""
         viewModel.connectionCheck = .idle
         viewModel.voicePreview = .idle
+        await loadProfilePhoto()
         await loadVoicesAction()
         await loadImageModelsAction()
     }
@@ -130,7 +146,7 @@ final class SettingsPresenter {
         }
         viewModel.connectionCheck = .checking
         do {
-            viewModel.connectionCheck = .succeeded(modelCount: try await fetchModels(draft))
+            viewModel.connectionCheck = .succeeded(modelCount: try await dependencies.fetchModels(draft))
         } catch {
             logger.error("Connection test failed: \(error.localizedDescription, privacy: .public)")
             viewModel.connectionCheck = .failed(message: ErrorViewConfiguration(from: error).message)
@@ -207,13 +223,15 @@ final class SettingsPresenter {
     }
 
     /// The settings as they stand in the form, with stray spaces trimmed. What the form does not show is carried over.
-    private var draft: ServerSettings {
+    var draft: ServerSettings {
         ServerSettings(
             ollamaAddress: viewModel.ollamaAddress.trimmingCharacters(in: .whitespaces),
             searchAddress: viewModel.searchAddress.trimmingCharacters(in: .whitespaces),
             speechAddress: viewModel.speechAddress.trimmingCharacters(in: .whitespaces),
             imageAddress: viewModel.imageAddress.trimmingCharacters(in: .whitespaces),
             imageModel: viewModel.imageModel,
+            fullName: viewModel.profile.fullName,
+            nickname: viewModel.profile.nickname,
             voice: viewModel.voice.trimmingCharacters(in: .whitespaces),
             defaultModelID: settingsStore.settings.defaultModelID,
             appearance: viewModel.appearance,
@@ -223,7 +241,9 @@ final class SettingsPresenter {
             isFollowUpsEnabled: viewModel.isFollowUpsEnabled,
             thinkingLevel: settingsStore.settings.thinkingLevel,
             isPageReadingEnabled: viewModel.isPageReadingEnabled,
-            isMemoryEnabled: viewModel.isMemoryEnabled
+            isMemoryEnabled: viewModel.isMemoryEnabled,
+            isHapticsEnabled: viewModel.isHapticsEnabled,
+            isReplyNotificationsEnabled: viewModel.isReplyNotificationsEnabled
         )
     }
 }

@@ -6,15 +6,19 @@ public struct ConversationDataProvider: Sendable {
     public let loadAll: @Sendable () async throws -> [Conversation]
     public let save: @Sendable (Conversation) async throws -> Void
     public let delete: @Sendable (Conversation.ID) async throws -> Void
+    /// Removes everything saved at once, including anything that can no longer be read. Without it, each is removed in turn.
+    public let deleteAll: (@Sendable () async throws -> Void)?
 
     public init(
         loadAll: @escaping @Sendable () async throws -> [Conversation],
         save: @escaping @Sendable (Conversation) async throws -> Void,
-        delete: @escaping @Sendable (Conversation.ID) async throws -> Void
+        delete: @escaping @Sendable (Conversation.ID) async throws -> Void,
+        deleteAll: (@Sendable () async throws -> Void)? = nil
     ) {
         self.loadAll = loadAll
         self.save = save
         self.delete = delete
+        self.deleteAll = deleteAll
     }
 }
 
@@ -31,6 +35,9 @@ public extension ConversationDataProvider {
             },
             delete: { id in
                 try await service.delete(name: fileName(for: id))
+            },
+            deleteAll: {
+                try await service.deleteAll()
             }
         )
     }

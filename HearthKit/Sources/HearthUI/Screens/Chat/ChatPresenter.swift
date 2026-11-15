@@ -9,11 +9,14 @@ protocol ChatPresenterDelegate: AnyObject {
     func chatPresenterDidRequestSidebar(_ presenter: ChatPresenter)
     func chatPresenterDidRequestVoice(_ presenter: ChatPresenter)
     func chatPresenterDidRequestSettings(_ presenter: ChatPresenter)
+    /// A project is to be chosen for the chat.
+    func chatPresenter(_ presenter: ChatPresenter, didRequestProjectFor id: Conversation.ID)
 }
 
 /// Runs the chat screen: sends messages, streams replies, and keeps the open conversation saved.
 ///
-/// The work is spread over extensions by subject: `+Replying`, `+Pictures`, `+Editing`, `+FollowUps`, `+Menu` and `+Voice`.
+/// The work is spread over extensions by subject: `+Replying`, `+Pictures`, `+Editing`, `+FollowUps`, `+Menu`, `+Greeting`,
+/// `+Notifications` and `+Voice`.
 @MainActor
 final class ChatPresenter {
     /// What the chat is built from: the interactors, the dictation provider and the stores it shares with other screens.
@@ -22,12 +25,16 @@ final class ChatPresenter {
         let speech: SpeechInteractor
         let image: ImageInteractor
         let dictation: DictationProvider
+        let notifications: NotificationProvider
         let settingsStore: SettingsStore
         let modelStore: ModelStore
         let conversationStore: ConversationStore
         let memoryStore: MemoryStore
+        let projectStore: ProjectStore
         /// Whether the app is locked, in which case nothing is read aloud.
         let isLocked: @MainActor () -> Bool
+        /// Whether the app is in front of the user at this moment, in which case a finished reply needs no notification.
+        let isOnScreen: @MainActor () -> Bool
     }
 
     let viewModel = ChatViewModel()
@@ -58,12 +65,17 @@ final class ChatPresenter {
 
     // MARK: Loading
 
-    /// Reads the saved conversations and memories, then asks the server for its models. Run as the chat appears.
+    /// Reads the saved conversations, projects and memories, then asks the server for its models. Run as the chat appears.
     func loadAction() async {
         do {
             try await dependencies.conversationStore.load()
         } catch {
             logger.error("Loading conversations failed: \(error.localizedDescription, privacy: .public)")
+        }
+        do {
+            try await dependencies.projectStore.load()
+        } catch {
+            logger.error("Loading projects failed: \(error.localizedDescription, privacy: .public)")
         }
         do {
             try await dependencies.memoryStore.load()
@@ -201,14 +213,16 @@ final class ChatPresenter {
     }
 
     /// Stops whatever is under way and clears the screen for a fresh conversation with the same model.
-    func newChatAction() async {
+    ///
+    /// - Parameter projectID: The project the new chat belongs to; `nil` for an ordinary chat.
+    func newChatAction(in projectID: Project.ID? = nil) async {
         await stopAction()
         await stopSpeaking()
         cancelEditAction()
         viewModel.draft = ""
         viewModel.followUps = []
         viewModel.memoryNotice = nil
-        viewModel.conversation = Conversation(modelID: viewModel.selectedModel?.id)
+        viewModel.conversation = Conversation(modelID: viewModel.selectedModel?.id, projectID: projectID)
         viewModel.error = nil
     }
 

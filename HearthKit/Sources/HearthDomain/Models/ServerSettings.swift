@@ -27,6 +27,12 @@ public struct ServerSettings: Hashable, Codable, Sendable {
     public let imageAddress: String
     /// The model new pictures are made with. With none chosen, the first the server offers is used.
     public let imageModel: ImageModelKind?
+    /// The user's name in full, as they would sign it. Blank when they have not given one.
+    public let fullName: String
+    /// What the user likes to be called, for the greeting on an empty chat and for the model. Blank leaves the app
+    /// to use the first word of the full name, then to look among the memories, and to greet without a name if it
+    /// finds none. Saved as `userName` before there was a profile; that key is still read.
+    public let nickname: String
     /// The voice replies are spoken in, by its name on the speech server.
     public let voice: String
     /// The model a new conversation starts with, if one has been chosen.
@@ -45,6 +51,10 @@ public struct ServerSettings: Hashable, Codable, Sendable {
     public let isPageReadingEnabled: Bool
     /// Whether lasting facts about the user are remembered and carried into every conversation.
     public let isMemoryEnabled: Bool
+    /// Whether the phone taps back when something is done: a message sent, a reply finished, a switch thrown.
+    public let isHapticsEnabled: Bool
+    /// Whether a notification is posted when a reply or a picture finishes while the app is not on screen.
+    public let isReplyNotificationsEnabled: Bool
 
     public init(
         ollamaAddress: String = "",
@@ -52,6 +62,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         speechAddress: String = "",
         imageAddress: String = "",
         imageModel: ImageModelKind? = nil,
+        fullName: String = "",
+        nickname: String = "",
         voice: String = ServerSettings.defaultVoice,
         defaultModelID: ChatModel.ID? = nil,
         appearance: AppearanceKind = .system,
@@ -61,13 +73,17 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         isFollowUpsEnabled: Bool = true,
         thinkingLevel: ThinkingLevelKind = .medium,
         isPageReadingEnabled: Bool = true,
-        isMemoryEnabled: Bool = true
+        isMemoryEnabled: Bool = true,
+        isHapticsEnabled: Bool = true,
+        isReplyNotificationsEnabled: Bool = false
     ) {
         self.ollamaAddress = ollamaAddress
         self.searchAddress = searchAddress
         self.speechAddress = speechAddress
         self.imageAddress = imageAddress
         self.imageModel = imageModel
+        self.fullName = fullName
+        self.nickname = nickname
         self.voice = voice
         self.defaultModelID = defaultModelID
         self.appearance = appearance
@@ -78,11 +94,14 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         self.thinkingLevel = thinkingLevel
         self.isPageReadingEnabled = isPageReadingEnabled
         self.isMemoryEnabled = isMemoryEnabled
+        self.isHapticsEnabled = isHapticsEnabled
+        self.isReplyNotificationsEnabled = isReplyNotificationsEnabled
     }
 
     /// Settings saved before a field existed are read with that field's default, so nothing saved is lost.
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        let legacy = try decoder.container(keyedBy: LegacyCodingKeys.self)
         self.init(
             ollamaAddress: try container.decodeIfPresent(String.self, forKey: .ollamaAddress) ?? "",
             searchAddress: try container.decodeIfPresent(String.self, forKey: .searchAddress) ?? "",
@@ -90,6 +109,10 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             imageAddress: try container.decodeIfPresent(String.self, forKey: .imageAddress) ?? "",
             // A model the app no longer knows is read as no choice, not as a failure to read the settings.
             imageModel: (try? container.decodeIfPresent(ImageModelKind.self, forKey: .imageModel)) ?? nil,
+            fullName: try container.decodeIfPresent(String.self, forKey: .fullName) ?? "",
+            // A name typed before there was a profile was saved as `userName`; it becomes the nickname.
+            nickname: try container.decodeIfPresent(String.self, forKey: .nickname)
+                ?? legacy.decodeIfPresent(String.self, forKey: .userName) ?? "",
             voice: try container.decodeIfPresent(String.self, forKey: .voice) ?? Self.defaultVoice,
             defaultModelID: try container.decodeIfPresent(ChatModel.ID.self, forKey: .defaultModelID),
             appearance: try container.decodeIfPresent(AppearanceKind.self, forKey: .appearance) ?? .system,
@@ -99,8 +122,15 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             isFollowUpsEnabled: try container.decodeIfPresent(Bool.self, forKey: .isFollowUpsEnabled) ?? true,
             thinkingLevel: try container.decodeIfPresent(ThinkingLevelKind.self, forKey: .thinkingLevel) ?? .medium,
             isPageReadingEnabled: try container.decodeIfPresent(Bool.self, forKey: .isPageReadingEnabled) ?? true,
-            isMemoryEnabled: try container.decodeIfPresent(Bool.self, forKey: .isMemoryEnabled) ?? true
+            isMemoryEnabled: try container.decodeIfPresent(Bool.self, forKey: .isMemoryEnabled) ?? true,
+            isHapticsEnabled: try container.decodeIfPresent(Bool.self, forKey: .isHapticsEnabled) ?? true,
+            isReplyNotificationsEnabled: try container.decodeIfPresent(Bool.self, forKey: .isReplyNotificationsEnabled) ?? false
         )
+    }
+
+    /// Keys the settings were once saved under and are still read from, though no longer written.
+    private enum LegacyCodingKeys: String, CodingKey {
+        case userName
     }
 
     /// The chat server's address in usable form; `nil` when it is blank or not an address. Likewise the two below.
@@ -118,7 +148,9 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         appearance: AppearanceKind? = nil,
         isAutoReadEnabled: Bool? = nil,
         thinkingLevel: ThinkingLevelKind? = nil,
-        imageAddress: String? = nil
+        imageAddress: String? = nil,
+        isHapticsEnabled: Bool? = nil,
+        isReplyNotificationsEnabled: Bool? = nil
     ) -> ServerSettings {
         ServerSettings(
             ollamaAddress: ollamaAddress,
@@ -126,6 +158,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             speechAddress: speechAddress,
             imageAddress: imageAddress ?? self.imageAddress,
             imageModel: imageModel,
+            fullName: fullName,
+            nickname: nickname,
             voice: voice,
             defaultModelID: defaultModelID ?? self.defaultModelID,
             appearance: appearance ?? self.appearance,
@@ -135,7 +169,9 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             isFollowUpsEnabled: isFollowUpsEnabled,
             thinkingLevel: thinkingLevel ?? self.thinkingLevel,
             isPageReadingEnabled: isPageReadingEnabled,
-            isMemoryEnabled: isMemoryEnabled
+            isMemoryEnabled: isMemoryEnabled,
+            isHapticsEnabled: isHapticsEnabled ?? self.isHapticsEnabled,
+            isReplyNotificationsEnabled: isReplyNotificationsEnabled ?? self.isReplyNotificationsEnabled
         )
     }
 
@@ -147,6 +183,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             speechAddress: speechAddress,
             imageAddress: imageAddress,
             imageModel: imageModel,
+            fullName: fullName,
+            nickname: nickname,
             voice: voice,
             defaultModelID: defaultModelID,
             appearance: appearance,
@@ -156,9 +194,14 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             isFollowUpsEnabled: isFollowUpsEnabled,
             thinkingLevel: thinkingLevel,
             isPageReadingEnabled: isPageReadingEnabled,
-            isMemoryEnabled: isMemoryEnabled
+            isMemoryEnabled: isMemoryEnabled,
+            isHapticsEnabled: isHapticsEnabled,
+            isReplyNotificationsEnabled: isReplyNotificationsEnabled
         )
     }
+
+    /// Who the user is, as far as they have said.
+    public var profile: UserProfile { UserProfile(fullName: fullName, nickname: nickname) }
 
     /// Whether a conversation may read and write memory: memory must be on, and the conversation not private.
     public func allowsMemory(in conversation: Conversation) -> Bool {

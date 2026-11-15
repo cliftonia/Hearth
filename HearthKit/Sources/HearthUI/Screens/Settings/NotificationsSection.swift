@@ -1,0 +1,79 @@
+import HearthDomain
+import SwiftUI
+import UIKit
+
+/// The row in the settings that leads to the notification switches, saying whether any is on.
+struct NotificationsSection: View {
+    let presenter: SettingsPresenter
+
+    var body: some View {
+        let isOn = presenter.viewModel.isReplyNotificationsEnabled
+        Section {
+            NavigationLink(destination: { NotificationsPage(presenter: presenter) }, label: {
+                HStack(spacing: HearthSpacing.s8) {
+                    Text(Strings.notifications)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Text(isOn ? Strings.notificationOn : Strings.notificationOff)
+                        .foregroundStyle(HearthColor.mute)
+                }
+            })
+        }
+    }
+}
+
+/// What Hearth may tell the user about while it is not on screen: one switch for each thing it can do today.
+private struct NotificationsPage: View {
+    let presenter: SettingsPresenter
+
+    @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
+
+    var body: some View {
+        @Bindable var viewModel = presenter.viewModel
+        // The system's refusal only matters while a switch is on.
+        let isDenied = viewModel.notificationPermission == .denied && viewModel.isReplyNotificationsEnabled
+        SettingsPage(title: Strings.notifications) {
+            SettingsCard(footer: Strings.notificationsFooter) {
+                SettingsSwitchRow(title: Strings.notifyReplies, detail: Strings.notifyRepliesDetail, isOn: $viewModel.isReplyNotificationsEnabled)
+                    .onChange(of: viewModel.isReplyNotificationsEnabled) { Task { await presenter.replyNotificationsAction() } }
+                // A switch for each kind of notification still to come goes here, as a row of this card beneath a
+                // `Hairline`: scheduled tasks and finished research, once Hearth can do them. None is shown until
+                // it does something.
+            }
+            deniedNotice
+                .opacity(isDenied ? 1 : 0)
+                .frame(height: isDenied ? nil : 0, alignment: .top)
+                .clipped()
+                .allowsHitTesting(isDenied)
+                .accessibilityHidden(!isDenied)
+        }
+        .animation(.snappy, value: isDenied)
+        .task { await presenter.refreshNotificationPermissionAction() }
+        // The user may have been to the Settings app and back.
+        .onChange(of: scenePhase) {
+            if scenePhase == .active {
+                Task { await presenter.refreshNotificationPermissionAction() }
+            }
+        }
+    }
+
+    /// Says that the system is holding notifications back, and leads to where that is changed.
+    private var deniedNotice: some View {
+        VStack(alignment: .leading, spacing: HearthSpacing.s8) {
+            Label(Strings.notificationsDenied, systemImage: "bell.slash")
+                .font(.footnote)
+                .foregroundStyle(HearthColor.ink)
+            Button(Strings.notificationsOpenSettings) {
+                if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+                    openURL(url)
+                }
+            }
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(HearthColor.pine)
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(HearthSpacing.s12)
+        .cardSurface(radius: HearthRadius.banner, border: HearthColor.danger.opacity(0.5))
+    }
+}

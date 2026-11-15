@@ -28,6 +28,8 @@ final class SettingsViewModel {
     var imageAddress = ""
     /// The model new pictures are made with; `nil` leaves the choice to the app.
     var imageModel: ImageModelKind?
+    var fullName = ""
+    var nickname = ""
     var voice = ServerSettings.defaultVoice
     var appearance: AppearanceKind = .system
     var customInstructions = ""
@@ -36,6 +38,13 @@ final class SettingsViewModel {
     var isFollowUpsEnabled = true
     var isPageReadingEnabled = true
     var isMemoryEnabled = true
+
+    // MARK: Applied at once
+
+    /// Whether haptics are played. Like the theme, it takes effect as it is switched, without waiting for Done.
+    var isHapticsEnabled = true
+    /// Whether a reply that finishes off screen is announced. Takes effect as it is switched.
+    var isReplyNotificationsEnabled = false
 
     // MARK: Form state
 
@@ -48,4 +57,12 @@ final class SettingsViewModel {
     var newMemoryText = ""
     var isConfirmingClearMemories = false
     var connectionCheck: ConnectionCheckKind = .idle
+    /// Whether the system lets the app post notifications, as last asked.
+    var notificationPermission: NotificationPermissionKind = .notDetermined
+    var isConfirmingErase = false
+    /// What went wrong on the profile page, if something did: a photo that could not be kept, or an erasure that failed.
+    var profileError: String?
+
+    /// The names as they stand in the form.
+    var profile: UserProfile { UserProfile(fullName: fullName, nickname: nickname) }
 }

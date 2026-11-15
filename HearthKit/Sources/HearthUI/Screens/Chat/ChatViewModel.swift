@@ -23,6 +23,12 @@ final class ChatViewModel {
     /// The search toggle, for models that cannot ask for a search themselves.
     var isSearchEnabled = false
     var isDictating = false
+    /// How far a press on the resting composer has got towards recording, and what it has heard.
+    var holdToTalk = HoldToTalk()
+    /// How loud the voice is while the composer is held, from 0 to 1.
+    var voiceLevel = 0.0
+    /// Counts the times holding to talk has left words in the draft. The composer takes the keyboard on each.
+    var dictatedDraftCount = 0
     /// Whether the sheet for choosing a model, and how hard it thinks, is showing.
     var isModelPickerPresented = false
     /// Whether the alert for renaming the open chat is showing, and the title being typed into it.

@@ -41,7 +41,7 @@ struct PictureSection: View {
                     .buttonStyle(.plain)
                 }
             }
-            .sensoryFeedback(.success, trigger: savedCount)
+            .haptic(.success, trigger: savedCount)
         }
     }
 
@@ -50,7 +50,10 @@ struct PictureSection: View {
         Button(action: { save(image) }, label: {
             Label(Strings.pictureSave, systemImage: "square.and.arrow.down")
         })
-        Button(action: { UIPasteboard.general.image = image }, label: {
+        Button(action: {
+            UIPasteboard.general.image = image
+            Haptics.play(.success)
+        }, label: {
             Label(Strings.copy, systemImage: "doc.on.doc")
         })
     }

@@ -20,11 +20,16 @@ struct RootView: View {
             }
         }
         .onChange(of: scenePhase, initial: true) {
+            coordinator.router.isSceneActive = scenePhase == .active
             let shouldPrompt = coordinator.lockPresenter.sceneChanged(to: scenePhase)
             coordinator.showLockWindow(colorScheme: colorScheme)
             if shouldPrompt {
                 Task { await coordinator.lockPresenter.unlockAction() }
             }
+        }
+        // Every haptic in the app asks this one switch.
+        .onChange(of: coordinator.settingsStore.settings.isHapticsEnabled, initial: true) {
+            Haptics.isEnabled = coordinator.settingsStore.settings.isHapticsEnabled
         }
         .onChange(of: horizontalSizeClass, initial: true) { coordinator.router.isWide = horizontalSizeClass == .regular }
         .onChange(of: isCovered) { coordinator.showLockWindow(colorScheme: colorScheme) }
@@ -34,12 +39,27 @@ struct RootView: View {
             SettingsView(presenter: coordinator.settingsPresenter)
                 .preferredColorScheme(colorScheme)
         }
+        .sheet(item: $router.projectSheet) { sheet in
+            projectSheet(sheet)
+                .preferredColorScheme(colorScheme)
+        }
         .fullScreenCover(isPresented: $router.isVoicePresented) {
             VoiceView(presenter: coordinator.voicePresenter)
                 .preferredColorScheme(colorScheme)
         }
         .tint(HearthColor.pine)
         .preferredColorScheme(colorScheme)
+    }
+
+    /// The sheet that makes or edits a project, or the one that files a chat in a project.
+    @ViewBuilder
+    private func projectSheet(_ sheet: ProjectSheetKind) -> some View {
+        switch sheet {
+        case .editor:
+            ProjectView(presenter: coordinator.projectPresenter)
+        case .picker:
+            ProjectPickerView(presenter: coordinator.projectPickerPresenter)
+        }
     }
 
     /// On a wide screen the conversations stay beside the chat; on a phone they slide in as a drawer.

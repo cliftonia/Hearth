@@ -8,6 +8,8 @@ struct ChatView: View {
 
     let presenter: ChatPresenter
 
+    @Environment(\.scenePhase) private var scenePhase
+
     var body: some View {
         let viewModel = presenter.viewModel
         VStack(spacing: 0) {
@@ -18,6 +20,7 @@ struct ChatView: View {
                     .opacity(viewModel.conversation.messages.isEmpty ? 0 : 1)
                 EmptyChatSection(
                     isServerConfigured: presenter.isServerConfigured,
+                    greeting: presenter.greeting,
                     isPrivate: viewModel.conversation.isPrivate,
                     settingsAction: presenter.settingsAction
                 )
@@ -46,6 +49,16 @@ struct ChatView: View {
         }
         .background(HearthColor.paper.ignoresSafeArea())
         .animation(.snappy, value: viewModel.error)
+        // One haptic as a turn ends, never while its text streams: soft for a reply, fuller for a picture.
+        // Nothing is played for a turn that ends off screen, or one that came to nothing.
+        .onChange(of: viewModel.isStreaming) { _, isStreaming in
+            let last = viewModel.conversation.messages.last
+            guard !isStreaming, scenePhase == .active, viewModel.error == nil, let last, last.role == .assistant, !last.isEmpty else {
+                return
+            }
+            Haptics.play(last.isPicture ? .success : .soft)
+        }
+        .haptic(.error, trigger: viewModel.error) { _, new in new != nil }
         .alert(Strings.renameChat, isPresented: Bindable(viewModel).isRenamingChat) {
             TextField(Strings.chatTitle, text: Bindable(viewModel).chatTitleDraft)
             Button(Strings.cancel, role: .cancel) {}
