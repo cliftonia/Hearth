@@ -7,7 +7,9 @@ public struct AppDependencies {
     let chat: ChatInteractor
     let speech: SpeechInteractor
     let image: ImageInteractor
+    let research: ResearchInteractor
     let dictation: DictationProvider
+    let camera: CameraProvider
     let authentication: AuthenticationProvider
     let notifications: NotificationProvider
     /// Lists the models at a server address, for testing a connection without touching the model store.
@@ -46,9 +48,11 @@ public struct AppDependencies {
         )
         return AppDependencies(
             chat: ChatInteractor(chat: chatProvider, search: .live()),
-            speech: SpeechInteractor(speech: .live(), playback: .live()),
+            speech: makeSpeech(),
             image: ImageInteractor(provider: .live()),
-            dictation: .live(),
+            research: ResearchInteractor(chat: chatProvider, search: .live()),
+            dictation: makeDictation(),
+            camera: makeCamera(),
             authentication: .live(),
             notifications: notifications,
             fetchModels: chatProvider.fetchModels,
@@ -61,5 +65,46 @@ public struct AppDependencies {
             profileStore: profileStore,
             eraser: EraseInteractor(stores: stores, removeNotifications: notifications.removeAll)
         )
+    }
+
+    // MARK: Simulator stand-ins
+
+    /// The words a scripted voice conversation hears, given when the simulator launches the app as the argument
+    /// `-HearthVoiceScript "words"`. `nil` on a device, in a release build, and when the argument is left out.
+    private static var voiceScript: String? {
+        #if DEBUG && targetEnvironment(simulator)
+        UserDefaults.standard.string(forKey: "HearthVoiceScript")
+        #else
+        nil
+        #endif
+    }
+
+    /// The device's cameras. The simulator has none, so a debug build there is given a drawn test card.
+    private static func makeCamera() -> CameraProvider {
+        #if DEBUG && targetEnvironment(simulator)
+        .simulated()
+        #else
+        .live()
+        #endif
+    }
+
+    /// The recogniser, or in the simulator a listener that hears the scripted words when a script is given.
+    private static func makeDictation() -> DictationProvider {
+        #if DEBUG && targetEnvironment(simulator)
+        if let voiceScript {
+            return .scripted(words: voiceScript)
+        }
+        #endif
+        return .live()
+    }
+
+    /// The speech server and the audio player. A scripted conversation is silent and asks nothing of the speech server.
+    private static func makeSpeech() -> SpeechInteractor {
+        #if DEBUG && targetEnvironment(simulator)
+        if voiceScript != nil {
+            return SpeechInteractor(speech: .silent, playback: .silent)
+        }
+        #endif
+        return SpeechInteractor(speech: .live(), playback: .live())
     }
 }

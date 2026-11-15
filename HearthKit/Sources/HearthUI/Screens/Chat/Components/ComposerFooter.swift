@@ -16,6 +16,7 @@ struct ComposerFooter: View {
     /// Whether a finger is resting on the field at this moment, before or during a hold.
     @State private var isPressed = false
     @FocusState private var isFocused: Bool
+    @AccessibilityFocusState private var isVoiceOverFocused: Bool
 
     var body: some View {
         @Bindable var viewModel = presenter.viewModel
@@ -38,6 +39,7 @@ struct ComposerFooter: View {
                         .foregroundStyle(HearthColor.ink)
                         .tint(HearthColor.pine)
                         .focused($isFocused)
+                        .accessibilityFocused($isVoiceOverFocused)
                         .padding(.horizontal, HearthSpacing.s4)
                         .concealed(isHeld)
                         .overlay { holdToTalkTouchLayer }
@@ -94,6 +96,10 @@ struct ComposerFooter: View {
         .onChange(of: viewModel.dictatedDraftCount) {
             isFocused = true
         }
+        // The chat handed back, as when the canvas closes: VoiceOver returns here, and no keyboard is raised.
+        .onChange(of: viewModel.focusRequestCount) {
+            isVoiceOverFocused = true
+        }
     }
 
     // MARK: Arrangement
@@ -113,14 +119,14 @@ struct ComposerFooter: View {
         }
     }
 
-    /// The model the message goes to and how hard it will think, or the picture model while pictures are being made.
+    /// The model the message goes to and the effort chosen for it, or the picture model while pictures are being made.
     /// Tapping it opens the sheet where both are chosen.
     private var modelChip: some View {
         let viewModel = presenter.viewModel
         let name = viewModel.isPictureMode
             ? presenter.selectedPictureModel?.name ?? Strings.pictures
             : viewModel.selectedModel?.displayName ?? Strings.noModel
-        let effort = !viewModel.isPictureMode && viewModel.selectedModel?.canThink == true ? presenter.thinkingLevel.title : ""
+        let effort = viewModel.isPictureMode ? "" : presenter.effortChipTitle
         return Button(action: { viewModel.isModelPickerPresented = true }, label: {
             HStack(spacing: HearthSpacing.s6) {
                 Text(name)
@@ -128,10 +134,13 @@ struct ComposerFooter: View {
                     .foregroundStyle(HearthColor.ink)
                     .lineLimit(1)
                     .truncationMode(.middle)
+                // Research stands out in the brand colour, so it is plain that the next message will be researched.
                 Text(effort)
                     .font(.footnote)
-                    .foregroundStyle(HearthColor.mute)
+                    .foregroundStyle(presenter.isResearchChosen ? HearthColor.pine : HearthColor.mute)
                     .lineLimit(1)
+                    // Research is never shortened; where room is tight the model's name gives way to it.
+                    .fixedSize(horizontal: presenter.isResearchChosen, vertical: false)
                     .layoutPriority(1)
                     .frame(width: effort.isEmpty ? 0 : nil)
             }
@@ -163,6 +172,10 @@ struct ComposerFooter: View {
             // With a picture already made, what is written is taken to be about it.
             let hasPicture = presenter.viewModel.conversation.messages.contains(where: \.isPicture)
             return hasPicture ? Strings.pictureFollowUpPlaceholder : Strings.picturePlaceholder
+        }
+        // Research says so in the field too, where it shows even while the composer is at rest.
+        if presenter.isResearchChosen {
+            return Strings.researchPlaceholder
         }
         // At rest the composer says what can be done with it; once opened it says who is being written to.
         if !isExpanded {

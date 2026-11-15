@@ -48,6 +48,16 @@ enum PresenterFixtures {
         ImageInteractor(provider: ImageDataProvider(fetchCapabilities: { _ in ImageCapabilities() }, render: { _, _, _, _ in throw Unreachable() }))
     }
 
+    /// Research with a chat server that says nothing and a search that finds nothing.
+    static var research: ResearchInteractor {
+        let provider = ChatDataProvider(
+            fetchModels: { _ in [] },
+            streamChat: { _, _ in AsyncThrowingStream { $0.finish() } },
+            complete: { _, _ in "" }
+        )
+        return ResearchInteractor(chat: provider, search: SearchDataProvider { _, _ in [] })
+    }
+
     static var dictation: DictationProvider {
         DictationProvider(requestAuthorization: { false }, start: { AsyncStream { $0.finish() } }, stop: {})
     }

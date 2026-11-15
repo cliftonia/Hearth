@@ -37,6 +37,17 @@ and your conversations stay on the device.
 - **Web search when it is needed**: a model that can call tools searches SearXNG on its own, asks for news when the
   question is about current events, reads the top pages it finds and cites its sources; for a model that cannot call
   tools, a toggle searches before it replies
+- **Deep research**: choose it as the effort in the model sheet, after Light, Medium and High, and ask a question.
+  Hearth has the chat's own model plan a handful of searches, runs them on your SearXNG, reads a dozen of the pages
+  found, takes notes on each, looks once more for anything important that is missing, and writes a report that cites
+  its sources as `[1]`, `[2]`, with the numbered sources listed beneath it. The steps show while it works, Stop ends
+  it at once, and Try again researches again. The choice stays with its chat and is never saved, so a new chat is
+  never researched by accident
+- **Canvas**: a web page, a drawing in SVG, a Markdown document or a long block of code in a reply is folded into
+  a card, and the card opens it in a panel of its own: beside the chat on an iPad in landscape or a Mac, as a
+  full-height sheet on a phone. A page, a drawing or a document can be seen as it is meant to look or as it was
+  written, and copied or shared. Ask for a change and the panel follows the new version as it is written, with
+  arrows to step back to earlier ones. A page runs its own scripts but is shut off from the network
 - **Suggested follow-up questions** under each reply; tap one to ask it
 - **A composer that stays out of the way**: one row at rest, opening out while you write to show the options for
   the reply: web search, how hard to think, and reading aloud
@@ -62,6 +73,11 @@ and your conversations stay on the device.
 ### Voice
 
 - **Voice conversation**: speak, pause, hear the answer, speak again; tap the orb to interrupt
+- **Voice with the camera**: with a model that sees pictures, the camera button in a voice conversation shows what
+  the camera sees in a card above the orb. Each time you finish speaking, one still picture goes with your words, so
+  you can ask "what is this?" or "read that label". It is kept on your message in the chat like any attached photo.
+  Nothing is recorded, the camera starts off every time, and it goes off when the conversation closes or Hearth
+  leaves the screen
 - **Read aloud**: one reply at a time, or every reply with the speaker option in the composer, spoken sentence by
   sentence while it is still being written
 - **Hear this voice**: Settings plays a short sample of the chosen voice before you keep it
@@ -152,6 +168,10 @@ HearthCore    Tagged identifiers, logging
   have reached a public address. Page text is reduced in a single pass that hostile markup cannot slow down. Each
   result's title, snippet and page text are handed to the model inside a fence with a marker made up afresh for
   every search, marked as material, not instructions.
+- **Generated pages**: a page or a drawing shown in the canvas was written by a model, so it is untrusted too. It is
+  loaded from a string with no address of its own into a web view that keeps nothing, may run its own scripts,
+  and can fetch nothing: every `http`, `https` and WebSocket request is blocked, every navigation away from the
+  page is cancelled, so a tapped link opens nothing, and it is given no window, camera, microphone or files.
 - **Design system**: colours, type, spacing, radii, sizes and shadows are tokens, and views use nothing else.
 - **Strings** live in `Localizable.xcstrings`, rebuilt from `Strings.swift` by `python3 Tools/sync_strings.py`.
 
@@ -172,7 +192,12 @@ swiftlint lint
 Tests are written with Swift Testing: the stream decoding, prompt building, sentence chunking for
 speech and the feed that reads a reply aloud, Markdown, maths and web page parsing, memory and its limits, follow-up questions, export, the chat interactor, the
 conversation store, file storage, which addresses a page may be read from, the app lock, the drawer's grouping, the profile and
-the greeting, erasing everything, and when a finished reply is announced and in what words. The codebase holds a
+the greeting, erasing everything, when a finished reply is announced and in what words, the camera of a voice
+conversation (when it runs, when it stops, and the picture sent with a spoken turn), the canvas (which parts of a
+reply are pieces, their kinds and titles, fences left open or nested, which pieces are versions of one another,
+what a generated page may load and where it may go, and how the columns share a wide screen), and deep research: reading
+a model's plan, choosing and spreading sources, tidying citations, the order of its steps, its bounds, stopping it and
+what it does when nothing can be read. The codebase holds a
 zero-warning SwiftLint bar.
 
 The same checks run on every push and pull request through GitHub Actions (`.github/workflows/ci.yml`), together with
@@ -184,6 +209,21 @@ a check that the string catalog matches `Strings.swift` and that each layer impo
   form, such as matrices, stay close to how the model wrote them.
 - **Files are read as text.** PDFs need a text layer, and each file is cut at 60,000 characters.
 - **The voice conversation stops listening while a reply is spoken**, so it cannot hear itself.
+- **The camera sends stills, not video.** One picture is taken as you stop speaking, shrunk to at most 1,280 pixels
+  on its longer side like any attached photo, and sent with that turn; if none can be taken the words go alone. It
+  is asked for the first time you turn it on, and a model that cannot see leaves the button disabled. A picture in
+  a chat closes memory for the rest of it, as an attached photo does. Turned off by Hearth leaving the screen, it
+  stays off until you turn it on again. The simulator has no camera, so a debug build there shows a drawn test
+  card instead.
+- **A canvas piece is a fenced block.** A page or a drawing counts at any length, by its language tag or by how it
+  begins; a document or code counts from 15 lines. Shorter blocks stay in the reply as before. Nothing more is
+  saved: the pieces are read from the reply's text each time, and an open canvas closes with its chat.
+- **Versions are matched simply.** A later piece is a version of the open one when it is the same kind and either
+  has the same title or is the only piece in its reply. Two unrelated pages each alone in a reply are therefore
+  offered as versions of one another.
+- **A page in the canvas cannot reach the network**, so one that loads a script, a font or a picture from a web
+  address shows without it, and its links open nothing. Line numbers are left off code that holds characters the
+  monospaced face lacks, such as emoji, since they would drift out of step.
 - **Follow-up questions and chat titles each cost one short extra request** to the same model.
   Follow-ups can be turned off in Settings.
 - **Memory is deliberately cautious.** At most 50 short memories and two changes a turn. Nothing can be remembered in
@@ -197,5 +237,12 @@ a check that the string catalog matches `Strings.swift` and that each layer impo
   text, so those sites see the device's address rather than the server's. It can be turned off in Settings, leaving
   the model with snippets only. A page can still try to mislead the model; marking its text as untrusted lowers that
   risk but cannot remove it.
+- **Deep research is bounded.** At most 5 planned searches and 3 more to fill a gap, 12 pages and then 4 more, no
+  more than 2 pages from one site, 4 pages fetched at once, 12 seconds for a page, 6,000 characters read from each
+  and 24,000 characters of notes handed to the writer. That is about 15 to 20 requests to the model, all to the one
+  the chat already uses; a run took about 40 seconds with a cloud model, and will take minutes with a large local one.
+  Pages are read by the device under the same rule as any search's pages. If no page can be read, or none says
+  anything about the question, it says so and writes nothing. It needs a search address; without one the choice is
+  listed but cannot be made
 - **A reply keeps streaming for a short while in the background**, as long as iOS allows, usually about half a minute.
 - The app icon is drawn by `python3 Tools/make_icon.py` (needs Pillow).

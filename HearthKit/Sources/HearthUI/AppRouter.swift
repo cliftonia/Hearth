@@ -18,7 +18,18 @@ final class AppRouter {
     /// The drawer of chats on a narrow screen. A wide screen keeps the chats in view and ignores this.
     var isSidebarOpen = false
     /// Whether the screen is wide enough to keep the chats beside the chat. The root view keeps this current.
-    var isWide = false
+    var isWide = false {
+        didSet { matchCanvasSheet() }
+    }
+    /// Whether the canvas is open. A wide screen shows it beside the chat; a narrow one as a sheet.
+    var isCanvasOpen = false {
+        didSet { matchCanvasSheet() }
+    }
+    /// Whether the canvas's sheet is showing: the canvas is open and the screen is narrow. The sheet is bound to
+    /// this, so a swipe that dismisses it lands here.
+    var isCanvasSheetPresented = false
+    /// The width the root view has to lay out in, which decides whether the chat list has room beside the canvas.
+    var rootWidth: CGFloat = 0
     /// Whether a wide screen shows the chats beside the chat. Putting them away gives the chat the whole width.
     /// The choice is remembered from one launch to the next.
     var isSidebarPinned: Bool {
@@ -32,6 +43,15 @@ final class AppRouter {
         self.defaults = defaults
         isSidebarPinned = !defaults.bool(forKey: Self.sidebarHiddenKey)
     }
+
+    /// Keeps the sheet in step with the canvas and the width of the screen.
+    private func matchCanvasSheet() {
+        let isWanted = isCanvasOpen && !isWide
+        if isCanvasSheetPresented != isWanted {
+            isCanvasSheetPresented = isWanted
+        }
+    }
+
     var isSettingsPresented = false
     /// Whether the app is in front of the user. The root view keeps this current; a reply that finishes while it
     /// is `false` may be announced with a notification.

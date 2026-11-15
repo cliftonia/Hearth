@@ -11,11 +11,13 @@ protocol ChatPresenterDelegate: AnyObject {
     func chatPresenterDidRequestSettings(_ presenter: ChatPresenter)
     /// A project is to be chosen for the chat.
     func chatPresenter(_ presenter: ChatPresenter, didRequestProjectFor id: Conversation.ID)
+    /// A piece of a reply is to be opened in the canvas.
+    func chatPresenter(_ presenter: ChatPresenter, didRequestCanvasFor reference: CanvasReference)
 }
 
 /// Runs the chat screen: sends messages, streams replies, and keeps the open conversation saved.
 ///
-/// The work is spread over extensions by subject: `+Replying`, `+Pictures`, `+Editing`, `+FollowUps`, `+Menu`, `+Greeting`,
+/// The work is spread over extensions by subject: `+Replying`, `+Pictures`, `+Research`, `+Editing`, `+FollowUps`, `+Menu`, `+Greeting`, `+Canvas`,
 /// `+Notifications` and `+Voice`.
 @MainActor
 final class ChatPresenter {
@@ -24,6 +26,7 @@ final class ChatPresenter {
         let chat: ChatInteractor
         let speech: SpeechInteractor
         let image: ImageInteractor
+        let research: ResearchInteractor
         let dictation: DictationProvider
         let notifications: NotificationProvider
         let settingsStore: SettingsStore
@@ -114,14 +117,17 @@ final class ChatPresenter {
         viewModel.pendingDocuments = []
         if viewModel.isPictureMode {
             await submitPicture(message)
+        } else if isResearchChosen, !text.isEmpty {
+            await submitResearch(message)
         } else {
             await submit(message)
         }
     }
 
-    /// Sends words alone, as a voice conversation does. `onDelta` receives each piece of reply text as it arrives.
-    func submit(text: String, style: ReplyStyle, onDelta: @escaping @MainActor (String) -> Void) async {
-        await submit(Message(role: .user, text: text), style: style, onDelta: onDelta)
+    /// Sends words that were not written in the composer, as a voice conversation does, with any pictures taken
+    /// as they were spoken. `onDelta` receives each piece of reply text as it arrives.
+    func submit(text: String, imagesJPEG: [Data] = [], style: ReplyStyle, onDelta: @escaping @MainActor (String) -> Void) async {
+        await submit(Message(role: .user, text: text, imagesJPEG: imagesJPEG), style: style, onDelta: onDelta)
     }
 
     /// Adds the user's message and streams the reply.
@@ -197,6 +203,11 @@ final class ChatPresenter {
             return
         }
         viewModel.conversation = viewModel.conversation.updating(messages: messages)
+        // A report is researched again, not answered from what the model already knows.
+        if previous?.isResearch == true || (previous == nil && isResearchChosen) {
+            await research(model: model, replacing: previous)
+            return
+        }
         await reply(model: model, style: .chat, replacing: previous, onDelta: nil)
         await suggestFollowUps(model: model)
     }
@@ -222,6 +233,7 @@ final class ChatPresenter {
         viewModel.draft = ""
         viewModel.followUps = []
         viewModel.memoryNotice = nil
+        viewModel.isResearchMode = false
         viewModel.conversation = Conversation(modelID: viewModel.selectedModel?.id, projectID: projectID)
         viewModel.error = nil
     }
@@ -236,6 +248,7 @@ final class ChatPresenter {
         cancelEditAction()
         viewModel.followUps = []
         viewModel.memoryNotice = nil
+        viewModel.isResearchMode = false
         viewModel.conversation = conversation
         viewModel.error = nil
         if let model = dependencies.modelStore.model(for: conversation.modelID) {

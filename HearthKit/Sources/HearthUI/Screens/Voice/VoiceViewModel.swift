@@ -1,3 +1,4 @@
+import HearthDomain
 import Observation
 
 /// Where a voice conversation stands.
@@ -19,4 +20,18 @@ final class VoiceViewModel {
     var caption = ""
     var modelName = ""
     var voiceName = ""
+
+    // MARK: Camera
+
+    /// Whether the camera is on, which way it faces, and why it is off if it should not be.
+    var camera = VoiceCamera()
+    /// What cameras the device has. Until the screen opens, none.
+    var cameraAvailability = CameraAvailability(hasCamera: false, canFlip: false)
+    /// Whether the chosen model accepts pictures.
+    var modelCanSee = false
+
+    /// What the camera button can do.
+    var cameraControl: VoiceCameraControlKind {
+        VoiceCamera.control(availability: cameraAvailability, modelCanSee: modelCanSee)
+    }
 }

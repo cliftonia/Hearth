@@ -24,6 +24,7 @@ struct ChatNotificationTests {
                 chat: PresenterFixtures.chat,
                 speech: PresenterFixtures.speech,
                 image: PresenterFixtures.image,
+                research: PresenterFixtures.research,
                 dictation: PresenterFixtures.dictation,
                 notifications: notifications.provider,
                 settingsStore: settingsStore,

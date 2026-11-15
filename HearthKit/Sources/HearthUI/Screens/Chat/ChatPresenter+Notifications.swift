@@ -64,6 +64,7 @@ extension ChatPresenter {
     func resetAction() async {
         viewModel.selectedModel = nil
         viewModel.isPictureMode = false
+        viewModel.isResearchMode = false
         viewModel.pictureModels = []
         await newChatAction()
         await refreshModelsAction()

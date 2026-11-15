@@ -60,7 +60,10 @@ targets:
               - hearth
         NSFaceIDUsageDescription: Hearth uses Face ID to unlock your conversations.
         NSPhotoLibraryAddUsageDescription: Hearth saves a picture to your photo library when you ask it to.
-        NSCameraUsageDescription: Hearth uses the camera when you take a photo to attach to a message.
+        # The camera is on only while a photo is being taken for a message, or while it is turned on in a voice conversation.
+        NSCameraUsageDescription: >-
+          Hearth uses the camera when you take a photo to attach to a message, and only while you turn the camera on
+          in a voice conversation. Pictures go to your own server.
         NSMicrophoneUsageDescription: Hearth listens when you dictate a message or hold a voice conversation.
         NSSpeechRecognitionUsageDescription: Hearth turns what you say into text for your message.
         NSAppTransportSecurity:

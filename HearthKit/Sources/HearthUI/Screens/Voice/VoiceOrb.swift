@@ -5,7 +5,8 @@ struct VoiceOrb: View {
     /// The diameters of the orb and the two halos around it.
     private static let coreDiameter: CGFloat = 150
     private static let innerHaloDiameter: CGFloat = 190
-    private static let outerHaloDiameter: CGFloat = 230
+    /// The outer halo is the whole of the orb, so the voice screen reads it to make room.
+    static let outerHaloDiameter: CGFloat = 230
 
     let state: VoiceStateKind
 

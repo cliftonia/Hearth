@@ -76,6 +76,7 @@ writing the number in a view.
 | `banner` | 14 | The error banner |
 | `bubble` | 18 | The user's message bubble |
 | `bubbleTail` | 6 | The bubble's one tight corner |
+| `preview` | 20 | The camera's live picture in a voice conversation |
 | `composer` | 24 | The composer |
 
 Rounded rectangles are always drawn with `style: .continuous`. Pills and round buttons use `Capsule` and
@@ -92,7 +93,7 @@ Rounded rectangles are always drawn with `style: .continuous`. Pills and round b
 | `sendButton` | 34 | The composer's send button |
 | `messageAction` | 34 × 30 | Copy, share, read aloud, try again |
 | `floatingButton` | 48 | Settings and New chat over the chat list |
-| `voiceButton` | 60 | Mute and end in a voice conversation |
+| `voiceButton` | 60 | The camera, mute and end in a voice conversation |
 | `statusDot` | 10 | The connection dot; the writing indicator |
 | `readingWidth` | 780 | The widest a line of chat grows |
 | `sidebarWidth` | 320 | The chat list beside the chat |
@@ -119,6 +120,7 @@ Apply one with `.hearthShadow(.composer)`.
 | `OptionChip(systemImage:isOn:)` | An icon-only capsule, filled when on and outlined when off | The label of a `Button` or `Menu` that switches something |
 | `Hairline(axis:)` | A one-point line in the line colour | Dividers, horizontal by default |
 | `Avatar(photoJPEG:initials:diameter:)` | A round picture of a person: a photo, else initials, else a person symbol | The profile row and the profile page |
+| `PermissionNotice(systemImage:message:actionTitle:action:)` | A card saying the system is holding something back, with a button to where that is changed | Notifications refused; the camera refused |
 | `Haptics.play(_:)`, `.haptic(_:trigger:when:)` | The one place a haptic is played from | Every haptic; see below |
 | `.surface(_:fill:border:)` | A filled shape with a hairline border inside its edge | Any bordered shape; the modifiers below are built on it |
 | `.cardSurface(radius:border:)` | A card-coloured rounded rectangle with a border | Code blocks, tables, the search field, the composer, the error banner |
@@ -150,9 +152,9 @@ tap with. A kind is named for how it feels, not for what caused it:
 
 | `HapticKind` | Feels like | For |
 |---|---|---|
-| `light` | A light tap | Sending, pinning, opening or closing the chat list by its button, switching picture mode, a change of state in a voice conversation, starting to hold to talk |
+| `light` | A light tap | Sending, pinning, opening or closing the chat list by its button, switching picture mode, a change of state in a voice conversation, turning its camera on or off, starting to hold to talk |
 | `soft` | A softer, rounder tap | A reply finishing on screen; letting go after holding to talk |
-| `selection` | A tick | Choosing a model, stepping between versions of a reply |
+| `selection` | A tick | Choosing a model or an effort, stepping between versions of a reply |
 | `success` | Two rising taps | Copying, saving a picture, a picture arriving |
 | `warning` | A caution | Confirming something destructive |
 | `error` | Three sharp taps | The error banner appearing |
@@ -163,6 +165,13 @@ presenters, and never tie one to a value that changes while text streams.
 
 Views shared between screens that know about the domain, such as `MarkdownSection`, are not part of the
 design system; they live in `HearthUI/Components` and are built from it.
+
+The canvas added no token and no design-system component. Its card in a reply, `CanvasCard`, knows what a piece
+of work is, so it lives with the chat's components; it is a `cardSurface()` holding the kind's symbol on
+`pineSoft` at the `row` radius, a title, a line in `mute` and the word Open in `pine`. The panel is built from
+`IconButton`, `Hairline`, the system's segmented picker and the code block's own styling (`HearthFont.code` on
+`card`). The widths that share a wide screen between the columns are `CanvasLayout`'s, beside the one view that
+uses them.
 
 ## Adding to it
 

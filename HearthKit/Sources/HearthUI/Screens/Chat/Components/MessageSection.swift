@@ -20,12 +20,16 @@ struct MessageSection: View {
     let searchingQuery: String?
     /// What the picture server is doing while this reply is on its way.
     let pictureStatus: String?
+    /// What research is doing while this reply, a report, is on its way.
+    let researchStatus: String?
     /// Each action is `nil` when it does not apply to this message, and its button is then left out.
     let speakAction: (() -> Void)?
     let editAction: (() -> Void)?
     let retryAction: (() -> Void)?
     /// Shows the version of the reply at the given place, for a reply that was asked for more than once.
     let versionAction: ((Int) -> Void)?
+    /// Opens the piece of work at the given place among this reply's pieces in the canvas.
+    let canvasAction: (Int) -> Void
 
     @State private var copyCount = 0
 
@@ -70,11 +74,17 @@ struct MessageSection: View {
             if !message.thinking.isEmpty {
                 ThinkingSection(thinking: message.thinking, seconds: message.thinkingSeconds, isActive: isStreaming && message.text.isEmpty)
             }
-            if message.text.isEmpty, message.thinking.isEmpty, isStreaming, searchingQuery == nil, pictureStatus == nil {
+            if message.text.isEmpty, message.thinking.isEmpty, isStreaming, searchingQuery == nil, pictureStatus == nil, researchStatus == nil {
                 WritingIndicator()
             }
             if let pictureStatus, isStreaming {
                 Label(pictureStatus, systemImage: "paintbrush")
+                    .font(.footnote)
+                    .foregroundStyle(HearthColor.mute)
+            }
+            // The steps of research show until the report itself begins to arrive.
+            if let researchStatus, isStreaming, message.text.isEmpty {
+                Label(researchStatus, systemImage: "text.magnifyingglass")
                     .font(.footnote)
                     .foregroundStyle(HearthColor.mute)
             }
@@ -88,8 +98,7 @@ struct MessageSection: View {
                     .lineLimit(2)
             }
             if !message.text.isEmpty, message.imagesJPEG.isEmpty {
-                MarkdownSection(markdown: message.text)
-                    .textSelection(.enabled)
+                ReplyBodySection(markdown: message.text, isStreaming: isStreaming, openAction: canvasAction)
             }
             // Under a picture the text is only a note on how it was made.
             if !message.text.isEmpty, !message.imagesJPEG.isEmpty {
@@ -97,7 +106,11 @@ struct MessageSection: View {
                     .font(.footnote)
                     .foregroundStyle(HearthColor.mute)
             }
-            if !message.sources.isEmpty {
+            // A report lists its sources in full once it is finished, when their numbers are settled.
+            if !message.sources.isEmpty, message.isResearch, !isStreaming {
+                ResearchSourcesSection(sources: ResearchSourceViewConfiguration.list(from: message.sources))
+            }
+            if !message.sources.isEmpty, !message.isResearch {
                 SourcesSection(sources: message.sources)
             }
             // The actions keep their place while a reply streams, so the text above does not jump when it ends.

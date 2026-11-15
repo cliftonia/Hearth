@@ -14,6 +14,8 @@ extension ChatPresenter {
         guard viewModel.isPictureMode else {
             return
         }
+        // A message asks for a picture or for research, never both.
+        viewModel.isResearchMode = false
         // Asking what the server offers also wakes it, so the first picture comes sooner.
         Task {
             do {

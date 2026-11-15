@@ -1,20 +1,62 @@
 import SwiftUI
 
-/// A hands-free conversation: the orb, what is being heard or said, and the mute and end buttons.
+/// A hands-free conversation: the orb, what is being heard or said, the camera's picture when it is on, and the
+/// camera, mute and end buttons.
 struct VoiceView: View {
-    /// Room for the caption to grow without the orb moving.
+    /// Room for the caption to grow without the orb moving, and what it is cut to while the camera's picture
+    /// takes part of the screen.
     private static let captionMinimumHeight: CGFloat = 120
     private static let captionLineLimit = 7
+    private static let captionMinimumHeightBesideCamera: CGFloat = 64
+    private static let captionLineLimitBesideCamera = 3
 
     let presenter: VoicePresenter
+
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         let viewModel = presenter.viewModel
         VStack(spacing: 0) {
             header(viewModel: viewModel)
-            VStack(spacing: HearthSpacing.s28) {
+            GeometryReader { geometry in
+                conversation(viewModel: viewModel, in: geometry.size)
+            }
+            VoiceControls(presenter: presenter)
+        }
+        .background(HearthColor.paper.ignoresSafeArea())
+        .haptic(.light, trigger: viewModel.state)
+        .task { await presenter.startAction() }
+        // The camera is only ever on while this screen is in front of the user.
+        .onChange(of: scenePhase) {
+            if scenePhase != .active {
+                Task { await presenter.leftForegroundAction(isOffScreen: scenePhase == .background) }
+            }
+        }
+        .onDisappear { Task { await presenter.closedAction() } }
+    }
+
+    // MARK: The conversation
+
+    /// The camera's picture, the orb, the state and the caption, in the space between the header and the buttons.
+    private func conversation(viewModel: VoiceViewModel, in available: CGSize) -> some View {
+        let showsCamera = viewModel.camera.isPreviewShown
+        let cardSize = VoiceCameraLayout.cardSize(in: available, margin: HearthSpacing.s28)
+        let orbSide = VoiceOrb.outerHaloDiameter * (showsCamera ? VoiceCameraLayout.orbScale : 1)
+        return VStack(spacing: 0) {
+            // The card keeps its place in the view and is folded away while the camera is off.
+            VoiceCameraCard(presenter: presenter)
+                .frame(width: cardSize.width, height: cardSize.height)
+                .frame(height: showsCamera ? cardSize.height : 0, alignment: .top)
+                .clipped()
+                .opacity(showsCamera ? 1 : 0)
+                .allowsHitTesting(showsCamera)
+                .accessibilityHidden(!showsCamera)
+                .padding(.bottom, showsCamera ? HearthSpacing.s16 : 0)
+            VStack(spacing: showsCamera ? HearthSpacing.s16 : HearthSpacing.s28) {
                 Button(action: { Task { await presenter.interruptAction() } }, label: {
                     VoiceOrb(state: viewModel.state)
+                        .scaleEffect(showsCamera ? VoiceCameraLayout.orbScale : 1)
+                        .frame(width: orbSide, height: orbSide)
                 })
                 .buttonStyle(.plain)
                 .accessibilityLabel(Strings.interrupt)
@@ -28,20 +70,21 @@ struct VoiceView: View {
                     .foregroundStyle(viewModel.caption.isEmpty ? HearthColor.mute : HearthColor.ink)
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
-                    .lineLimit(Self.captionLineLimit)
-                    .frame(maxWidth: .infinity, minHeight: Self.captionMinimumHeight, alignment: .top)
+                    .lineLimit(showsCamera ? Self.captionLineLimitBesideCamera : Self.captionLineLimit)
+                    .frame(
+                        maxWidth: .infinity,
+                        minHeight: showsCamera ? Self.captionMinimumHeightBesideCamera : Self.captionMinimumHeight,
+                        alignment: .top
+                    )
                     .animation(.easeOut(duration: 0.15), value: viewModel.caption)
             }
-            .padding(.horizontal, HearthSpacing.s28)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            controls(viewModel: viewModel)
         }
-        .background(HearthColor.paper.ignoresSafeArea())
-        .haptic(.light, trigger: viewModel.state)
-        .task { await presenter.startAction() }
+        .padding(.horizontal, HearthSpacing.s28)
+        .frame(width: available.width, height: available.height)
+        .animation(.snappy(duration: 0.3), value: showsCamera)
     }
 
-    // MARK: Header and controls
+    // MARK: Header
 
     /// A way out, and a pill naming the model and the voice.
     private func header(viewModel: VoiceViewModel) -> some View {
@@ -69,38 +112,6 @@ struct VoiceView: View {
         }
         .padding(.horizontal, HearthSpacing.s8)
         .padding(.vertical, HearthSpacing.s4)
-    }
-
-    private func controls(viewModel: VoiceViewModel) -> some View {
-        let isMuted = viewModel.state == .muted
-        return HStack(spacing: HearthSpacing.s24) {
-            roundButton(
-                systemImage: isMuted ? "mic.slash.fill" : "mic.fill",
-                label: isMuted ? Strings.unmute : Strings.mute,
-                isProminent: false
-            ) {
-                Task { await presenter.muteAction() }
-            }
-            .disabled(viewModel.state == .unavailable)
-            .opacity(viewModel.state == .unavailable ? 0.4 : 1)
-            roundButton(systemImage: "xmark", label: Strings.endVoice, isProminent: true) {
-                Task { await presenter.endAction() }
-            }
-        }
-        .padding(.bottom, HearthSpacing.s28)
-    }
-
-    /// A large round button: outlined when quiet, filled with the danger colour when it ends the conversation.
-    private func roundButton(systemImage: String, label: String, isProminent: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.title3.weight(.medium))
-                .foregroundStyle(isProminent ? HearthColor.onDanger : HearthColor.ink)
-                .frame(width: HearthSize.voiceButton, height: HearthSize.voiceButton)
-                .surface(Circle(), fill: isProminent ? HearthColor.danger : HearthColor.card, border: isProminent ? .clear : HearthColor.line)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(label)
     }
 
     // MARK: Words

@@ -29,6 +29,9 @@ final class ChatViewModel {
     var voiceLevel = 0.0
     /// Counts the times holding to talk has left words in the draft. The composer takes the keyboard on each.
     var dictatedDraftCount = 0
+    /// Counts the times the chat has been handed back to the user, as when the canvas closes. VoiceOver goes to
+    /// the message field on each.
+    var focusRequestCount = 0
     /// Whether the sheet for choosing a model, and how hard it thinks, is showing.
     var isModelPickerPresented = false
     /// Whether the alert for renaming the open chat is showing, and the title being typed into it.
@@ -36,6 +39,9 @@ final class ChatViewModel {
     var chatTitleDraft = ""
     /// Whether what is sent asks for a picture, not for a reply from the chat model.
     var isPictureMode = false
+    /// Whether deep research is chosen as the effort for this chat, so that what is sent is researched on the web.
+    /// It belongs to the open chat alone: it is not saved, and a new or another chat starts without it.
+    var isResearchMode = false
     /// The picture models the server offers, for the menu at the top while pictures are being made. Empty until it answers.
     var pictureModels: [ImageModelKind] = []
 
@@ -55,6 +61,8 @@ final class ChatViewModel {
     var searchingQuery: String?
     /// What the picture server is doing right now, while a picture is on its way.
     var pictureStatus: String?
+    /// What research is doing right now, while a report is on its way.
+    var researchStatus: String?
     /// What was just remembered, changed or forgotten, shown under the latest reply.
     var memoryNotice: String?
     /// Questions suggested under the latest reply.

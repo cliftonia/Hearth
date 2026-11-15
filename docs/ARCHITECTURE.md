@@ -34,9 +34,9 @@ The pattern is MVVMP+C: Model, View, ViewModel, Presenter and Coordinator.
 | **Presenter** | A `@MainActor` class that owns the ViewModel, handles the View's actions, catches errors, and asks the coordinator for navigation through a weak delegate. | `ChatPresenter` |
 | **Coordinator** | `AppCoordinator`. Builds every Presenter, conforms to their delegate protocols in extensions, and changes the `AppRouter`. | `AppCoordinator` |
 | **Store** | An `@Observable`, `@MainActor` class of state shared by more than one screen, with `private(set)` properties and methods that change them. | `SettingsStore`, `ConversationStore`, `ProjectStore`, `MemoryStore`, `ProfileStore`, `ModelStore` |
-| **Interactor** | A concrete `Sendable` class that carries out a piece of business logic through the providers it is given. | `ChatInteractor`, `SpeechInteractor`, `ProjectInteractor`, `EraseInteractor` |
-| **DataProvider** | A struct of `@Sendable` closures, a "protocol witness", with a `.live()` version that calls the services. Tests pass their own closures. | `ChatDataProvider`, `ProjectDataProvider`, `DictationProvider`, `NotificationProvider` |
-| **Transformer** | Pure logic from one value to another, with no state beyond what it is fed. | `MarkdownTransformer`, `PromptBuilder`, `SentenceChunker`, `ReplyNotificationPlanner` |
+| **Interactor** | A concrete `Sendable` class that carries out a piece of business logic through the providers it is given. | `ChatInteractor`, `ResearchInteractor`, `SpeechInteractor`, `ProjectInteractor`, `EraseInteractor` |
+| **DataProvider** | A struct of `@Sendable` closures, a "protocol witness", with a `.live()` version that calls the services. Tests pass their own closures. | `ChatDataProvider`, `ProjectDataProvider`, `DictationProvider`, `CameraProvider`, `NotificationProvider` |
+| **Transformer** | Pure logic from one value to another, with no state beyond what it is fed. | `MarkdownTransformer`, `PromptBuilder`, `SentenceChunker`, `ReplyNotificationPlanner`, `ResearchSourceSelector`, `CanvasExtractor` |
 | **Service / DTO** | The data layer: a service makes the request or touches the device, a DTO is the shape on the wire. | `OllamaService`, `OllamaChatRequestDTO` |
 
 Rule of thumb for state: if two screens need it, it is a Store; if one screen needs it, it is that
@@ -60,8 +60,8 @@ AppCoordinator ─────────────────────�
 3. The coordinator sets itself as each Presenter's delegate. A Presenter that wants to go somewhere
    calls its delegate (`chatPresenterDidRequestSettings`), and the coordinator changes the `AppRouter`.
 4. `RootView` reads the router and presents what it says: the sidebar beside the chat or in a drawer,
-   Settings and the project sheets as sheets, the voice conversation as a full-screen cover, and the lock
-   over everything.
+   Settings and the project sheets as sheets, the canvas beside the chat or as a sheet, the voice conversation
+   as a full-screen cover, and the lock over everything.
 5. A View takes its Presenter, reads `presenter.viewModel`, and turns each tap into
    `presenter.somethingAction()`, inside a `Task` when the action is `async`.
 
@@ -78,13 +78,14 @@ App/
   StartVoiceIntent.swift        "Start Voice Conversation" for Siri, Shortcuts and the Action button
 
 HearthKit/Sources/HearthUI/
-  AppCoordinator.swift          Builds and connects the screens (+Projects: where the project sheets lead)
+  AppCoordinator.swift          Builds and connects the screens (+Projects: where the project sheets lead; +Canvas:
+                                opening and closing the canvas)
   AppRouter.swift               What is presented besides the chat
   AppDependencies.swift         Everything the screens are built from, and its live version
   AppDefaults.swift             The addresses the app starts with
   Screens/
     Root/                       RootView, DrawerContainer
-    Chat/                       ChatView, ChatPresenter (+Replying, +Editing, +FollowUps, +Notifications, +Voice), ChatViewModel
+    Chat/                       ChatView, ChatPresenter (+Replying, +Pictures, +Research, +Editing, +FollowUps, +Notifications, +Voice, +Canvas), ChatViewModel
       Components/               The header, a message, the composer and the other sections of the chat
       Attachments/              The camera, and loading photos and files
     Sidebar/                    SidebarView (+Projects), SidebarPresenter (+Projects), SidebarViewModel, its configurations, ConversationGrouper
@@ -92,12 +93,16 @@ HearthKit/Sources/HearthUI/
     ProjectPicker/              ProjectPickerView, ProjectPickerPresenter, ProjectPickerViewModel: the sheet that files a chat
     Settings/                   SettingsView, SettingsPresenter (+Profile, +Notifications), SettingsViewModel, and its
                                 sections and pushed pages: ProfileSection, MemorySection, NotificationsSection, SettingsCard
-    Voice/                      VoiceView, VoicePresenter, VoiceViewModel, VoiceOrb
+    Voice/                      VoiceView, VoicePresenter (+Camera), VoiceViewModel, VoiceOrb, VoiceControls, and the
+                                camera's card: VoiceCameraCard, CameraPreviewSurface, VoiceCameraLayout
+    Canvas/                     CanvasView, CanvasPresenter, CanvasViewModel, CanvasCodeSection, CanvasWebPreview (the
+                                locked-down web view) and CanvasLayout (how a wide screen is shared)
     Lock/                       LockView, LockPresenter, LockViewModel, LockWindowController
   Components/                   Views shared between screens that know about the domain: Markdown, the error configuration
   DesignSystem/
     Tokens/                     HearthColor, HearthFont, HearthSpacing, HearthRadius, HearthSize, HearthShadow
-    Components/                 HearthMark, IconButton, OptionChip, Hairline, Avatar, Haptics and the surface modifiers
+    Components/                 HearthMark, IconButton, OptionChip, Hairline, Avatar, PermissionNotice, Haptics and the
+                                surface modifiers
   Extensions/                   How domain values are named and shown: AppearanceKind, ThinkingLevelKind
   Localization/                 Every user-facing string: Strings.swift and its Strings+Topic.swift extensions
   Platform/                     Thin wrappers over UIKit: the keyboard, background time
@@ -146,6 +151,92 @@ A `Conversation` points at its project through `projectID`; the project knows no
   sheets are presented from `AppRouter.projectSheet`, one value for both so that the picker can give way to the
   sheet that makes a project.
 
+## Deep research
+
+Research answers one question with a report written from pages the app searched for and read. It is a turn like
+any other: it runs with the chat's selected model, streams into a reply, and is saved in the conversation.
+
+- **Chosen as an effort.** The model sheet's Effort menu lists the thinking levels and then Deep research.
+  `EffortChoiceKind` is that choice: `.thinking(ThinkingLevelKind)` or `.research`. Research is never a thinking
+  level and is never sent to the model as one; while it is chosen the model thinks at the level saved in the
+  settings. A thinking level is saved for every chat (`ServerSettings.thinkingLevel`); research is only
+  `ChatViewModel.isResearchMode`, which belongs to the open chat, is not saved, and is cleared by a new chat, by
+  opening another chat and by picture mode. A model that cannot think is offered one ordinary choice and research.
+  Without a search address research is listed, disabled, with a line saying why.
+- **The run** is `ResearchInteractor.run`, a stream of events, built on the same `ChatDataProvider` and
+  `SearchDataProvider` as a reply, so requests go to the same model through the same service and pages are read
+  through `PageService` and its `PageAddressPolicy`. In order: plan (one request), search each query, choose the
+  pages, read them a few at a time, take notes on each (one request a page), ask once whether anything important is
+  missing (one request) and, if so, search, read and note once more, then write (one streamed request).
+- **What is pure** sits in transformers: `ResearchQueryParser` reads queries out of JSON, fenced JSON, objects or
+  plain lines, and falls back to the question; `ResearchSourceSelector` drops repeats by normalised address, lets
+  the searches take turns and caps the pages from one site; `ResearchPromptBuilder` words each request and fences
+  page text and notes between markers made up for the run; `ResearchCitationTransformer` turns every citation into
+  a plain `[n]`, removes any number with no source behind it, and cuts the sources to those cited, renumbered in
+  order. Citations inside code and the text of links are left alone.
+- **Bounds** are the constants of `ResearchLimits`: queries, sources, sources from one site, pages fetched at once,
+  note requests at once, the wait for a page, characters read from a page, characters of one page's notes, and
+  characters of notes handed to the writer.
+- **What stops it.** A search or a page that fails is passed over. With nothing to write from it throws a
+  `ResearchError` that says which step came to nothing (`searchFailed`, `nothingFound`, `nothingReadable`,
+  `nothingRelevant`) and no report is written. The model failing on one page loses that page; failing on all of
+  them is the chat server's error. Stopping cancels the task the stream runs in, and with it every fetch and
+  request under way, since all of them are child tasks of it.
+- **Kept** as an ordinary reply whose `Message.isResearch` is set, with the report as its text and the cited pages
+  as its `sources`, so "Try again" researches again whatever effort is then chosen, keeping the earlier report as
+  a version. A report stopped part of the way is kept as far as it got, tidied in the same way. The sources close
+  memory for the rest of the conversation, as any web search does, and research itself reads no memories.
+- **On screen**, `ChatPresenter+Research` shows each step as a line under the reply (`ChatViewModel.researchStatus`)
+  and `ResearchSourcesSection` lists the sources under a finished report by number, title and site. The logs hold
+  counts only: never the question, a page's text or an address.
+
+## The canvas
+
+A reply may hold a piece of standalone work: a web page, a drawing, a document or a long block of code. The chat
+shows a card in its place, and the card opens it in the canvas. Nothing about it is stored and nothing about it is
+sent to the model; a piece is read out of the saved text of its reply each time it is wanted.
+
+- **What a piece is** is decided by `CanvasExtractor`, a pure transformer over a reply's Markdown. It reads the
+  text once, line by line, and cuts it into `CanvasSegment`s: stretches of ordinary Markdown and `CanvasPiece`s. A
+  fenced block is a piece when it is HTML or SVG, by its language tag or by how it begins (`<!doctype html`,
+  `<html`, `<svg`), or when it has at least `CanvasExtractor.minimumLineCount` lines, 15, as a `markdown`/`md`
+  document or as code. Any other block stays in the Markdown around it, exactly as written, and is drawn by
+  `MarkdownSection` as before. A fence still open when the text ends makes a piece that is not yet closed
+  (`isClosed`), which is how a reply on its way is read. A block is closed by a bare fence at least as long as
+  its own, and a Markdown document counts the fenced blocks inside it in and out.
+- **Its kind** is a `CanvasKind`: `html`, `svg`, `markdown` or `code(language:)`. **Its title** is the page's or the
+  drawing's own `<title>`, a document's first heading, or else the nearest heading within twelve lines above it;
+  with none, the UI names it for its kind ("Page", "Drawing", "Document", "Python code"). **Its identity** is its
+  place among the pieces of its reply, which cannot change while the reply streams, with the message's
+  identifier: a `CanvasReference`.
+- **Versions** are found by `CanvasVersionMatcher`, also pure: a piece anywhere in the chat is a version of the
+  open one when it is the same kind (any two pieces of code are) and either has the same title or is the only
+  piece in its reply. The canvas remembers the piece it was opened for and, at most, a version stepped back to;
+  with none it shows the newest, so a version being written is followed as it arrives.
+- **In the chat**, `ReplyBodySection` lays a reply out from its segments, with a `CanvasCard` for each piece. A card
+  whose piece is open in a reply still streaming shows that it is being written.
+- **The screen** is `CanvasPresenter`, `CanvasViewModel` and `CanvasView`. The presenter is given two closures, the
+  open chat's messages and the reply on its way, and builds a `CanvasViewConfiguration` from them whenever the
+  view asks, so it holds no copy of anything. The view model holds only what was opened, the version looked at
+  and the choice of Preview or Code. A piece still being written is shown as code, and a page is handed to the
+  web view only once it is finished.
+- **Opening and closing** go through the coordinator (`AppCoordinator+Canvas`): the card calls
+  `ChatPresenter.canvasAction`, the coordinator opens the presenter and sets `AppRouter.isCanvasOpen`. A wide screen
+  shows the canvas as a trailing column of `RootView`; `CanvasLayout` gives it half of the space beside the chat
+  list and puts the chat list away while there is not room for all three, which needs no state of its own, so
+  closing brings the list back. A narrow screen shows a sheet (`isCanvasSheetPresented`, which the router keeps in
+  step with the width). The canvas closes by its button, by its sheet being swiped away, by the lock, and when its
+  piece is no longer in the open chat, as when another chat is opened. Closing sends VoiceOver to the message
+  field and raises no keyboard.
+- **A generated page is untrusted.** `CanvasWebPolicy` in the domain holds the decisions and `CanvasWebPreview`
+  carries them out in a `WKWebView`: the document is loaded with `loadHTMLString` and no base address, into a
+  store that keeps nothing; scripts run; a compiled `WKContentRuleList` blocks every `http`, `https`, `ws`, `wss`
+  and `ftp` request, and no web view is made until those rules are installed, so if they cannot be compiled the
+  page is not shown at all; every navigation to anything but `about:` is cancelled, so a link opens nothing, here
+  or in the browser; new windows, the camera, the microphone, the motion sensors and the link menu are refused;
+  there are no message handlers; and a script run before the page's own takes away peer connections, the one way
+  to the network that is not a request. The log notes that a navigation was cancelled and never its address.
+
 ## Settings, the profile and erasing
 
 Settings is one sheet with one Presenter. Its first page is a form; the profile and the notifications are pages
@@ -177,6 +268,40 @@ Pressing and holding the resting composer dictates through the same flow as the 
 so a finger lifted early can never leave the recorder running. The words are held until the press ends, then put
 in the draft with the composer focused; nothing is sent. `DictationService` measures the level of the audio it
 already taps (`VoiceLevelMeter`) and `DictationProvider.levels` carries it to the dots in `HoldToTalkRow`.
+
+## Voice with the camera
+
+A voice conversation may have the camera on. While it is, each spoken turn is sent with one still picture taken as
+the words end. No video is recorded or sent.
+
+- **The provider.** `CameraProvider` in the domain is a struct of closures: ask for leave, start facing one way,
+  stop, flip, take one frame, say what cameras there are, and hand over the layer the live picture is drawn in.
+  `CameraProvider.live()` is backed by `CameraService` in the data layer, an `AVCaptureSession` with a video output
+  whose pictures are let go unseen unless a frame has been asked for; the one asked for is encoded as JPEG. All of
+  it runs on the service's own queue. The preview is a plain `CALayer` as far as the domain and the UI know;
+  `CameraPreviewSurface` holds it in a view.
+- **The account.** `VoiceCamera` is the pure state, kept on `VoiceViewModel`: off, asking, starting or on, which
+  way it faces, and why it is off if the user would expect otherwise. Every attempt to turn the camera on is
+  numbered, and each step of it is checked against that number, so an attempt overtaken by the screen closing, the
+  app leaving the front or another tap can never leave the camera running. `VoiceCamera.control` says whether the
+  button is hidden (no camera), disabled (the chosen model cannot see; the screen says so, and no other model is
+  chosen for the user) or enabled.
+- **The presenter.** `VoicePresenter+Camera` asks for leave only when the button is first turned on. A refusal
+  leaves the conversation as it was and shows a `PermissionNotice` that leads to the system's settings. The camera
+  is stopped by its button, by the conversation ending, by the screen going away for any reason, and by the app
+  leaving the foreground (`VoiceView` watches the scene phase); it starts off every time the screen opens. The
+  system's own question about the camera also takes the app from the front, so an attempt that is only asking is
+  left to finish unless the app goes off screen altogether.
+- **The picture.** When the listener hears the end of a turn, the loop asks for one frame before anything is sent.
+  The frame goes through `PhotoLoader.downscaledJPEG`, the same shrinking an attached photo is given, and is handed
+  to the chat with the words (`ChatPresenter.submit(text:imagesJPEG:style:onDelta:)`), where it is an ordinary
+  `Message.imagesJPEG`: shown on the user's message, saved with the chat, sent to the model, and closing memory, in a
+  private chat as in any other. A frame that cannot be taken or read means the turn goes without one.
+- **In the simulator** there is no camera. A debug build for the simulator uses `CameraProvider.simulated()`, which
+  serves a drawn test card for each side (`SimulatedCameraService`). Launching it with the argument
+  `-HearthVoiceScript "words"` also puts a scripted listener in place of the recogniser, which hears those words
+  once, twenty seconds after listening begins, and a voice that says nothing and asks no speech server; with empty
+  words it hears nothing. All of it is inside `#if DEBUG && targetEnvironment(simulator)` and is in no build that ships.
 
 ## Notifications
 

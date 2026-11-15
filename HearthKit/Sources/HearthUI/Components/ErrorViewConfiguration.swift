@@ -23,6 +23,8 @@ struct ErrorViewConfiguration: Hashable {
             self.init(message: Strings.errorSpeechNotConfigured, retryActionLabel: nil)
         case let imageError as ImageError:
             self.init(from: imageError)
+        case let researchError as ResearchError:
+            self.init(from: researchError)
         case is URLError:
             self.init(message: Strings.errorUnreachable)
         default:
@@ -44,6 +46,21 @@ struct ErrorViewConfiguration: Hashable {
             self.init(title: Strings.picture, message: message.isEmpty ? Strings.errorPictureFailed : message)
         case .timedOut:
             self.init(title: Strings.picture, message: Strings.errorPictureTimedOut)
+        }
+    }
+
+    private init(from error: ResearchError) {
+        switch error {
+        case .searchNotConfigured:
+            self.init(title: Strings.research, message: Strings.errorResearchNotConfigured, retryActionLabel: nil)
+        case .searchFailed:
+            self.init(title: Strings.research, message: Strings.errorResearchSearchFailed)
+        case .nothingFound:
+            self.init(title: Strings.research, message: Strings.errorResearchNothingFound)
+        case .nothingReadable:
+            self.init(title: Strings.research, message: Strings.errorResearchNothingReadable)
+        case .nothingRelevant:
+            self.init(title: Strings.research, message: Strings.errorResearchNothingRelevant)
         }
     }
 

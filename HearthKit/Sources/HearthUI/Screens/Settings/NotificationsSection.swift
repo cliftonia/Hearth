@@ -59,21 +59,10 @@ private struct NotificationsPage: View {
 
     /// Says that the system is holding notifications back, and leads to where that is changed.
     private var deniedNotice: some View {
-        VStack(alignment: .leading, spacing: HearthSpacing.s8) {
-            Label(Strings.notificationsDenied, systemImage: "bell.slash")
-                .font(.footnote)
-                .foregroundStyle(HearthColor.ink)
-            Button(Strings.notificationsOpenSettings) {
-                if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
-                    openURL(url)
-                }
+        PermissionNotice(systemImage: "bell.slash", message: Strings.notificationsDenied, actionTitle: Strings.notificationsOpenSettings) {
+            if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+                openURL(url)
             }
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(HearthColor.pine)
-            .buttonStyle(.plain)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(HearthSpacing.s12)
-        .cardSurface(radius: HearthRadius.banner, border: HearthColor.danger.opacity(0.5))
     }
 }

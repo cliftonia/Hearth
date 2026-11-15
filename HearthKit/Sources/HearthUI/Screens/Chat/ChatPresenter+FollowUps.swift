@@ -71,7 +71,12 @@ extension ChatPresenter {
         guard !viewModel.isStreaming else {
             return
         }
-        await submit(Message(role: .user, text: question))
+        // While research is chosen for the chat, a suggested question is researched like a typed one.
+        if isResearchChosen {
+            await submitResearch(Message(role: .user, text: question))
+        } else {
+            await submit(Message(role: .user, text: question))
+        }
     }
 
     /// Asks the model what the user might ask next. Suggestions are a nicety: without them the chat is complete.

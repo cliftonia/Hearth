@@ -12,6 +12,8 @@ enum HearthRadius {
     static let bubble: CGFloat = 18
     /// The one tight corner of the bubble, pointing at its author.
     static let bubbleTail: CGFloat = 6
+    /// The camera's live picture in a voice conversation.
+    static let preview: CGFloat = 20
     /// The composer.
     static let composer: CGFloat = 24
 }

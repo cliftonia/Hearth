@@ -79,18 +79,8 @@ struct ChatView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: Self.messageSpacing) {
                     ForEach(messages) { message in
-                        MessageSection(
-                            message: message,
-                            isStreaming: viewModel.isStreaming && message.id == messages.last?.id,
-                            isSpeaking: viewModel.speakingMessageID == message.id,
-                            searchingQuery: message.id == messages.last?.id ? viewModel.searchingQuery : nil,
-                            pictureStatus: message.id == messages.last?.id ? viewModel.pictureStatus : nil,
-                            speakAction: presenter.isSpeechAvailable ? { Task { await presenter.speakAction(message.id) } } : nil,
-                            editAction: viewModel.isStreaming ? nil : { presenter.editAction(message.id) },
-                            retryAction: message.id == messages.last?.id ? { Task { await presenter.regenerateAction() } } : nil,
-                            versionAction: viewModel.isStreaming ? nil : { index in Task { await presenter.selectVersionAction(index, of: message.id) } }
-                        )
-                        .id(message.id)
+                        messageSection(message, isLast: message.id == messages.last?.id, viewModel: viewModel)
+                            .id(message.id)
                     }
                     if let notice = viewModel.memoryNotice {
                         MemoryNoticeSection(notice: notice)
@@ -123,5 +113,22 @@ struct ChatView: View {
                 }
             }
         }
+    }
+
+    /// One message, with the passing state and the actions that apply to it.
+    private func messageSection(_ message: Message, isLast: Bool, viewModel: ChatViewModel) -> some View {
+        MessageSection(
+            message: message,
+            isStreaming: viewModel.isStreaming && isLast,
+            isSpeaking: viewModel.speakingMessageID == message.id,
+            searchingQuery: isLast ? viewModel.searchingQuery : nil,
+            pictureStatus: isLast ? viewModel.pictureStatus : nil,
+            researchStatus: isLast ? viewModel.researchStatus : nil,
+            speakAction: presenter.isSpeechAvailable ? { Task { await presenter.speakAction(message.id) } } : nil,
+            editAction: viewModel.isStreaming ? nil : { presenter.editAction(message.id) },
+            retryAction: isLast ? { Task { await presenter.regenerateAction() } } : nil,
+            versionAction: viewModel.isStreaming ? nil : { index in Task { await presenter.selectVersionAction(index, of: message.id) } },
+            canvasAction: { index in presenter.canvasAction(CanvasReference(messageID: message.id, index: index)) }
+        )
     }
 }

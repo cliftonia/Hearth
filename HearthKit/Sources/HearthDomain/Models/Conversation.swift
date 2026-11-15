@@ -78,6 +78,9 @@ public struct Message: Identifiable, Hashable, Codable, Sendable {
     public let otherVersions: [ReplyVersion]
     /// Where the shown attempt stands among them all, counting from zero.
     public let versionIndex: Int
+    /// Whether the reply is a research report, written from pages the app searched for and read. Asking for it
+    /// again researches again.
+    public let isResearch: Bool
     public let createdAt: Date
 
     public init(
@@ -91,6 +94,7 @@ public struct Message: Identifiable, Hashable, Codable, Sendable {
         documents: [AttachedDocument] = [],
         otherVersions: [ReplyVersion] = [],
         versionIndex: Int = 0,
+        isResearch: Bool = false,
         createdAt: Date = Date()
     ) {
         self.id = id
@@ -103,6 +107,7 @@ public struct Message: Identifiable, Hashable, Codable, Sendable {
         self.documents = documents
         self.otherVersions = otherVersions
         self.versionIndex = min(max(versionIndex, 0), otherVersions.count)
+        self.isResearch = isResearch
         self.createdAt = createdAt
     }
 
@@ -120,6 +125,7 @@ public struct Message: Identifiable, Hashable, Codable, Sendable {
             documents: try container.decodeIfPresent([AttachedDocument].self, forKey: .documents) ?? [],
             otherVersions: try container.decodeIfPresent([ReplyVersion].self, forKey: .otherVersions) ?? [],
             versionIndex: try container.decodeIfPresent(Int.self, forKey: .versionIndex) ?? 0,
+            isResearch: try container.decodeIfPresent(Bool.self, forKey: .isResearch) ?? false,
             createdAt: try container.decode(Date.self, forKey: .createdAt)
         )
     }
@@ -142,6 +148,7 @@ public struct Message: Identifiable, Hashable, Codable, Sendable {
             documents: documents,
             otherVersions: otherVersions,
             versionIndex: versionIndex,
+            isResearch: isResearch,
             createdAt: createdAt
         )
     }
@@ -163,7 +170,7 @@ public extension Message {
     /// An empty reply to be filled by asking again, with this reply and its other attempts kept behind it.
     func startingNewVersion() -> Message {
         let kept = text.isEmpty && thinking.isEmpty ? otherVersions : allVersions
-        return Message(role: role, text: "", otherVersions: kept, versionIndex: kept.count)
+        return Message(role: role, text: "", otherVersions: kept, versionIndex: kept.count, isResearch: isResearch)
     }
 
     /// The same reply showing another of its attempts. An index outside the attempts changes nothing.
@@ -196,6 +203,7 @@ public extension Message {
             documents: documents,
             otherVersions: others,
             versionIndex: index,
+            isResearch: isResearch,
             createdAt: createdAt
         )
     }

@@ -43,6 +43,15 @@ struct RootView: View {
             projectSheet(sheet)
                 .preferredColorScheme(colorScheme)
         }
+        // On a narrow screen the canvas is a sheet of the full height; a wide one shows it beside the chat.
+        .sheet(isPresented: $router.isCanvasSheetPresented, onDismiss: coordinator.canvasSheetDidDismiss) {
+            CanvasView(presenter: coordinator.canvasPresenter)
+                .presentationDetents([.large])
+                .preferredColorScheme(colorScheme)
+        }
+        // The canvas belongs to the chat it was opened from: it closes when its piece is no longer there.
+        .onChange(of: coordinator.chatPresenter.viewModel.conversation.id) { coordinator.canvasPresenter.chatChangedAction() }
+        .onChange(of: coordinator.chatPresenter.viewModel.conversation.messages.count) { coordinator.canvasPresenter.chatChangedAction() }
         .fullScreenCover(isPresented: $router.isVoicePresented) {
             VoiceView(presenter: coordinator.voicePresenter)
                 .preferredColorScheme(colorScheme)
@@ -62,26 +71,50 @@ struct RootView: View {
         }
     }
 
+    /// The chat list, the chat and the canvas side by side. The chat list is put away by its button, or for as
+    /// long as the canvas is open on a screen without room for all three.
+    private func wideLayout(width: CGFloat) -> some View {
+        let isCanvasOpen = coordinator.router.isCanvasOpen
+        let columns = CanvasLayout.columns(
+            totalWidth: width,
+            isSidebarPinned: coordinator.router.isSidebarPinned,
+            isCanvasOpen: isCanvasOpen,
+            sidebarWidth: HearthSize.sidebarWidth
+        )
+        let isSidebarShown = columns.sidebarWidth > 0
+        return HStack(spacing: 0) {
+            // Put away, the chats keep their own width and slide out of sight, so nothing in them is rebuilt.
+            SidebarView(presenter: coordinator.sidebarPresenter)
+                .frame(width: HearthSize.sidebarWidth)
+                .frame(width: columns.sidebarWidth, alignment: .trailing)
+                .clipped()
+                .allowsHitTesting(isSidebarShown)
+                .accessibilityHidden(!isSidebarShown)
+            Hairline(axis: .vertical)
+                .ignoresSafeArea()
+                .opacity(isSidebarShown ? 1 : 0)
+            ChatView(presenter: coordinator.chatPresenter)
+            // The canvas is only in the tree while it is open, so a closed one reads nothing from the chat.
+            if isCanvasOpen {
+                Hairline(axis: .vertical)
+                    .ignoresSafeArea()
+                CanvasView(presenter: coordinator.canvasPresenter)
+                    .frame(width: columns.canvasWidth)
+                    .transition(.move(edge: .trailing))
+            }
+        }
+        .background(HearthColor.paper.ignoresSafeArea())
+        .animation(.snappy(duration: 0.28), value: columns)
+    }
+
     /// On a wide screen the conversations stay beside the chat; on a phone they slide in as a drawer.
     @ViewBuilder
     private func layout(isSidebarOpen: Binding<Bool>) -> some View {
         if horizontalSizeClass == .regular {
-            let isPinned = coordinator.router.isSidebarPinned
-            HStack(spacing: 0) {
-                // Put away, the chats keep their own width and slide out of sight, so nothing in them is rebuilt.
-                SidebarView(presenter: coordinator.sidebarPresenter)
-                    .frame(width: HearthSize.sidebarWidth)
-                    .frame(width: isPinned ? HearthSize.sidebarWidth : 0, alignment: .trailing)
-                    .clipped()
-                    .allowsHitTesting(isPinned)
-                    .accessibilityHidden(!isPinned)
-                Hairline(axis: .vertical)
-                    .ignoresSafeArea()
-                    .opacity(isPinned ? 1 : 0)
-                ChatView(presenter: coordinator.chatPresenter)
+            GeometryReader { proxy in
+                wideLayout(width: proxy.size.width)
+                    .onChange(of: proxy.size.width, initial: true) { coordinator.router.rootWidth = proxy.size.width }
             }
-            .background(HearthColor.paper.ignoresSafeArea())
-            .animation(.snappy(duration: 0.28), value: isPinned)
         } else {
             DrawerContainer(isOpen: isSidebarOpen) {
                 SidebarView(presenter: coordinator.sidebarPresenter)

@@ -10,16 +10,24 @@ protocol VoicePresenterDelegate: AnyObject {
 }
 
 /// Runs a spoken conversation: listen until the user pauses, ask the model, speak the reply, listen again.
+///
+/// The camera that may accompany it is worked in `VoicePresenter+Camera`.
 @MainActor
 final class VoicePresenter {
     /// What a voice conversation is built from. The chat itself stays with the chat screen, reached through closures.
     struct Dependencies {
         let dictation: DictationProvider
         let speech: SpeechInteractor
+        let camera: CameraProvider
         let settings: @MainActor () -> ServerSettings
         let modelName: @MainActor () -> String
-        /// Sends the words to the chat; the closure receives the reply piece by piece.
-        let runTurn: @MainActor (String, @escaping @MainActor (String) -> Void) async -> Void
+        /// Whether the chosen model accepts pictures, without which the camera has nobody to show them to.
+        let modelCanSee: @MainActor () -> Bool
+        /// Shrinks a picture from the camera exactly as an attached photo is shrunk; `nil` if it cannot be read.
+        let prepareFrame: @MainActor (Data) -> Data?
+        /// Sends the words to the chat, with the picture taken as they ended if the camera is on; the closure
+        /// receives the reply piece by piece.
+        let runTurn: @MainActor (String, Data?, @escaping @MainActor (String) -> Void) async -> Void
         /// Stops a reply that is still on its way.
         let stopTurn: @MainActor () async -> Void
     }
@@ -30,8 +38,8 @@ final class VoicePresenter {
     let viewModel = VoiceViewModel()
     weak var delegate: (any VoicePresenterDelegate)?
 
-    private let dependencies: Dependencies
-    private let logger = Logger(for: VoicePresenter.self)
+    let dependencies: Dependencies
+    let logger = Logger(for: VoicePresenter.self)
     /// The listen, think, speak cycle, for as long as the conversation runs.
     private var loopTask: Task<Void, Never>?
     /// The reply being spoken, kept so that it can be cut short.
@@ -46,6 +54,7 @@ final class VoicePresenter {
         viewModel.modelName = dependencies.modelName()
         viewModel.voiceName = dependencies.settings().voice
         viewModel.caption = ""
+        await resetCamera()
         guard await dependencies.dictation.requestAuthorization() else {
             fail(Strings.voicePermissionDenied)
             return
@@ -55,6 +64,8 @@ final class VoicePresenter {
 
     /// Stops everything and closes the screen.
     func endAction() async {
+        // The camera goes first, so that it is off before anything else is waited for.
+        await stopCamera()
         await halt()
         delegate?.voicePresenterDidFinish(self)
     }
@@ -117,7 +128,12 @@ private extension VoicePresenter {
                 guard !Task.isCancelled else {
                     return
                 }
-                await respond(to: words)
+                // The picture is taken as the words end, before anything is asked of the model.
+                let frameJPEG = await captureFrame()
+                guard !Task.isCancelled else {
+                    return
+                }
+                await respond(to: words, frameJPEG: frameJPEG)
             } catch {
                 logger.error("Listening failed: \(error.localizedDescription, privacy: .public)")
                 fail(Strings.errorDictationUnavailable)
@@ -153,7 +169,7 @@ private extension VoicePresenter {
     }
 
     /// Sends the words to the chat and speaks the reply sentence by sentence as it is written.
-    func respond(to words: String) async {
+    func respond(to words: String, frameJPEG: Data?) async {
         viewModel.state = .thinking
         let (sentences, continuation) = AsyncStream.makeStream(of: String.self)
         let feed = SpokenReplyFeed(continuation: continuation)
@@ -170,7 +186,7 @@ private extension VoicePresenter {
             }
         }
         speakTask = speaking
-        await dependencies.runTurn(words) { [viewModel] delta in
+        await dependencies.runTurn(words, frameJPEG) { [viewModel] delta in
             if feed.append(delta) {
                 viewModel.state = .speaking
             }

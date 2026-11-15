@@ -5,7 +5,7 @@ import SwiftUI
 ///
 /// The app has one coordinator. Each presenter reports to it through a delegate protocol, which it conforms to in
 /// the extensions below; it answers by changing the `AppRouter` or by asking another presenter to act. What it does
-/// for projects is in `AppCoordinator+Projects`.
+/// for projects is in `AppCoordinator+Projects`, and for the canvas in `AppCoordinator+Canvas`.
 @MainActor
 public final class AppCoordinator {
     let router: AppRouter
@@ -18,6 +18,7 @@ public final class AppCoordinator {
     let projectPickerPresenter: ProjectPickerPresenter
     let voicePresenter: VoicePresenter
     let lockPresenter: LockPresenter
+    let canvasPresenter: CanvasPresenter
     /// A voice conversation asked for while locked, begun once the owner is in.
     private var isVoicePending = false
     private let lockWindowController = LockWindowController()
@@ -30,6 +31,7 @@ public final class AppCoordinator {
             chat: dependencies.chat,
             speech: dependencies.speech,
             image: dependencies.image,
+            research: dependencies.research,
             dictation: dependencies.dictation,
             notifications: dependencies.notifications,
             settingsStore: dependencies.settingsStore,
@@ -51,6 +53,7 @@ public final class AppCoordinator {
             selectedConversationID: { chatPresenter.viewModel.conversation.id }
         )
         self.lockPresenter = lockPresenter
+        self.canvasPresenter = Self.makeCanvasPresenter(chatPresenter: chatPresenter)
         self.settingsPresenter = Self.makeSettingsPresenter(dependencies: dependencies, chatPresenter: chatPresenter)
         let (projectStore, conversationStore) = (dependencies.projectStore, dependencies.conversationStore)
         self.projectPresenter = ProjectPresenter(projectStore: projectStore, conversationStore: conversationStore, interactor: dependencies.projects)
@@ -58,9 +61,15 @@ public final class AppCoordinator {
         self.voicePresenter = VoicePresenter(dependencies: VoicePresenter.Dependencies(
             dictation: dependencies.dictation,
             speech: dependencies.speech,
+            camera: dependencies.camera,
             settings: { settingsStore.settings },
             modelName: { chatPresenter.viewModel.selectedModel?.displayName ?? "" },
-            runTurn: { words, onDelta in await chatPresenter.submit(text: words, style: .voice, onDelta: onDelta) },
+            modelCanSee: { chatPresenter.viewModel.selectedModel?.canSee == true },
+            // A picture from the camera is prepared exactly as an attached photo is.
+            prepareFrame: { PhotoLoader.downscaledJPEG(from: $0) },
+            runTurn: { words, frameJPEG, onDelta in
+                await chatPresenter.submit(text: words, imagesJPEG: frameJPEG.map { [$0] } ?? [], style: .voice, onDelta: onDelta)
+            },
             stopTurn: { await chatPresenter.stopAction() }
         ))
         connectDelegates()
@@ -115,6 +124,7 @@ public final class AppCoordinator {
         projectPickerPresenter.delegate = self
         voicePresenter.delegate = self
         lockPresenter.delegate = self
+        canvasPresenter.delegate = self
     }
 
     /// Follows a link into the app, as a widget sends: `hearth://new` for a fresh chat, `hearth://voice` to talk.
@@ -176,6 +186,9 @@ extension AppCoordinator: ChatPresenterDelegate {
     /// A narrow screen opens the drawer; a wide one shows the chats beside the chat or puts them away.
     func chatPresenterDidRequestSidebar(_ presenter: ChatPresenter) {
         if router.isWide {
+            guard !closeCanvasForSidebar() else {
+                return
+            }
             router.isSidebarPinned.toggle()
         } else {
             router.isSidebarOpen = true
@@ -192,6 +205,10 @@ extension AppCoordinator: ChatPresenterDelegate {
 
     func chatPresenter(_ presenter: ChatPresenter, didRequestProjectFor id: Conversation.ID) {
         presentProjectPicker(for: id)
+    }
+
+    func chatPresenter(_ presenter: ChatPresenter, didRequestCanvasFor reference: CanvasReference) {
+        openCanvas(reference)
     }
 }
 
@@ -279,6 +296,7 @@ extension AppCoordinator: LockPresenterDelegate {
         router.projectSheet = nil
         router.isVoicePresented = false
         router.isSidebarOpen = false
+        router.isCanvasOpen = false
         sidebarPresenter.viewModel.isRenaming = false
         Task {
             if wasInVoice {

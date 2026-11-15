@@ -1,8 +1,9 @@
 import HearthDomain
 import SwiftUI
 
-/// The sheet opened from the composer's model chip: the server's models to choose from, and how hard the chosen
-/// one should think. While pictures are being made it lists the picture models instead.
+/// The sheet opened from the composer's model chip: the server's models to choose from, and the effort that goes
+/// into a reply: how hard the chosen model thinks, or deep research. While pictures are being made it lists the
+/// picture models instead.
 struct ModelPickerSheet: View {
     private static let closeButtonSide: CGFloat = 36
 
@@ -26,7 +27,7 @@ struct ModelPickerSheet: View {
                 .padding(.bottom, HearthSpacing.s16)
             }
             // The effort stays in view below the list, however many models the server has.
-            if !isPictureMode, presenter.viewModel.selectedModel?.canThink == true {
+            if !isPictureMode {
                 effortRow
                     .padding(.horizontal, HearthSpacing.s16)
                     .padding(.top, HearthSpacing.s8)
@@ -116,14 +117,23 @@ struct ModelPickerSheet: View {
         .joined(separator: " · ")
     }
 
-    /// How hard the chosen model thinks before it replies. A menu, since there are only four levels.
+    /// The effort that goes into a reply: how hard the chosen model thinks before it, for a model that thinks, and
+    /// deep research for any model. A menu, since the choices are few. Research is listed but cannot be chosen
+    /// until there is a search address, and says so.
     private var effortRow: some View {
-        let level = presenter.thinkingLevel
+        let canThink = presenter.viewModel.selectedModel?.canThink == true
+        let chosen = presenter.effortChoice
+        let title = chosen.title(canThink: canThink)
         return Menu {
-            ForEach(ThinkingLevelKind.allCases, id: \.self) { option in
-                Button(action: { presenter.selectThinkingLevelAction(option) }, label: {
-                    Label(option.title, systemImage: option == level ? "checkmark" : "")
+            ForEach(presenter.effortChoices, id: \.self) { option in
+                let isAvailable = presenter.isEffortChoiceAvailable(option)
+                Button(action: { presenter.selectEffortAction(option) }, label: {
+                    Label(option.title(canThink: canThink), systemImage: option == chosen ? "checkmark" : "")
+                    if option == .research {
+                        Text(isAvailable ? Strings.researchDetail : Strings.researchNeedsSearch)
+                    }
                 })
+                .disabled(!isAvailable)
             }
         } label: {
             HStack(spacing: HearthSpacing.s8) {
@@ -131,9 +141,9 @@ struct ModelPickerSheet: View {
                     .font(.body)
                     .foregroundStyle(HearthColor.ink)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Text(level.title)
+                Text(title)
                     .font(.body)
-                    .foregroundStyle(HearthColor.mute)
+                    .foregroundStyle(chosen == .research ? HearthColor.pine : HearthColor.mute)
                 Image(systemName: "chevron.up.chevron.down")
                     .font(.footnote)
                     .foregroundStyle(HearthColor.mute)
@@ -144,7 +154,8 @@ struct ModelPickerSheet: View {
             .cardSurface(radius: HearthRadius.bubble)
         }
         .accessibilityLabel(Strings.effort)
-        .accessibilityValue(level.title)
+        .accessibilityValue(title)
+        .haptic(.selection, trigger: chosen)
     }
 
     // MARK: Picture models

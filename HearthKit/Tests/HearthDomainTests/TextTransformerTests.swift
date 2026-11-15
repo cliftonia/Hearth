@@ -122,7 +122,8 @@ struct HTMLTextTransformerTests {
         #expect(HTMLTextTransformer().text(from: html, maximumLength: 5000) == "First point.\nSecond point.")
     }
 
-    @Test(arguments: ["<nav ", "<script>", "<!-- ", "<article ", "<", "<a href=", "&#", "<nav></nav>", "<!-- x -->", "</article"])
+    // One at a time: run side by side, the cases slow each other and the clock measures the crowd, not the reader.
+    @Test(.serialized, arguments: ["<nav ", "<script>", "<!-- ", "<article ", "<", "<a href=", "&#", "<nav></nav>", "<!-- x -->", "</article"])
     func `markup built to be slow is still read in good time`(fragment: String) {
         let hostile = String(repeating: fragment, count: 400_000 / fragment.count) + "<p>The end.</p>"
         let clock = ContinuousClock()
