@@ -33,7 +33,7 @@ public struct MemoryLedger: Sendable {
             if let refusal = refusal(for: fact, among: memories.filter { $0.id != id }) {
                 return (memories, .refused(refusal))
             }
-            let memory = Memory(id: id, text: fact, isFromUser: isFromUser, createdAt: existing.createdAt, updatedAt: now)
+            let memory = Memory(id: id, text: fact, isFromUser: isFromUser, createdAt: existing.createdAt, updatedAt: now, syncID: existing.syncID)
             return (memories.map { $0.id == id ? memory : $0 }, .updated(memory))
         case .delete(let id):
             guard let existing = memories.first(where: { $0.id == id }) else {
@@ -61,7 +61,7 @@ public struct MemoryLedger: Sendable {
     }
 
     /// Handles count upwards and are never reused, so a stale handle cannot point at a newer memory.
-    private func nextID(after memories: [Memory]) -> Memory.ID {
+    func nextID(after memories: [Memory]) -> Memory.ID {
         let highest = memories.compactMap { Int($0.id.rawValue.dropFirst()) }.max() ?? 0
         return Memory.ID("m\(highest + 1)")
     }

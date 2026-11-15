@@ -52,6 +52,7 @@ extension AppDefaults {
             searchAddress: infoValue("HearthDefaultSearchAddress"),
             speechAddress: infoValue("HearthDefaultSpeechAddress"),
             imageAddress: infoValue("HearthDefaultImageAddress"),
+            hubAddress: infoValue("HearthDefaultHubAddress"),
             modelName: infoValue("HearthDefaultModel")
         )
     }

@@ -29,6 +29,12 @@ public struct FileStoreService: Sendable {
             .map { try Data(contentsOf: $0) }
     }
 
+    /// The named blob, read at once on the calling thread; `nil` when it is not there or cannot be read.
+    /// Only for a small file that must be read before anything else happens.
+    public func loadNow(name: String) -> Data? {
+        try? Data(contentsOf: directoryURL.appending(path: name))
+    }
+
     /// Removes every blob, and the directory with them. Emptying a directory that is not there is not an error.
     public func deleteAll() async throws {
         guard FileManager.default.fileExists(atPath: directoryURL.path(percentEncoded: false)) else {

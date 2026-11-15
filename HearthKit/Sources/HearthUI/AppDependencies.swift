@@ -22,6 +22,11 @@ public struct AppDependencies {
     let projects: ProjectInteractor
     let profileStore: ProfileStore
     let eraser: EraseInteractor
+    let syncStore: SyncStore
+    let sync: SyncInteractor
+    let syncScheduler: SyncScheduler
+    /// Filled in by the coordinator once the chat exists.
+    let syncHooks: SyncHooks
 
     /// The real thing, talking to the servers and the device. The defaults seed the settings on first launch.
     public static func live(defaults: AppDefaults) -> AppDependencies {
@@ -39,6 +44,10 @@ public struct AppDependencies {
         let profileStore = ProfileStore(provider: .live())
         let settingsStore = SettingsStore.live(defaults: settings)
         let notifications = NotificationProvider.live()
+        let syncStore = SyncStore(provider: .live(), defaultHubAddress: defaults.hubAddress)
+        let syncHooks = SyncHooks()
+        let syncStores = SyncInteractor.Stores(conversations: conversationStore, projects: projectStore, memories: memoryStore, sync: syncStore)
+        let (sync, syncScheduler) = makeSync(stores: syncStores, hooks: syncHooks)
         let stores = EraseInteractor.Stores(
             conversations: conversationStore,
             projects: projectStore,
@@ -63,8 +72,33 @@ public struct AppDependencies {
             projectStore: projectStore,
             projects: ProjectInteractor(projectStore: projectStore, conversationStore: conversationStore),
             profileStore: profileStore,
-            eraser: EraseInteractor(stores: stores, removeNotifications: notifications.removeAll)
+            eraser: EraseInteractor(stores: stores, removeNotifications: notifications.removeAll) { await syncScheduler.stopAndReset() },
+            syncStore: syncStore,
+            sync: sync,
+            syncScheduler: syncScheduler,
+            syncHooks: syncHooks
         )
+    }
+
+    /// Sync against the hub, and what decides when it runs. Each store tells sync of the changes made on this
+    /// device: a deletion is noted at once, and a sync follows a few seconds after any change.
+    private static func makeSync(stores: SyncInteractor.Stores, hooks: SyncHooks) -> (SyncInteractor, SyncScheduler) {
+        let sync = SyncInteractor(
+            stores: stores,
+            provider: .live(),
+            isBusy: { hooks.isBusy($0) },
+            didApplyRemote: { hooks.didApplyRemote($0) }
+        )
+        let scheduler = SyncScheduler(store: stores.sync, interactor: sync)
+        let syncStore = stores.sync
+        let record: @MainActor (SyncLocalChangeKind) -> Void = { change in
+            syncStore.record(change)
+            scheduler.localChangeHappened()
+        }
+        stores.conversations.onLocalChange = record
+        stores.projects.onLocalChange = record
+        stores.memories.onLocalChange = record
+        return (sync, scheduler)
     }
 
     // MARK: Simulator stand-ins

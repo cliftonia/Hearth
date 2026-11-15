@@ -9,6 +9,14 @@ enum ConnectionCheckKind: Hashable {
     case failed(message: String)
 }
 
+/// How a check of the hub on the sync page stands.
+enum SyncCheckKind: Hashable {
+    case idle
+    case checking
+    case succeeded
+    case failed(message: String)
+}
+
 /// Whether a sample of the chosen voice is being spoken, or could not be.
 enum VoicePreviewKind: Hashable {
     case idle
@@ -62,6 +70,15 @@ final class SettingsViewModel {
     var isConfirmingErase = false
     /// What went wrong on the profile page, if something did: a photo that could not be kept, or an erasure that failed.
     var profileError: String?
+
+    // MARK: Sync, applied at once
+
+    /// The hub's address as typed; kept when typing ends, when the page closes, and before anything uses it.
+    var syncAddress = ""
+    /// A new access token being typed. It is never filled from the Keychain, and is emptied once saved.
+    var syncTokenDraft = ""
+    var isSyncEnabled = false
+    var syncCheck: SyncCheckKind = .idle
 
     /// The names as they stand in the form.
     var profile: UserProfile { UserProfile(fullName: fullName, nickname: nickname) }

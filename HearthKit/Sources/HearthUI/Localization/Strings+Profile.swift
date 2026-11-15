@@ -17,9 +17,9 @@ extension Strings {
     static let profileInstructionsFooter = String(localized: "profile.instructionsFooter", defaultValue: "Instructions apply to every conversation.", bundle: .module)
     static let followUpsFooter = String(localized: "profile.followUpsFooter", defaultValue: "Suggestions cost one extra short request per reply.", bundle: .module)
     static let eraseAll = String(localized: "profile.eraseAll", defaultValue: "Erase all data on this device", bundle: .module)
-    static let eraseAllFooter = String(localized: "profile.eraseAllFooter", defaultValue: "Hearth has no accounts. Everything it knows about you is kept on this device, and this removes it.", bundle: .module)
+    static let eraseAllFooter = String(localized: "profile.eraseAllFooter", defaultValue: "Hearth has no accounts. This removes everything it keeps on this device and turns sync off. Your hub and your other devices keep their copies; nothing is deleted there.", bundle: .module)
     static let eraseAllQuestion = String(localized: "profile.eraseAllQuestion", defaultValue: "Erase all data on this device?", bundle: .module)
-    static let eraseAllMessage = String(localized: "profile.eraseAllMessage", defaultValue: "Your chats, projects, memories, profile and saved settings will be erased, server addresses included. Hearth will be as it was when first opened. This cannot be undone.", bundle: .module)
+    static let eraseAllMessage = String(localized: "profile.eraseAllMessage", defaultValue: "Your chats, projects, memories, profile and saved settings will be erased from this device, server addresses and sync included. Hearth will be as it was when first opened. Your hub and other devices are not changed. This cannot be undone.", bundle: .module)
     static let eraseAllConfirm = String(localized: "profile.eraseAllConfirm", defaultValue: "Erase everything", bundle: .module)
     static let eraseAllFailed = String(localized: "profile.eraseAllFailed", defaultValue: "Not everything could be erased. Try again.", bundle: .module)
 }

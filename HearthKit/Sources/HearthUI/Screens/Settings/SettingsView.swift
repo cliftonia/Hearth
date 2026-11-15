@@ -8,11 +8,14 @@ import SwiftUI
 struct SettingsView: View {
     let presenter: SettingsPresenter
 
+    /// The pages pushed on from the settings, the last on top.
+    @State private var path: [SettingsPageKind] = []
+
     var body: some View {
         @Bindable var viewModel = presenter.viewModel
-        NavigationStack {
+        NavigationStack(path: $path) {
             Form {
-                ProfileSection(presenter: presenter)
+                ProfileSection(presenter: presenter, openAction: openAction)
                 Section {
                     addressField(Strings.ollamaAddress, text: $viewModel.ollamaAddress)
                     addressField(Strings.searchAddress, text: $viewModel.searchAddress)
@@ -45,8 +48,9 @@ struct SettingsView: View {
                     Toggle(Strings.readRepliesAloud, isOn: $viewModel.isAutoReadEnabled)
                 }
                 PictureSettingsSection(model: $viewModel.imageModel, capabilities: viewModel.imageCapabilities)
-                MemorySection(presenter: presenter)
-                NotificationsSection(presenter: presenter)
+                MemorySection(presenter: presenter, openAction: openAction)
+                NotificationsSection(presenter: presenter, openAction: openAction)
+                SyncSection(presenter: presenter, openAction: openAction)
                 Section {
                     Toggle(Strings.requireUnlock, isOn: $viewModel.isLockEnabled)
                         .onChange(of: viewModel.isLockEnabled) { Task { await presenter.lockAction() } }
@@ -73,6 +77,7 @@ struct SettingsView: View {
             }
             .scrollContentBackground(.hidden)
             .background(HearthColor.paper)
+            .navigationDestination(for: SettingsPageKind.self, destination: page)
             .navigationTitle(Strings.settings)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -89,6 +94,31 @@ struct SettingsView: View {
         }
         .tint(HearthColor.pine)
         .task { await presenter.loadAction() }
+    }
+
+    // MARK: Pages
+
+    /// Opens a page, unless it is already the one on top.
+    private func openAction(_ kind: SettingsPageKind) {
+        guard path.last != kind else {
+            return
+        }
+        path.append(kind)
+    }
+
+    /// The page a row leads on to.
+    @ViewBuilder
+    private func page(_ kind: SettingsPageKind) -> some View {
+        switch kind {
+        case .profile:
+            ProfilePage(presenter: presenter)
+        case .memories:
+            MemoryListView(presenter: presenter)
+        case .notifications:
+            NotificationsPage(presenter: presenter)
+        case .sync:
+            SyncPage(presenter: presenter)
+        }
     }
 
     // MARK: Rows

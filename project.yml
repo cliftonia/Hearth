@@ -76,6 +76,7 @@ targets:
         HearthDefaultSearchAddress: $(HEARTH_SEARCH_ADDRESS)
         HearthDefaultSpeechAddress: $(HEARTH_SPEECH_ADDRESS)
         HearthDefaultImageAddress: $(HEARTH_IMAGE_ADDRESS)
+        HearthDefaultHubAddress: $(HEARTH_HUB_ADDRESS)
         HearthDefaultModel: $(HEARTH_DEFAULT_MODEL)
         HearthAppGroup: $(HEARTH_APP_GROUP)
   # Home screen and lock screen shortcuts to a new chat and to a voice conversation.

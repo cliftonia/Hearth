@@ -21,6 +21,9 @@ struct RootView: View {
         }
         .onChange(of: scenePhase, initial: true) {
             coordinator.router.isSceneActive = scenePhase == .active
+            if scenePhase == .active {
+                coordinator.sceneDidBecomeActive()
+            }
             let shouldPrompt = coordinator.lockPresenter.sceneChanged(to: scenePhase)
             coordinator.showLockWindow(colorScheme: colorScheme)
             if shouldPrompt {

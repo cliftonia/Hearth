@@ -12,7 +12,11 @@ struct SettingsPresenterTests {
         let settingsStore: SettingsStore
         let conversationStore = PresenterFixtures.conversationStore([Conversation(title: "Holiday")])
         let profileStore = PresenterFixtures.profileStore()
+        let syncStore = PresenterFixtures.syncStore()
         let notifications: NotificationsFixture
+        private(set) var syncNowCount = 0
+        /// What a hub check answers.
+        var checkAnswer: SyncHubCheckKind = .reachable
         private(set) var didQuietChat = false
         private(set) var eraseCount = 0
         private(set) var finishes: [Bool] = []
@@ -41,7 +45,12 @@ struct SettingsPresenterTests {
                 authentication: AuthenticationProvider { _ in true },
                 notifications: notifications.provider,
                 fetchModels: { _ in 0 },
-                quietChat: { self.didQuietChat = true }
+                quietChat: { self.didQuietChat = true },
+                sync: SettingsPresenter.SyncControls(
+                    store: syncStore,
+                    syncNow: { self.syncNowCount += 1 },
+                    check: { _, _ in self.checkAnswer }
+                )
             ))
             subject.delegate = self
             return subject

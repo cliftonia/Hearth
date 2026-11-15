@@ -98,8 +98,15 @@ and your conversations stay on the device.
 - **Notifications** when a reply or a picture finishes while Hearth is not on screen, made on the device itself.
   Tapping one opens its chat; a private chat's says only that a reply is ready
 - **Erase all data on this device**: there are no accounts, so the profile page offers to erase the chats, projects,
-  memories, profile and saved settings instead, leaving the app as it was when first opened
-- **On the device only**: JSON files in the app's own folder, synced nowhere
+  memories, profile and saved settings instead, leaving the app as it was when first opened. It wipes this device
+  only and turns sync off; nothing is deleted from the hub or your other devices
+- **On the device**: JSON files in the app's own folder, and synced only if you turn sync on
+- **Sync between your devices**, through your own [Hearth Hub](#sync-with-your-own-hub) (Settings → Sync, off by
+  default): ordinary chats with their messages, reply versions, pictures, research reports and sources, pins and
+  projects; projects with their instructions and files; and memories. Private chats, settings, server addresses, the
+  profile and its photo, and the hub's access token never leave the device. It syncs when Hearth opens, when it comes
+  back to the front, a few seconds after a change, and on "Sync now"; a reply still being written is sent once it
+  has finished
 
 ### Look
 
@@ -143,6 +150,15 @@ plain HTTP is refused by the system, so address a tailnet machine by its MagicDN
 | Ollama | `https://my-server.example.ts.net` | `tailscale serve --bg http://localhost:11434` |
 | Search | `https://my-server.example.ts.net:8888` | SearXNG with `json` among its `search.formats` |
 | Speech | `http://my-server.example.ts.net:8880` | Kokoro-FastAPI listening on the tailnet |
+
+### Sync with your own hub
+
+Hearth Hub is a small server of your own, kept in a separate repository, that holds a copy of what each device
+syncs. In Settings → Sync, enter its address, an access token if it asks for one (kept in the Keychain, never in
+the settings or a file), and turn on "Sync this device". The same App Transport Security rules apply as for your
+other servers: plain `http://` only to a local-network name or a `*.ts.net` one, `https://` anywhere else. A copy
+changed on two devices is settled by the later change, item by item; a deletion travels as a tombstone. The exact
+format is the hub's `docs/WIRE_FORMAT.md`.
 
 ## Architecture
 
@@ -197,8 +213,10 @@ conversation (when it runs, when it stops, and the picture sent with a spoken tu
 reply are pieces, their kinds and titles, fences left open or nested, which pieces are versions of one another,
 what a generated page may load and where it may go, and how the columns share a wide screen), and deep research: reading
 a model's plan, choosing and spreading sources, tidying citations, the order of its steps, its bounds, stopping it and
-what it does when nothing can be read. The codebase holds a
-zero-warning SwiftLint bar.
+what it does when nothing can be read; and sync: every synced model to the wire and back (reply versions, pictures,
+research and fields from a newer app kept), which copy wins, tombstones both ways, private chats never sent, a
+streaming chat put off, a refused older copy replaced by the hub's, paging, the settings page, when syncs run, and
+that erasing sends nothing. The codebase holds a zero-warning SwiftLint bar.
 
 The same checks run on every push and pull request through GitHub Actions (`.github/workflows/ci.yml`), together with
 a check that the string catalog matches `Strings.swift` and that each layer imports only the layers beneath it.
@@ -244,5 +262,11 @@ a check that the string catalog matches `Strings.swift` and that each layer impo
   Pages are read by the device under the same rule as any search's pages. If no page can be read, or none says
   anything about the question, it says so and writes nothing. It needs a search address; without one the choice is
   listed but cannot be made
+- **Sync is last writer wins, per item.** Two devices changing the same chat before they sync keep the later
+  change and lose the earlier one, whole; messages are not merged. The comparison uses each device's clock, so a
+  device whose clock is badly wrong can win or lose unfairly (the hub refuses times more than a day ahead). A
+  conversation is sent whole, pictures included, each time it changes; one larger than 20 MB of JSON stays on the
+  device and the status line says so. A memory saved with the same words on two devices before they first sync is
+  kept twice
 - **A reply keeps streaming for a short while in the background**, as long as iOS allows, usually about half a minute.
 - The app icon is drawn by `python3 Tools/make_icon.py` (needs Pillow).

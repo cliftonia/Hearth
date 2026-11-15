@@ -9,3 +9,4 @@ HEARTH_OLLAMA_ADDRESS = https:/$()/my-server.example.ts.net
 HEARTH_SEARCH_ADDRESS = https:/$()/my-server.example.ts.net:8888
 HEARTH_SPEECH_ADDRESS = http:/$()/my-server.example.ts.net:8880
 HEARTH_IMAGE_ADDRESS = http:/$()/my-server.example.ts.net:8188
+HEARTH_HUB_ADDRESS = https:/$()/my-server.example.ts.net:8765

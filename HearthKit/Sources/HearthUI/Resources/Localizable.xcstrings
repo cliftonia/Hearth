@@ -2460,7 +2460,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hearth has no accounts. Everything it knows about you is kept on this device, and this removes it."
+            "value": "Hearth has no accounts. This removes everything it keeps on this device and turns sync off. Your hub and your other devices keep their copies; nothing is deleted there."
           }
         }
       }
@@ -2471,7 +2471,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your chats, projects, memories, profile and saved settings will be erased, server addresses included. Hearth will be as it was when first opened. This cannot be undone."
+            "value": "Your chats, projects, memories, profile and saved settings will be erased from this device, server addresses and sync included. Hearth will be as it was when first opened. Your hub and other devices are not changed. This cannot be undone."
           }
         }
       }
@@ -3572,6 +3572,314 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yesterday"
+          }
+        }
+      }
+    },
+    "sync.check": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test connection"
+          }
+        }
+      }
+    },
+    "sync.checkSucceeded": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected to the hub."
+          }
+        }
+      }
+    },
+    "sync.failed.hub": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The hub ran into a problem (%lld). Hearth will try again later."
+          }
+        }
+      }
+    },
+    "sync.failed.notConfigured": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The hub address is not a usable address."
+          }
+        }
+      }
+    },
+    "sync.failed.tokenNeeded": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The hub needs an access token."
+          }
+        }
+      }
+    },
+    "sync.failed.tokenRefused": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The hub did not accept the access token."
+          }
+        }
+      }
+    },
+    "sync.failed.unreachable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The hub could not be reached. Hearth will try again later."
+          }
+        }
+      }
+    },
+    "sync.failed.unreadable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The hub's answer could not be read. Is this the address of a Hearth Hub?"
+          }
+        }
+      }
+    },
+    "sync.hubAddress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hub address"
+          }
+        }
+      }
+    },
+    "sync.hubFooter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your own Hearth Hub keeps your chats, projects and memories in step between your devices. Private chats, settings, server addresses and your profile are never synced."
+          }
+        }
+      }
+    },
+    "sync.inProgress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Syncing…"
+          }
+        }
+      }
+    },
+    "sync.lastSynced": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last synced %@."
+          }
+        }
+      }
+    },
+    "sync.needsAddress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add the hub's address to turn sync on."
+          }
+        }
+      }
+    },
+    "sync.never": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not synced yet."
+          }
+        }
+      }
+    },
+    "sync.now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sync now"
+          }
+        }
+      }
+    },
+    "sync.off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        }
+      }
+    },
+    "sync.on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On"
+          }
+        }
+      }
+    },
+    "sync.removeToken": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove token"
+          }
+        }
+      }
+    },
+    "sync.saveToken": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save token"
+          }
+        }
+      }
+    },
+    "sync.status": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
+          }
+        }
+      }
+    },
+    "sync.switch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sync this device"
+          }
+        }
+      }
+    },
+    "sync.switchDetail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When Hearth opens, when it comes back, and shortly after a change."
+          }
+        }
+      }
+    },
+    "sync.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sync"
+          }
+        }
+      }
+    },
+    "sync.token": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access token"
+          }
+        }
+      }
+    },
+    "sync.tokenFooter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only if your hub asks for one. It is kept in this device's Keychain and is never synced."
+          }
+        }
+      }
+    },
+    "sync.tokenPlaceholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional"
+          }
+        }
+      }
+    },
+    "sync.tokenSavedPlaceholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved. Type a new one to replace it"
+          }
+        }
+      }
+    },
+    "sync.tooLarge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synced, except %lld too large for the hub, which stay on this device only."
           }
         }
       }

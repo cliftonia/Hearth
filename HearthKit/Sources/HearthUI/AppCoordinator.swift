@@ -19,6 +19,8 @@ public final class AppCoordinator {
     let voicePresenter: VoicePresenter
     let lockPresenter: LockPresenter
     let canvasPresenter: CanvasPresenter
+    /// Decides when to sync with the hub.
+    let syncScheduler: SyncScheduler
     /// A voice conversation asked for while locked, begun once the owner is in.
     private var isVoicePending = false
     private let lockWindowController = LockWindowController()
@@ -72,8 +74,36 @@ public final class AppCoordinator {
             },
             stopTurn: { await chatPresenter.stopAction() }
         ))
+        self.syncScheduler = dependencies.syncScheduler
+        connect(dependencies)
+    }
+
+    /// Connects what the presenters report to the coordinator, sync to the chat, and notification taps.
+    private func connect(_ dependencies: AppDependencies) {
         connectDelegates()
+        connectSync(dependencies)
         listenForNotificationTaps(dependencies.notifications)
+    }
+
+    /// Lets sync ask the chat whether a chat is being written to, tells the chat of chats another device changed,
+    /// and starts syncing once the saved data has been read.
+    private func connectSync(_ dependencies: AppDependencies) {
+        let chatPresenter = chatPresenter
+        let scheduler = syncScheduler
+        dependencies.syncHooks.isBusy = { chatPresenter.isWriting($0) }
+        dependencies.syncHooks.didApplyRemote = { keys in
+            let ids = Set(keys.filter { $0.kind == .conversation }.compactMap(\.uuid).map { Conversation.ID($0) })
+            guard !ids.isEmpty else {
+                return
+            }
+            Task { await chatPresenter.conversationsChangedRemotely(ids) }
+        }
+        chatPresenter.onStoresLoaded = { scheduler.appDidLoad() }
+    }
+
+    /// The app has come to the front: sync, if sync is on.
+    func sceneDidBecomeActive() {
+        syncScheduler.appBecameActive()
     }
 
     private static func makeSettingsPresenter(dependencies: AppDependencies, chatPresenter: ChatPresenter) -> SettingsPresenter {
@@ -93,7 +123,12 @@ public final class AppCoordinator {
                 }
                 return try await fetchModels(baseURL).count
             },
-            quietChat: { await chatPresenter.quietAction() }
+            quietChat: { await chatPresenter.quietAction() },
+            sync: SettingsPresenter.SyncControls(
+                store: dependencies.syncStore,
+                syncNow: { await dependencies.syncScheduler.syncNow() },
+                check: { url, token in await dependencies.sync.check(url, token: token) }
+            )
         ))
     }
 

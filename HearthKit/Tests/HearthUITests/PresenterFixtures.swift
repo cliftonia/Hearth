@@ -24,6 +24,19 @@ enum PresenterFixtures {
         ProfileStore(provider: ProfilePhotoProvider(load: { nil }, save: { _ in }, delete: {}))
     }
 
+    /// A sync store kept in memory, with the given settings.
+    static func syncStore(_ settings: SyncSettings = SyncSettings()) -> SyncStore {
+        let saved = SyncMemory(settings: try? JSONEncoder().encode(settings))
+        return SyncStore(provider: SyncStoreProvider(
+            loadSettings: { saved.settings },
+            saveSettings: { saved.settings = $0 },
+            loadJournal: { nil },
+            saveJournal: { _ in },
+            readToken: { saved.token },
+            writeToken: { saved.token = $0 }
+        ))
+    }
+
     static func settingsStore(_ settings: ServerSettings = ServerSettings()) -> SettingsStore {
         SettingsStore(defaults: settings, load: { nil }, save: { _ in })
     }
@@ -92,5 +105,26 @@ final class NotificationsFixture {
 
     private func record(_ notification: ReplyNotification) {
         posted.append(notification)
+    }
+}
+
+/// What a sync store in memory has saved, safely across tasks.
+final class SyncMemory: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storedSettings: Data?
+    private var storedToken: String?
+
+    init(settings: Data?) {
+        storedSettings = settings
+    }
+
+    var settings: Data? {
+        get { lock.withLock { storedSettings } }
+        set { lock.withLock { storedSettings = newValue } }
+    }
+
+    var token: String? {
+        get { lock.withLock { storedToken } }
+        set { lock.withLock { storedToken = newValue } }
     }
 }

@@ -20,11 +20,24 @@ public extension MemoryDataProvider {
                 guard let data = try await service.loadAll().first else {
                     return []
                 }
-                return try JSONDecoder().decode([Memory].self, from: data)
+                let memories = try JSONDecoder().decode([Memory].self, from: data)
+                // Memories saved before sync were each just given a new `syncID`; it is written back at once, so
+                // that the next launch reads the same one.
+                if try JSONDecoder().decode([SyncIDProbe].self, from: data).contains(where: { $0.syncID == nil }) {
+                    try await service.save(try JSONEncoder().encode(memories), name: fileName)
+                }
+                return memories
             },
             save: { memories in
-                try await service.save(try JSONEncoder().encode(memories), name: "memories.json")
+                try await service.save(try JSONEncoder().encode(memories), name: fileName)
             }
         )
+    }
+
+    private static let fileName = "memories.json"
+
+    /// Whether a saved memory already has its identifier for sync.
+    private struct SyncIDProbe: Decodable {
+        let syncID: UUID?
     }
 }

@@ -140,4 +140,30 @@ struct EraseTests {
         #expect(fixture.profile.photoJPEG == nil)
         #expect(fixture.photoFile == nil)
     }
+
+    @Test func `erasing a synced device sends no deletions, turns sync off and leaves the hub as it was`() async throws {
+        let hub = FakeHub()
+        let device = SyncDevice(hub: hub)
+        try await device.conversations.save(SyncSamples.conversation(title: "Holiday"))
+        try await device.projects.save(Project(name: "Garden"))
+        await device.memories.apply(.save("Likes tea"), isFromUser: true)
+        try await device.syncNow()
+        let reportedBefore = device.reported.count
+        let profile = ProfileStore(provider: ProfilePhotoProvider(load: { nil }, save: { _ in }, delete: {}))
+        let settings = SettingsStore(defaults: ServerSettings(), load: { nil }, save: { _ in })
+        let stores = EraseInteractor.Stores(
+            conversations: device.conversations, projects: device.projects, memories: device.memories, profile: profile, settings: settings
+        )
+        let subject = EraseInteractor(stores: stores) { await device.sync.reset() }
+
+        try await subject.eraseAll()
+
+        #expect(device.conversations.conversations.isEmpty && device.projects.projects.isEmpty && device.memories.memories.isEmpty)
+        #expect(device.reported.count == reportedBefore)
+        #expect(device.sync.journal.tombstones.isEmpty)
+        #expect(!device.sync.settings.isEnabled && device.sync.settings.hubAddress.isEmpty)
+        await #expect(throws: SyncError(.notConfigured)) { try await device.syncNow() }
+        #expect(hub.all.count == 3)
+        #expect(hub.all.allSatisfy { !$0.deleted })
+    }
 }

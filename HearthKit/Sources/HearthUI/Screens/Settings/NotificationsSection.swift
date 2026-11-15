@@ -5,11 +5,13 @@ import UIKit
 /// The row in the settings that leads to the notification switches, saying whether any is on.
 struct NotificationsSection: View {
     let presenter: SettingsPresenter
+    /// Opens the page this row leads to.
+    let openAction: (SettingsPageKind) -> Void
 
     var body: some View {
         let isOn = presenter.viewModel.isReplyNotificationsEnabled
         Section {
-            NavigationLink(destination: { NotificationsPage(presenter: presenter) }, label: {
+            SettingsLinkRow(action: { openAction(.notifications) }, label: {
                 HStack(spacing: HearthSpacing.s8) {
                     Text(Strings.notifications)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -22,7 +24,7 @@ struct NotificationsSection: View {
 }
 
 /// What Hearth may tell the user about while it is not on screen: one switch for each thing it can do today.
-private struct NotificationsPage: View {
+struct NotificationsPage: View {
     let presenter: SettingsPresenter
 
     @Environment(\.openURL) private var openURL

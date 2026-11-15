@@ -52,6 +52,8 @@ final class ChatPresenter {
     var speakTask: Task<Void, Never>?
     /// The reply being streamed, kept so that it can be stopped.
     var turnTask: Task<Void, Never>?
+    /// Told once the saved chats, projects and memories have been read, which is when sync may begin.
+    var onStoresLoaded: (@MainActor () -> Void)?
 
     init(dependencies: Dependencies) {
         self.dependencies = dependencies
@@ -85,6 +87,7 @@ final class ChatPresenter {
         } catch {
             logger.error("Loading memories failed: \(error.localizedDescription, privacy: .public)")
         }
+        onStoresLoaded?()
         await refreshModelsAction()
     }
 

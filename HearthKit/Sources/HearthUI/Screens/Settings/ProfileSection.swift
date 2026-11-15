@@ -7,11 +7,13 @@ struct ProfileSection: View {
     private static let avatarDiameter: CGFloat = 44
 
     let presenter: SettingsPresenter
+    /// Opens the page this row leads to.
+    let openAction: (SettingsPageKind) -> Void
 
     var body: some View {
         let profile = presenter.viewModel.profile
         Section {
-            NavigationLink(destination: { ProfilePage(presenter: presenter) }, label: {
+            SettingsLinkRow(action: { openAction(.profile) }, label: {
                 HStack(spacing: HearthSpacing.s12) {
                     Avatar(photoJPEG: presenter.photoJPEG, initials: profile.initials, diameter: Self.avatarDiameter)
                     VStack(alignment: .leading, spacing: HearthSpacing.s2) {
@@ -33,7 +35,7 @@ struct ProfileSection: View {
 }
 
 /// Who the user is and how they like to be answered, and the way to erase everything.
-private struct ProfilePage: View {
+struct ProfilePage: View {
     private static let avatarDiameter: CGFloat = 96
 
     let presenter: SettingsPresenter

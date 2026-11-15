@@ -6,11 +6,16 @@ import Observation
 @Observable
 public final class ProjectStore {
     public private(set) var projects: [Project] = []
+    /// Told of every change made on this device, for sync. Not told of erasing everything.
+    @ObservationIgnored public var onLocalChange: (@MainActor (SyncLocalChangeKind) -> Void)?
 
-    private let provider: ProjectDataProvider
+    let provider: ProjectDataProvider
+    private let clock: @MainActor () -> Date
 
-    public init(provider: ProjectDataProvider) {
+    /// - Parameter clock: The time changes are stamped with.
+    public init(provider: ProjectDataProvider, clock: @escaping @MainActor () -> Date = { Date() }) {
         self.provider = provider
+        self.clock = clock
     }
 
     /// Reads every project from disk, most recently changed first.
@@ -28,10 +33,12 @@ public final class ProjectStore {
 
     /// Puts a new or changed project at the top of the list and writes it to disk.
     ///
-    /// If the write fails the list goes back to what is on disk, and the error is passed on.
+    /// It is stamped as changed now, which is also when the list says it last changed. If the write fails the list
+    /// goes back to what is on disk, and the error is passed on.
     public func save(_ project: Project) async throws {
         let previousIndex = projects.firstIndex { $0.id == project.id }
         let previous = previousIndex.map { projects[$0] }
+        let project = project.updating(updatedAt: SyncClock.stamp(now: clock(), after: previous?.updatedAt))
         projects.removeAll { $0.id == project.id }
         projects.insert(project, at: 0)
         do {
@@ -43,9 +50,11 @@ public final class ProjectStore {
             }
             throw error
         }
+        onLocalChange?(.changed(.project(project.id)))
     }
 
     /// Removes every project from the list and from disk, as when the user erases everything on the device.
+    /// Sync is not told: erasing this device deletes nothing anywhere else.
     /// If that cannot be done the list is read again from what is left on disk, and the error is passed on.
     public func deleteAll() async throws {
         do {
@@ -78,5 +87,25 @@ public final class ProjectStore {
             projects.insert(removed, at: min(index, projects.count))
             throw error
         }
+        onLocalChange?(.deleted(.project(id), at: SyncClock.stamp(now: clock(), after: removed.updatedAt)))
+    }
+
+    // MARK: From another device
+
+    /// Puts a project from another device in the list, in its place by date, replacing any copy held. It is
+    /// written as it came, stamp included, and sync is not told.
+    public func applyRemote(_ project: Project) async throws {
+        try await provider.save(project)
+        projects.removeAll { $0.id == project.id }
+        projects.insert(project, at: projects.firstIndex { $0.updatedAt < project.updatedAt } ?? projects.count)
+    }
+
+    /// Removes a project another device deleted. Its chats are let go by `ConversationStore.releaseRemote(from:)`.
+    public func deleteRemote(_ id: Project.ID) async throws {
+        guard projects.contains(where: { $0.id == id }) else {
+            return
+        }
+        try await provider.delete(id)
+        projects.removeAll { $0.id == id }
     }
 }

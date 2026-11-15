@@ -10,7 +10,7 @@ HearthUI        Coordinator, Presenters, ViewModels, SwiftUI views, design syste
    │
 HearthDomain    Models, Interactors, Stores, DataProviders, Transformers             Sendable
    │
-HearthData      Services and DTOs: Ollama, SearXNG, Kokoro, files, audio, speech, notifications   Sendable
+HearthData      Services and DTOs: Ollama, SearXNG, Kokoro, the hub, files, Keychain, audio, speech, notifications   Sendable
    │
 HearthCore      Tagged identifiers, logging
 ```
@@ -83,6 +83,7 @@ HearthKit/Sources/HearthUI/
   AppRouter.swift               What is presented besides the chat
   AppDependencies.swift         Everything the screens are built from, and its live version
   AppDefaults.swift             The addresses the app starts with
+  Sync/                         SyncScheduler (when to sync, one at a time) and SyncHooks (what sync asks of the chat)
   Screens/
     Root/                       RootView, DrawerContainer
     Chat/                       ChatView, ChatPresenter (+Replying, +Pictures, +Research, +Editing, +FollowUps, +Notifications, +Voice, +Canvas), ChatViewModel
@@ -92,7 +93,7 @@ HearthKit/Sources/HearthUI/
     Project/                    ProjectView, ProjectPresenter, ProjectViewModel: the sheet that makes or edits a project
     ProjectPicker/              ProjectPickerView, ProjectPickerPresenter, ProjectPickerViewModel: the sheet that files a chat
     Settings/                   SettingsView, SettingsPresenter (+Profile, +Notifications), SettingsViewModel, and its
-                                sections and pushed pages: ProfileSection, MemorySection, NotificationsSection, SettingsCard
+                                sections and pushed pages: ProfileSection, MemorySection, NotificationsSection, SyncSection, SettingsCard
     Voice/                      VoiceView, VoicePresenter (+Camera), VoiceViewModel, VoiceOrb, VoiceControls, and the
                                 camera's card: VoiceCameraCard, CameraPreviewSurface, VoiceCameraLayout
     Canvas/                     CanvasView, CanvasPresenter, CanvasViewModel, CanvasCodeSection, CanvasWebPreview (the
@@ -237,6 +238,57 @@ sent to the model; a piece is read out of the saved text of its reply each time 
   there are no message handlers; and a script run before the page's own takes away peer connections, the one way
   to the network that is not a request. The log notes that a navigation was cancelled and never its address.
 
+## Sync
+
+Sync keeps ordinary chats, projects and memories in step between devices through Hearth Hub, a small server of the
+user's own in a separate repository. The format on the wire, the conflict rule and what a client must do are
+written down in the hub's `docs/WIRE_FORMAT.md`; this section says how this app does it.
+
+- **Layers.** `SyncService` (data) makes the three requests over `URLSession`; the DTOs in `SyncDTOs.swift` are the
+  wire's shapes, `JSONValue` keeps raw JSON, `WireTime` reads and writes the wire's times from whole milliseconds,
+  and `SyncUnknownFieldsDTO` keeps and gives back fields a newer app wrote. `KeychainService` keeps the access
+  token. In the domain, `SyncDataProvider` and `SyncStoreProvider` are the closure witnesses over them;
+  `Conversation+DTO`, `Project+DTO` and `Memory+DTO` map each model to its body and back; `SyncPlanner` is the pure
+  decision-making; `SyncInteractor` carries one sync out through the stores; and `SyncStore` holds the settings,
+  the status and the journal. In the UI, `SyncScheduler` decides when to sync and `SettingsPresenter+Sync` with
+  `SyncSection` is the page.
+- **Stamps.** Every synced item carries the time it last changed: `Conversation.modifiedAt` (new; separate from
+  `updatedAt`, which is when the chat was last active and orders the list, and which a rename or a pin leaves
+  alone), `Project.updatedAt` and `Memory.updatedAt`. Only the stores stamp, with `SyncClock.stamp`, which is now or
+  a millisecond after the previous stamp if that is later, so a change made here always wins over the copy it
+  changed. Items saved before sync are read with their old times as their stamps. A memory also gains `syncID`, a
+  UUID, since its `m3` handle is counted afresh on each device and cannot name it between them; it is written back
+  to the file the first time it is read.
+- **What the stores report.** `ConversationStore`, `ProjectStore` and `MemoryStore` call `onLocalChange` after each
+  change made here, `.changed` or `.deleted` with the stamp for its tombstone. A private chat is never reported, and
+  neither is erasing (`deleteAll`, `MemoryStore.eraseAll`). `SyncStore.record` keeps each deletion as a tombstone in
+  the journal until the hub takes it, and `SyncScheduler.localChangeHappened` syncs three seconds after the last
+  change. Changes that arrive from another device go in through `applyRemote`, `deleteRemote` and
+  `ConversationStore.releaseRemote(from:)`, which write the item as it came and report nothing.
+- **The journal** (`SyncJournal`, a JSON file in a `Sync` folder beside `Conversations`): the opaque install
+  identifier, the hub's database identifier and the cursor, the stamp of each item as the hub holds it, the
+  tombstones not yet sent, and the unknown fields kept for each item. It is read at once at launch so nothing is
+  recorded before it. The hub address and the switch are in the user defaults; the token in the Keychain only.
+- **A sync** (`SyncInteractor.sync`) pulls the hub's changes after the cursor, page by page, has the planner weigh
+  each against the local copy (later stamp wins; an equal one is the same version), applies what wins and saves the
+  cursor after each page; then it sends each local item whose stamp is not the one the hub holds, and each
+  tombstone. A 409 means the hub holds a later copy, which is taken unless the item has changed here again. An
+  item over the hub's 20 MB is not sent, is counted, and the status line says how many stayed on the device. A
+  different hub identifier (another hub, or the same one started afresh) starts again from nothing, which is also
+  how a first sync merges: what the hub lacks is sent, what the device lacks arrives, and the later copy wins where
+  both have one.
+- **The open chat.** `ChatPresenter.isWriting` tells sync that a reply, picture or report is streaming into a chat;
+  such a chat is neither replaced nor sent, and the cursor stays before its change so the next sync weighs it again.
+  The reply's save at the end is a change like any other and triggers a sync. When another device changes the open
+  chat, `conversationsChangedRemotely` shows the new copy, or a new chat if it was deleted.
+- **When.** `SyncScheduler` syncs only once the chat has read the stores (`ChatPresenter.onStoresLoaded`), then each
+  time the app comes to the front, a few seconds after a change, and on "Sync now"; one at a time, a request during
+  a sync running one more after it. A failure only sets `SyncStore.failure` for the status line.
+- **Never synced:** private chats, not even as a tombstone; the settings; any address; the profile and its photo;
+  the token. The logs hold counts and kinds of failure, never a title, a message, an address or the token.
+- **Erasing** stops any sync, turns sync off and forgets the address, the token and the journal
+  (`SyncScheduler.stopAndReset`) before anything is deleted, and deletes nothing on the hub.
+
 ## Settings, the profile and erasing
 
 Settings is one sheet with one Presenter. Its first page is a form; the profile and the notifications are pages
@@ -246,7 +298,8 @@ pushed from it, drawn as cards (`SettingsPage`, `SettingsCard`).
   Done; Cancel lets it go. The pushed pages take part in the same draft: the names and the instructions typed on
   the profile page are kept by Done like any field on the first page.
 - **What takes effect at once**, because it is an act more than a setting or has to be felt to be judged: the
-  theme, the memories, the profile photo, the haptics switch, the notification switches, and erasing everything.
+  theme, the memories, the profile photo, the haptics switch, the notification switches, the sync page, and erasing
+  everything.
   Each is written straight to its store, so Cancel does not undo it.
 - **The profile.** The full name and the nickname are fields of `ServerSettings` (`UserProfile` gives the
   initials and the name to call the user by). The nickname took the place of the earlier `userName`, whose saved
@@ -254,9 +307,10 @@ pushed from it, drawn as cards (`SettingsPage`, `SettingsCard`).
   among the memories; `PromptBuilder` tells the model the name in one line, in private chats too, since it is a
   setting and not a memory. The photo is cut to a small square JPEG and kept by `ProfileStore` in a `Profile`
   folder beside `Conversations`.
-- **Erasing.** There are no accounts, so the profile page offers to erase what the device holds.
+- **Erasing.** There are no accounts, so the profile page offers to erase what the device holds. Sync is stopped,
+  turned off and forgotten first, so nothing erased here is deleted from the hub or another device.
   `EraseInteractor` asks each store in turn (`ConversationStore.deleteAll`, `ProjectStore.deleteAll`,
-  `MemoryStore.clear`, `ProfileStore.removePhoto`) and last `SettingsStore.reset`, which removes the saved
+  `MemoryStore.eraseAll`, `ProfileStore.removePhoto`) and last `SettingsStore.reset`, which removes the saved
   settings and goes back to the build-time defaults, as on first launch. The chat is quietened first so that
   nothing is written meanwhile, and a failure part of the way leaves the settings in place to try again.
 

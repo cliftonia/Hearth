@@ -11,14 +11,32 @@ public struct Memory: Identifiable, Hashable, Codable, Sendable {
     /// Whether the user wrote it by hand, rather than the model saving it.
     public let isFromUser: Bool
     public let createdAt: Date
+    /// When the memory last changed; sync compares it to decide which of two copies is newer.
     public let updatedAt: Date
+    /// Names the memory between devices. The short handle cannot, since every device counts its own from `m1`.
+    public let syncID: UUID
 
-    public init(id: ID, text: String, isFromUser: Bool, createdAt: Date, updatedAt: Date) {
+    public init(id: ID, text: String, isFromUser: Bool, createdAt: Date, updatedAt: Date, syncID: UUID = UUID()) {
         self.id = id
         self.text = text
         self.isFromUser = isFromUser
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.syncID = syncID
+    }
+
+    /// Memories saved before sync have no `syncID` and are given one; `MemoryDataProvider` writes it back at once,
+    /// so that it never changes.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            id: try container.decode(ID.self, forKey: .id),
+            text: try container.decode(String.self, forKey: .text),
+            isFromUser: try container.decode(Bool.self, forKey: .isFromUser),
+            createdAt: try container.decode(Date.self, forKey: .createdAt),
+            updatedAt: try container.decode(Date.self, forKey: .updatedAt),
+            syncID: try container.decodeIfPresent(UUID.self, forKey: .syncID) ?? UUID()
+        )
     }
 }
 

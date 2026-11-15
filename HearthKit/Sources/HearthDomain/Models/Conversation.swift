@@ -226,6 +226,9 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
     public let createdAt: Date
     /// When the conversation was last active; the list is ordered by it.
     public let updatedAt: Date
+    /// When anything about the conversation last changed, a rename or a pin included. It is what sync compares to
+    /// decide which of two copies is newer, and is stamped by `ConversationStore`, never by the screens.
+    public let modifiedAt: Date
 
     public init(
         id: ID = ID(UUID()),
@@ -236,7 +239,8 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
         isPrivate: Bool = false,
         projectID: Project.ID? = nil,
         createdAt: Date = Date(),
-        updatedAt: Date = Date()
+        updatedAt: Date = Date(),
+        modifiedAt: Date? = nil
     ) {
         self.id = id
         self.title = title
@@ -247,10 +251,12 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
         self.projectID = projectID
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.modifiedAt = modifiedAt ?? SyncClock.flooredToMillisecond(max(updatedAt, createdAt))
     }
 
     /// Conversations saved before pinning, private chats or projects existed carry none of those marks; they are
-    /// read as not pinned, not private and in no project.
+    /// read as not pinned, not private and in no project. Those saved before sync have no `modifiedAt`, and take
+    /// it from when they were last active.
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
@@ -262,7 +268,8 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
             isPrivate: try container.decodeIfPresent(Bool.self, forKey: .isPrivate) ?? false,
             projectID: try container.decodeIfPresent(Project.ID.self, forKey: .projectID),
             createdAt: try container.decode(Date.self, forKey: .createdAt),
-            updatedAt: try container.decode(Date.self, forKey: .updatedAt)
+            updatedAt: try container.decode(Date.self, forKey: .updatedAt),
+            modifiedAt: try container.decodeIfPresent(Date.self, forKey: .modifiedAt)
         )
     }
 
@@ -290,7 +297,24 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
             isPrivate: isPrivate ?? self.isPrivate,
             projectID: projectID,
             createdAt: createdAt,
-            updatedAt: updatedAt ?? self.updatedAt
+            updatedAt: updatedAt ?? self.updatedAt,
+            modifiedAt: modifiedAt
+        )
+    }
+
+    /// A copy marked as changed at the given moment, for sync. Only the store stamps a conversation.
+    public func modified(at date: Date) -> Conversation {
+        Conversation(
+            id: id,
+            title: title,
+            modelID: modelID,
+            messages: messages,
+            isPinned: isPinned,
+            isPrivate: isPrivate,
+            projectID: projectID,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            modifiedAt: date
         )
     }
 

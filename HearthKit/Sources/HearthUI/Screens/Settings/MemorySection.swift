@@ -4,12 +4,14 @@ import SwiftUI
 /// What is remembered about the user: a switch, a way in to the list, and the list itself.
 struct MemorySection: View {
     let presenter: SettingsPresenter
+    /// Opens the page this row leads to.
+    let openAction: (SettingsPageKind) -> Void
 
     var body: some View {
         @Bindable var viewModel = presenter.viewModel
         Section {
             Toggle(Strings.memoryToggle, isOn: $viewModel.isMemoryEnabled)
-            NavigationLink(destination: { MemoryListView(presenter: presenter) }, label: {
+            SettingsLinkRow(action: { openAction(.memories) }, label: {
                 HStack(spacing: HearthSpacing.s8) {
                     Text(Strings.savedMemories)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -26,7 +28,7 @@ struct MemorySection: View {
 }
 
 /// The saved memories, where one can be added by hand, swiped away, or all forgotten at once.
-private struct MemoryListView: View {
+struct MemoryListView: View {
     let presenter: SettingsPresenter
 
     var body: some View {

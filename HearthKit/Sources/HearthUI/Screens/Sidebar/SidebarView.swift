@@ -71,7 +71,10 @@ struct SidebarView: View {
                 ForEach(groups) { group in
                     heading(group.title)
                     ForEach(group.rows) { row in
+                        // Keyed by everything it shows, so a row changed by another device while it moves between
+                        // groups is drawn afresh rather than kept as it was.
                         conversationRow(row)
+                            .id(row)
                     }
                 }
                 // The note keeps its place in the list when hidden, beneath the projects, which are always there.

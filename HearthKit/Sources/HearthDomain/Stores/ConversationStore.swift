@@ -6,11 +6,16 @@ import Observation
 @Observable
 public final class ConversationStore {
     public private(set) var conversations: [Conversation] = []
+    /// Told of every change made on this device, for sync. Never told of a private chat, nor of erasing everything.
+    @ObservationIgnored public var onLocalChange: (@MainActor (SyncLocalChangeKind) -> Void)?
 
-    private let provider: ConversationDataProvider
+    let provider: ConversationDataProvider
+    private let clock: @MainActor () -> Date
 
-    public init(provider: ConversationDataProvider) {
+    /// - Parameter clock: The time changes are stamped with.
+    public init(provider: ConversationDataProvider, clock: @escaping @MainActor () -> Date = { Date() }) {
         self.provider = provider
+        self.clock = clock
     }
 
     /// Reads every conversation from disk, most recently active first.
@@ -31,6 +36,7 @@ public final class ConversationStore {
         let previousIndex = conversations.firstIndex { $0.id == conversation.id }
         let previous = previousIndex.map { conversations[$0] }
         let saved = conversation.updating(isPinned: previous?.isPinned, project: previous.map { ProjectMembership($0.projectID) })
+            .modified(at: SyncClock.stamp(now: clock(), after: previous?.modifiedAt))
         conversations.removeAll { $0.id == saved.id }
         conversations.insert(saved, at: 0)
         do {
@@ -42,6 +48,7 @@ public final class ConversationStore {
             }
             throw error
         }
+        report(.changed(.conversation(saved.id)), for: saved)
     }
 
     /// Pins or unpins a conversation without counting it as activity: its place by date is unchanged.
@@ -76,7 +83,7 @@ public final class ConversationStore {
             return
         }
         let previous = conversations[index]
-        let changed = change(previous)
+        let changed = change(previous).modified(at: SyncClock.stamp(now: clock(), after: previous.modifiedAt))
         conversations[index] = changed
         do {
             try await provider.save(changed)
@@ -86,9 +93,24 @@ public final class ConversationStore {
             }
             throw error
         }
+        report(.changed(.conversation(id)), for: changed)
+    }
+
+    /// Replaces the list wholesale, for changes that arrive from another device (`ConversationStore+Sync`).
+    func replaceAll(with list: [Conversation]) {
+        conversations = list
+    }
+
+    /// Tells sync of a change, unless the conversation is private: nothing of a private chat ever leaves the device.
+    private func report(_ change: SyncLocalChangeKind, for conversation: Conversation) {
+        guard !conversation.isPrivate else {
+            return
+        }
+        onLocalChange?(change)
     }
 
     /// Removes every conversation from the list and from disk, as when the user erases everything on the device.
+    /// Sync is not told: erasing this device deletes nothing anywhere else.
     /// If that cannot be done the list is read again from what is left on disk, and the error is passed on.
     public func deleteAll() async throws {
         do {
@@ -119,5 +141,6 @@ public final class ConversationStore {
             conversations.insert(removed, at: min(index, conversations.count))
             throw error
         }
+        report(.deleted(.conversation(id), at: SyncClock.stamp(now: clock(), after: removed.modifiedAt)), for: removed)
     }
 }

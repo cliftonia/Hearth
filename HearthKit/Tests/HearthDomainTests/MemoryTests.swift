@@ -6,9 +6,9 @@ import Testing
 struct MemoryLedgerTests {
     private let now = Date(timeIntervalSince1970: 1_800_000_000)
 
-    /// A memory saved by a model, under the given handle.
-    private func memory(_ id: String, _ text: String) -> Memory {
-        Memory(id: Memory.ID(id), text: text, isFromUser: false, createdAt: now, updatedAt: now)
+    /// A memory saved by a model, under the given handle, and named for sync by the given identifier if one is given.
+    private func memory(_ id: String, _ text: String, syncID: UUID? = nil) -> Memory {
+        Memory(id: Memory.ID(id), text: text, isFromUser: false, createdAt: now, updatedAt: now, syncID: syncID ?? UUID())
     }
 
     /// Applies a change as a model would make it.
@@ -19,7 +19,7 @@ struct MemoryLedgerTests {
     @Test func `a fact is saved as one trimmed line under a fresh handle`() {
         let result = apply(.save("  Lives in\n Brisbane.  "), to: [memory("m1", "Likes tea."), memory("m7", "Has a dog.")])
 
-        #expect(result.outcome == .saved(memory("m8", "Lives in Brisbane.")))
+        #expect(result.outcome == .saved(memory("m8", "Lives in Brisbane.", syncID: result.memories.last?.syncID)))
         #expect(result.memories.map(\.id.rawValue) == ["m1", "m7", "m8"])
     }
 
@@ -49,10 +49,12 @@ struct MemoryLedgerTests {
     }
 
     @Test func `a memory is corrected in place and keeps its handle`() {
-        let result = apply(.update(Memory.ID("m1"), "Lives in Sydney."), to: [memory("m1", "Lives in Brisbane."), memory("m2", "Has a dog.")])
+        let known = [memory("m1", "Lives in Brisbane."), memory("m2", "Has a dog.")]
+        let result = apply(.update(Memory.ID("m1"), "Lives in Sydney."), to: known)
 
         #expect(result.memories.map(\.text) == ["Lives in Sydney.", "Has a dog."])
-        #expect(result.outcome == .updated(memory("m1", "Lives in Sydney.")))
+        // The correction is the same memory to sync, so it keeps the identifier sync knows it by.
+        #expect(result.outcome == .updated(memory("m1", "Lives in Sydney.", syncID: known[0].syncID)))
     }
 
     @Test func `a correction cannot turn one memory into a copy of another`() {

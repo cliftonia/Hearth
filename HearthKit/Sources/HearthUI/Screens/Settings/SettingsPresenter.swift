@@ -34,6 +34,8 @@ final class SettingsPresenter {
         let fetchModels: @Sendable (ServerSettings) async throws -> Int
         /// Stops whatever the chat is doing, so that nothing is written while everything is being erased.
         let quietChat: @MainActor () async -> Void
+        /// The sync page's store and actions.
+        let sync: SyncControls
     }
 
     let viewModel = SettingsViewModel()
@@ -79,6 +81,7 @@ final class SettingsPresenter {
         viewModel.newMemoryText = ""
         viewModel.connectionCheck = .idle
         viewModel.voicePreview = .idle
+        loadSyncAction()
         await loadProfilePhoto()
         await loadVoicesAction()
         await loadImageModelsAction()
