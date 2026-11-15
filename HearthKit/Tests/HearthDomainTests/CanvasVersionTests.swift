@@ -136,6 +136,60 @@ struct CanvasWebPolicyTests {
         #expect(policy.document(for: .code(language: "swift"), text: "let x = 1") == nil)
     }
 
+    @Test func `the script takes away peer connections`() {
+        let script = CanvasWebPolicy().startScript
+
+        for name in ["RTCPeerConnection", "webkitRTCPeerConnection", "RTCDataChannel", "RTCIceCandidate", "RTCSessionDescription"] {
+            #expect(script.contains("'\(name)'"), "\(name)")
+        }
+        #expect(script.contains("value: undefined, writable: false, configurable: false"))
+    }
+
+    @Test func `the script seals every frame the page makes or reaches`() {
+        let script = CanvasWebPolicy().startScript
+        let hooks = [
+            // Reaching a frame's window.
+            "contentWindow", "contentDocument", "getSVGDocument",
+            // Putting elements or markup into the page.
+            "appendChild", "insertBefore", "replaceChild", "replaceWith", "insertAdjacentElement", "insertAdjacentHTML",
+            "innerHTML", "outerHTML", "insertNode", "surroundContents", "write", "writeln", "execCommand", "open", "attachShadow"
+        ]
+
+        for hook in hooks {
+            #expect(script.contains("'\(hook)'"), "\(hook)")
+        }
+        // It walks the page's frames by an index the page cannot hide, and watches for the parser's.
+        #expect(script.contains("w[i]"))
+        #expect(script.contains("MutationObserver"))
+        // What it relies on is taken before the page runs, so the page cannot swap it out afterwards.
+        #expect(script.contains("var call = Reflect.apply, describe = Object.getOwnPropertyDescriptor, define = Object.defineProperty;"))
+    }
+
+    @Test func `the script gives no frame a sandbox and takes out a frame it cannot reach`() {
+        let script = CanvasWebPolicy().startScript
+        let hooks = ["setAttribute", "setAttributeNS", "toggleAttribute", "setAttributeNode", "setAttributeNodeNS", "setNamedItem", "setNamedItemNS"]
+
+        for hook in hooks {
+            #expect(script.contains("'\(hook)'"), "\(hook)")
+        }
+        // The attribute itself, its list of flags, and a watch for it on the document.
+        #expect(script.contains("wrap(w, 'HTMLIFrameElement', 'sandbox', 'set'"))
+        #expect(script.contains("wrap(w, 'HTMLIFrameElement', 'sandbox', 'get'"))
+        #expect(script.contains("attributeFilter: ['sandbox']"))
+        // A frame it cannot reach is removed, and markup cannot hide a frame in a shadow root.
+        #expect(script.contains("call(removeNode, node, [])"))
+        #expect(script.contains("'setHTMLUnsafe'"))
+        #expect(script.contains("'parseHTMLUnsafe'"))
+    }
+
+    @Test func `the script is a single expression with nothing that would end a script element`() {
+        let script = CanvasWebPolicy().startScript.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        #expect(script.hasPrefix("(function () {"))
+        #expect(script.hasSuffix("})();"))
+        #expect(!script.contains("</"))
+    }
+
     private static func rules() throws -> [[String: Any]] {
         let data = Data(CanvasWebPolicy().contentRules.utf8)
         return try #require(try JSONSerialization.jsonObject(with: data) as? [[String: Any]])

@@ -187,7 +187,8 @@ HearthCore    Tagged identifiers, logging
 - **Generated pages**: a page or a drawing shown in the canvas was written by a model, so it is untrusted too. It is
   loaded from a string with no address of its own into a web view that keeps nothing, may run its own scripts,
   and can fetch nothing: every `http`, `https` and WebSocket request is blocked, every navigation away from the
-  page is cancelled, so a tapped link opens nothing, and it is given no window, camera, microphone or files.
+  page is cancelled, so a tapped link opens nothing, and it is given no window, camera, microphone or files, and no
+  peer connection in any frame.
 - **Design system**: colours, type, spacing, radii, sizes and shadows are tokens, and views use nothing else.
 - **Strings** live in `Localizable.xcstrings`, rebuilt from `Strings.swift` by `python3 Tools/sync_strings.py`.
 
@@ -240,7 +241,10 @@ a check that the string catalog matches `Strings.swift` and that each layer impo
   has the same title or is the only piece in its reply. Two unrelated pages each alone in a reply are therefore
   offered as versions of one another.
 - **A page in the canvas cannot reach the network**, so one that loads a script, a font or a picture from a web
-  address shows without it, and its links open nothing. Line numbers are left off code that holds characters the
+  address shows without it, and its links open nothing. Peer connections are taken away in the page and in every
+  frame it makes, and a frame cannot be given a `sandbox`: one that would be out of reach is removed. Measured on
+  the simulator, no frame leaks and DNS prefetching and preconnecting cause no lookups. The frame sealing is a
+  script rather than a rule the engine enforces, so a way to make a frame it does not know of could reopen it. Line numbers are left off code that holds characters the
   monospaced face lacks, such as emoji, since they would drift out of step.
 - **Follow-up questions and chat titles each cost one short extra request** to the same model.
   Follow-ups can be turned off in Settings.

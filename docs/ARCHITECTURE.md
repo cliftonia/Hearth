@@ -235,8 +235,41 @@ sent to the model; a piece is read out of the saved text of its reply each time 
   and `ftp` request, and no web view is made until those rules are installed, so if they cannot be compiled the
   page is not shown at all; every navigation to anything but `about:` is cancelled, so a link opens nothing, here
   or in the browser; new windows, the camera, the microphone, the motion sensors and the link menu are refused;
-  there are no message handlers; and a script run before the page's own takes away peer connections, the one way
-  to the network that is not a request. The log notes that a navigation was cancelled and never its address.
+  there are no message handlers; and a script run before the page's own, in every frame
+  (`forMainFrameOnly: false`), takes away peer connections, the one way to the network that is not a request. The
+  log notes that a navigation was cancelled and never its address.
+- **Peer connections in frames.** WebKit runs the start script at the start of a frame's empty first document and
+  of the documents frames load, sandboxed `srcdoc` frames included, but not in the empty document a frame holds
+  while it waits for a document of its own: a `srcdoc` not yet loaded, an address the rules block, a
+  `javascript:` address. A page could take a working `RTCPeerConnection` from such a frame's `contentWindow` at
+  once. Measured on the simulator (iOS 27) with a probe page that makes or reaches frames 23 ways, at once and three
+  seconds later, plus scripts inside `srcdoc` frames, sandboxed ones among them, that report on themselves: before,
+  10 to 12 checks leaked (the frames above, and a frame in a declarative shadow root), and a listener on the Mac
+  received STUN binding requests; the web view also published multicast DNS names for its candidates. So
+  `CanvasWebPolicy.startScript` now seals frames itself, as the Android app's does: every way a script makes a
+  frame or reaches its window (inserting nodes or markup, `document.write` and `open`, `contentWindow` and
+  `contentDocument`, shadow roots and the like) seals every frame in the page, walked by index, and installs the
+  same script in each; a frame made by the parser is sealed by a `MutationObserver`, and one whose `load` handler
+  runs at once by a listener ahead of the page's. Everything it relies on is taken before the page runs. After:
+  `LEAKING: 0`, no STUN packet and no multicast DNS name.
+- **What fails closed.** The script can only seal a frame it can reach, and the one frame in a page it cannot reach
+  is one whose `sandbox` puts it in an origin of its own. So no frame is given a sandbox: the attribute is taken off
+  anything before it is put in the page, `setAttribute`, `setAttributeNS`, `toggleAttribute`, `setAttributeNode`,
+  `setNamedItem` and the `sandbox` property ignore it, and the list of flags the page is handed changes nothing; a
+  frame the sweep still cannot reach, such as one the parser made with a sandbox, is taken out of the page. Markup
+  given to `setHTMLUnsafe` or `Document.parseHTMLUnsafe` is read without declarative shadow roots, so a script
+  cannot hide a frame in a closed one. Measured: a sandboxed frame in the page's markup or made by `innerHTML` is
+  removed before its own script can report; one written into a shadow root by `setHTMLUnsafe` is never made; and
+  one sandboxed by `setAttribute`, the property, an attribute node, its list of flags, or after it was put in the
+  page is given no sandbox and is sealed.
+- **What is not shut off.** A sandboxed frame inside a closed declarative shadow root written in the page's own
+  markup (or by `document.write`) cannot be found to be removed; the web view's own start script still runs in it,
+  and it measured sealed. The sweep is a script that stands between the page and the engine rather than a rule
+  the engine enforces: it covers every way to make or reach a frame the probe tried, but a way it does not
+  intercept would reopen it. `<link rel="dns-prefetch">`, `<link rel="preconnect">` (in the markup or added by a
+  script) and links caused no lookup and no connection from the canvas, measured by matching the Mac's DNS log
+  against lookups of the same names and by a listener on a local port, while the same page in Safari on the
+  simulator caused both; no change was needed for them.
 
 ## Sync
 

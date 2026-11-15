@@ -14,6 +14,8 @@ public enum CanvasNavigationDecisionKind: Hashable, Sendable {
 /// - It goes nowhere: `decision(forNavigationTo:)` cancels every navigation but the page's own loading. A tapped
 ///   link therefore opens nothing, here or in the browser.
 /// - It is given no window, camera, microphone or motion sensor: the three constants below.
+/// - It is given no peer connection, in its own window or any frame's, and no frame it cannot reach:
+///   `startScript`.
 ///
 /// The web view that enforces this is `CanvasWebPreview`; the decisions are here so that they can be tested.
 public struct CanvasWebPolicy: Sendable {
@@ -47,21 +49,6 @@ public struct CanvasWebPolicy: Sendable {
     /// with any other address is a way out of the page and is cancelled, whether a tap or a script asked for it.
     public func decision(forNavigationTo url: URL?) -> CanvasNavigationDecisionKind {
         url?.scheme?.lowercased() == "about" ? .allow : .cancel
-    }
-
-    /// Run in every frame before the page's own scripts: takes away the one way to reach the network that is
-    /// not a request and so is not covered by the content rules, a peer connection.
-    public var startScript: String {
-        """
-        (function () {
-            ['RTCPeerConnection', 'webkitRTCPeerConnection', 'RTCDataChannel', 'RTCIceCandidate', 'RTCSessionDescription']
-                .forEach(function (name) {
-                    try {
-                        Object.defineProperty(window, name, { value: undefined, writable: false, configurable: false });
-                    } catch (error) {}
-                });
-        })();
-        """
     }
 
     /// The document the web view is given for a piece: a page as it was written, a drawing centred in a page of
