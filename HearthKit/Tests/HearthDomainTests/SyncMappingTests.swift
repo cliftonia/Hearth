@@ -94,6 +94,15 @@ struct SyncMappingTests {
         #expect(throws: SyncMappingError.unknownRole) { try Message(from: dto) }
     }
 
+    @Test(arguments: ["javascript:alert(1)", "file:///etc/passwd", "tel:123", "hearth://new", "mailto:a@example.com"])
+    func `a source from another device that is not a web page is dropped`(address: String) {
+        #expect(SearchSource(from: SearchSourceDTO(title: "x", url: address, snippet: nil)) == nil)
+    }
+
+    @Test func `a web source from another device is kept`() {
+        #expect(SearchSource(from: SearchSourceDTO(title: "x", url: "https://example.com/a", snippet: nil)) != nil)
+    }
+
     @Test func `a project goes to the wire and back unchanged`() throws {
         let project = Project(
             name: "Garden", instructions: "Subtropical.", documents: [AttachedDocument(name: "beds.txt", text: "Tomatoes")],

@@ -248,4 +248,16 @@ struct ResearchPromptTests {
         #expect(decoded.text == "Report [1].")
         #expect(Message(role: .assistant, text: "Hello").isResearch == false)
     }
+
+    @Test func `follow-up searches are asked for from the question and the notes alone`() throws {
+        let context = [Message(role: .user, text: "My address is 12 Secret Lane")]
+        let source = SearchSource(title: "A page", url: try #require(URL(string: "https://www.site.example/a")), snippet: "")
+        let builder = ResearchPromptBuilder(question: "And in winter?", context: context, now: Date(timeIntervalSince1970: 1_800_000_000))
+
+        let prompt = try #require(builder.gapMessages(notes: [ResearchNote(number: 1, source: source, text: "- A fact.")]).first?.text)
+
+        #expect(!prompt.contains("Secret Lane"))
+        #expect(prompt.contains("Question: And in winter?"))
+        #expect(prompt.contains("Never put the user's private details into a query."))
+    }
 }

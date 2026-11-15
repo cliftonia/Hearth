@@ -76,7 +76,8 @@ public extension ReplyVersion {
 public extension SearchSource {
     /// A source from its synced form; `nil` when its address cannot be read as one, which no app writes.
     init?(from dto: SearchSourceDTO) {
-        guard let url = URL(string: dto.url, encodingInvalidCharacters: false) else {
+        // A source from another device is only ever a web page: anything else could open an app or a file when tapped.
+        guard let url = URL(string: dto.url, encodingInvalidCharacters: false), SearchSource.isWebLink(url) else {
             return nil
         }
         self.init(title: dto.title ?? "", url: url, snippet: dto.snippet ?? "")
