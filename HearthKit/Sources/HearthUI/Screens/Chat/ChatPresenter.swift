@@ -13,7 +13,7 @@ protocol ChatPresenterDelegate: AnyObject {
 
 /// Runs the chat screen: sends messages, streams replies, and keeps the open conversation saved.
 ///
-/// The work is spread over extensions by subject: `+Replying`, `+Pictures`, `+Editing`, `+FollowUps` and `+Voice`.
+/// The work is spread over extensions by subject: `+Replying`, `+Pictures`, `+Editing`, `+FollowUps`, `+Menu` and `+Voice`.
 @MainActor
 final class ChatPresenter {
     /// What the chat is built from: the interactors, the dictation provider and the stores it shares with other screens.

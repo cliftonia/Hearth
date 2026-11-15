@@ -24,4 +24,16 @@ extension ImageModelKind {
             "Juggernaut XL"
         }
     }
+
+    /// A few words on what the model is best at.
+    var blurb: String {
+        switch self {
+        case .zImageTurbo:
+            Strings.pictureBlurbZImage
+        case .krea2Turbo:
+            Strings.pictureBlurbKrea
+        case .juggernautXL:
+            Strings.pictureBlurbJuggernaut
+        }
+    }
 }

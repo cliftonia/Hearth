@@ -46,6 +46,16 @@ struct ChatView: View {
         }
         .background(HearthColor.paper.ignoresSafeArea())
         .animation(.snappy, value: viewModel.error)
+        .alert(Strings.renameChat, isPresented: Bindable(viewModel).isRenamingChat) {
+            TextField(Strings.chatTitle, text: Bindable(viewModel).chatTitleDraft)
+            Button(Strings.cancel, role: .cancel) {}
+            Button(Strings.save) { Task { await presenter.commitRenameChatAction() } }
+        }
+        .sheet(isPresented: Bindable(viewModel).isModelPickerPresented) {
+            ModelPickerSheet(presenter: presenter)
+                // A sheet is a separate presentation, so it is given the chosen theme as the root is.
+                .preferredColorScheme(presenter.settings.appearance.colorScheme)
+        }
         .task { await presenter.loadAction() }
     }
 

@@ -166,6 +166,17 @@
         }
       }
     },
+    "chat.options": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chat options"
+          }
+        }
+      }
+    },
     "chat.private": {
       "extractionState": "manual",
       "localizations": {
@@ -195,6 +206,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show or hide chat list"
+          }
+        }
+      }
+    },
+    "common.close": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
           }
         }
       }
@@ -1090,6 +1112,72 @@
         }
       }
     },
+    "model.effort": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effort"
+          }
+        }
+      }
+    },
+    "model.pictureSheetTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select picture model"
+          }
+        }
+      }
+    },
+    "model.searches": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searches by itself"
+          }
+        }
+      }
+    },
+    "model.sees": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sees pictures"
+          }
+        }
+      }
+    },
+    "model.sheetTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select model"
+          }
+        }
+      }
+    },
+    "model.thinks": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thinks before replying"
+          }
+        }
+      }
+    },
     "notice.searchFailed": {
       "extractionState": "manual",
       "localizations": {
@@ -1119,6 +1207,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Available"
+          }
+        }
+      }
+    },
+    "picture.blurb.juggernaut": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Painterly"
+          }
+        }
+      }
+    },
+    "picture.blurb.krea": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Most photographic, slower"
+          }
+        }
+      }
+    },
+    "picture.blurb.zImage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fast, all-round"
           }
         }
       }
@@ -1339,6 +1460,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Add a picture server address above to make pictures."
+          }
+        }
+      }
+    },
+    "picture.noModelsYet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looking for picture models…"
           }
         }
       }

@@ -9,7 +9,7 @@ struct ComposerLayout: Layout {
     let spacing: CGFloat
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        guard let parts = Parts(subviews) else { return .zero }
+        guard let parts = Parts(subviews, width: isCompact ? nil : proposal.width, spacing: spacing) else { return .zero }
         let width = proposal.width ?? parts.leading.width + parts.trailing.width + Self.restingFieldWidth
         let field = parts.field.sizeThatFits(ProposedViewSize(width: fieldWidth(in: width, parts: parts), height: nil))
         let controlsHeight = max(parts.leading.height, parts.trailing.height)
@@ -18,7 +18,7 @@ struct ComposerLayout: Layout {
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        guard let parts = Parts(subviews) else { return }
+        guard let parts = Parts(subviews, width: isCompact ? nil : bounds.width, spacing: spacing) else { return }
         let fieldProposal = ProposedViewSize(width: fieldWidth(in: bounds.width, parts: parts), height: nil)
         let leading = ProposedViewSize(parts.leading)
         let trailing = ProposedViewSize(parts.trailing)
@@ -48,13 +48,17 @@ struct ComposerLayout: Layout {
         let leading: CGSize
         let trailing: CGSize
 
-        init?(_ subviews: Subviews) {
+        /// - Parameter width: The row the controls share, when it is known. The leading controls are then offered
+        ///   only what the trailing ones leave, so a long model name is shortened instead of running under them.
+        init?(_ subviews: Subviews, width: CGFloat?, spacing: CGFloat) {
             guard subviews.count == 3 else { return nil }
             field = subviews[0]
             leadingView = subviews[1]
             trailingView = subviews[2]
-            leading = leadingView.sizeThatFits(.unspecified)
-            trailing = trailingView.sizeThatFits(.unspecified)
+            let trailingSize = trailingView.sizeThatFits(.unspecified)
+            let room = width.map { max(0, $0 - trailingSize.width - spacing) }
+            trailing = trailingSize
+            leading = leadingView.sizeThatFits(ProposedViewSize(width: room, height: nil))
         }
     }
 }

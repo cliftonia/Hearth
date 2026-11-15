@@ -23,6 +23,11 @@ final class ChatViewModel {
     /// The search toggle, for models that cannot ask for a search themselves.
     var isSearchEnabled = false
     var isDictating = false
+    /// Whether the sheet for choosing a model, and how hard it thinks, is showing.
+    var isModelPickerPresented = false
+    /// Whether the alert for renaming the open chat is showing, and the title being typed into it.
+    var isRenamingChat = false
+    var chatTitleDraft = ""
     /// Whether what is sent asks for a picture, not for a reply from the chat model.
     var isPictureMode = false
     /// The picture models the server offers, for the menu at the top while pictures are being made. Empty until it answers.

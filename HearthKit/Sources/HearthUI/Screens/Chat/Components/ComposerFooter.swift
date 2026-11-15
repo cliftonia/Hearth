@@ -38,6 +38,9 @@ struct ComposerFooter: View {
                     if viewModel.isPictureMode {
                         pictureModeChip
                     }
+                    if isExpanded {
+                        modelChip
+                    }
                     if isExpanded, !viewModel.isPictureMode {
                         optionChips
                     }
@@ -76,17 +79,46 @@ struct ComposerFooter: View {
         isFocused || !presenter.viewModel.draft.isEmpty
     }
 
-    /// The switches that shape a reply: web search, how hard to think, and reading aloud.
+    /// The switches that shape a reply: web search and reading aloud. How hard to think is chosen with the model.
     @ViewBuilder private var optionChips: some View {
         if presenter.isSearchToggleVisible {
             searchToggle
         }
-        if presenter.viewModel.selectedModel?.canThink == true {
-            thinkingMenu
-        }
         if presenter.isSpeechAvailable {
             readAloudToggle
         }
+    }
+
+    /// The model the message goes to and how hard it will think, or the picture model while pictures are being made.
+    /// Tapping it opens the sheet where both are chosen.
+    private var modelChip: some View {
+        let viewModel = presenter.viewModel
+        let name = viewModel.isPictureMode
+            ? presenter.selectedPictureModel?.name ?? Strings.pictures
+            : viewModel.selectedModel?.displayName ?? Strings.noModel
+        let effort = !viewModel.isPictureMode && viewModel.selectedModel?.canThink == true ? presenter.thinkingLevel.title : ""
+        return Button(action: { viewModel.isModelPickerPresented = true }, label: {
+            HStack(spacing: HearthSpacing.s6) {
+                Text(name)
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(HearthColor.ink)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Text(effort)
+                    .font(.footnote)
+                    .foregroundStyle(HearthColor.mute)
+                    .lineLimit(1)
+                    .layoutPriority(1)
+                    .frame(width: effort.isEmpty ? 0 : nil)
+            }
+            .padding(.horizontal, HearthSpacing.s12)
+            .frame(height: HearthSize.optionChip.height)
+            .background(HearthColor.bubble, in: Capsule())
+            .contentShape(Capsule())
+        })
+        .buttonStyle(.plain)
+        .accessibilityLabel(viewModel.isPictureMode ? Strings.pictureModelPickerLabel : Strings.modelPickerLabel)
+        .accessibilityValue(effort.isEmpty ? name : "\(name), \(effort)")
     }
 
     /// Shows that the next message asks for a picture; tapping it goes back to chatting.
@@ -147,27 +179,6 @@ struct ComposerFooter: View {
         .buttonStyle(.plain)
         .accessibilityLabel(Strings.searchLabel)
         .accessibilityAddTraits(isOn ? .isSelected : [])
-    }
-
-    /// How hard the model should think: off, light, medium or high.
-    private var thinkingMenu: some View {
-        let level = presenter.thinkingLevel
-        return Menu {
-            Picker(Strings.thinkingLevel, selection: thinkingSelection) {
-                ForEach(ThinkingLevelKind.allCases, id: \.self) { option in
-                    Text(option.title).tag(option)
-                }
-            }
-        } label: {
-            OptionChip(systemImage: level == .off ? "lightbulb.slash" : "lightbulb", isOn: level != .off)
-        }
-        .accessibilityLabel(Strings.thinkingLevel)
-        .accessibilityValue(level.title)
-    }
-
-    /// The menu's picker reads the level from the settings and writes a choice back through the presenter.
-    private var thinkingSelection: Binding<ThinkingLevelKind> {
-        Binding(get: { presenter.thinkingLevel }, set: { presenter.selectThinkingLevelAction($0) })
     }
 
     /// When on, every reply is read aloud as soon as it is finished.
