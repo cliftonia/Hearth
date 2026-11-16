@@ -38,6 +38,12 @@ struct DrawerContainer<Drawer: View, Content: View>: View {
             .simultaneousGesture(dragGesture(width: width))
             .animation(.snappy(duration: 0.28), value: isOpen)
             .animation(.interactiveSpring, value: dragTranslationX)
+            // The keyboard sits above every view, so left up it would cover the drawer as it opens.
+            .onChange(of: isOpen) { _, isNowOpen in
+                if isNowOpen {
+                    Keyboard.dismiss()
+                }
+            }
         }
     }
 
