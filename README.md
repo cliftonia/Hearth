@@ -94,31 +94,35 @@ and your conversations stay on the device.
 - **Projects** gather chats around one subject: every chat in a project is given the project's instructions,
   on top of your own, and can draw on its reference files (PDFs and text). File a chat from a long press or from
   its menu; deleting a project keeps its chats
-- **Lock** behind Face ID, Touch ID or the passcode; the lock covers the app switcher and every sheet
+- **Lock** behind Face ID, Touch ID, Optic ID or the passcode (a Mac's password), each named as the device has it;
+  the lock covers the app switcher and every sheet
 - **Notifications** when a reply or a picture finishes while Hearth is not on screen, made on the device itself,
   and, with their own switch, when the answer to a scheduled task arrives. Tapping one opens its chat; a private
   chat's says only that a reply is ready
 - **Scheduled tasks** (Settings → Scheduled tasks, with sync on): write a question, pick a cloud model, choose every
   day, every week on a given day, or once, and whether to search the web first. Your Hearth Hub asks it at that time
   and files the answer as a new chat, marked "Scheduled task", which reaches every device through sync. The page
-  shows when each last ran, or that it failed, and a switch to pause it
-- **Erase all data on this device**: there are no accounts, so the profile page offers to erase the chats, projects,
-  memories, profile and saved settings instead, leaving the app as it was when first opened. It wipes this device
+  shows when each last ran, or that it failed, and a switch to pause it. "Schedule a task" in the composer's + menu
+  starts one asking what you were writing
+- **Erase all data on this device**, last on the Settings list: erases the chats, projects, memories, profile and
+  saved settings, leaving the app as it was when first opened. It wipes this device
   only and turns sync off; nothing is deleted from the hub or your other devices
 - **On the device**: JSON files in the app's own folder, and synced only if you turn sync on
 - **Sync between your devices**, through your own [Hearth Hub](#sync-with-your-own-hub) (Settings → Sync, off by
   default): ordinary chats with their messages, reply versions, pictures, research reports and sources, pins and
   projects; projects with their instructions and files; and memories. Private chats, settings, server addresses, the
-  profile and its photo, and the hub's access token never leave the device. It syncs when Hearth opens, when it comes
+  profile and its photo, and the hub's access key never leave the device. It syncs when Hearth opens, when it comes
   back to the front, every minute while it stays there, a few seconds after a change, as soon as the hub's address,
-  its token or the switch changes, now and then in the background (iPhone and iPad), and on "Sync now"; a reply
+  its access key or the switch changes, now and then in the background (iPhone and iPad), and on "Sync now"; a reply
   still being written is sent once it has finished. Scheduled tasks sync too
 
 ### Look
 
 - **Theme**: follow the system, or keep to light or dark
-- **Haptics**: a light tap as a message is sent, a reply finishes or something is switched, with one switch in
-  Settings to silence them all
+- **Vibration**: a light tap as a message is sent, a reply finishes or something is switched, with one switch in
+  Settings to silence them all (on iPhone; iPad and Mac have nothing to vibrate)
+- **Settings** keep every change as it is made, as the system's Settings app does; each row says how things stand
+  on the page it leads to ("Memory: On · 12 saved", "Servers: Connected · 14 models")
 - **iPad**: conversations stay beside the chat on a wide screen
 - **Mac**: the same app, built with Mac Catalyst
 - Dynamic Type and VoiceOver labels throughout
@@ -139,7 +143,7 @@ open Hearth.xcodeproj
 
 `Config/Local.xcconfig` holds your bundle identifier, signing team and the server addresses the app
 starts with. It is ignored by git, so none of them reach the repository. Leave the addresses empty
-and the app asks for them in Settings on first launch; they can be changed there at any time.
+and the app asks for them on first launch; they can be changed at any time in Settings → Servers.
 
 <p align="center">
   <img src="docs/settings.png" alt="Settings: server addresses, voice, custom instructions and follow-up questions" width="30%">
@@ -160,7 +164,7 @@ plain HTTP is refused by the system, so address a tailnet machine by its MagicDN
 ### Sync with your own hub
 
 Hearth Hub is a small server of your own, kept in a separate repository, that holds a copy of what each device
-syncs. In Settings → Sync, enter its address, an access token if it asks for one (kept in the Keychain, never in
+syncs. In Settings → Sync, enter its address, an access key if it asks for one (kept in the Keychain, never in
 the settings or a file), and turn on "Sync this device". The same App Transport Security rules apply as for your
 other servers: plain `http://` only to a local-network name or a `*.ts.net` one, `https://` anywhere else. A copy
 changed on two devices is settled by the later change, item by item; a deletion travels as a tombstone. The exact

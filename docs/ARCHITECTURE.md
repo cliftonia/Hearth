@@ -97,16 +97,18 @@ HearthKit/Sources/HearthUI/
     Sidebar/                    SidebarView (+Projects), SidebarPresenter (+Projects), SidebarViewModel, its configurations, ConversationGrouper
     Project/                    ProjectView, ProjectPresenter, ProjectViewModel: the sheet that makes or edits a project
     ProjectPicker/              ProjectPickerView, ProjectPickerPresenter, ProjectPickerViewModel: the sheet that files a chat
-    Settings/                   SettingsView, SettingsPresenter (+Profile, +Notifications, +Sync), SettingsViewModel,
-                                SettingsPageKind (the pushed pages), and its sections and pages: ProfileSection, MemorySection,
-                                NotificationsSection, PictureSettingsSection, SyncSection, SettingsCard
-    Tasks/                      ScheduledTasksView (the row in the settings and the page), ScheduledTaskEditorView,
-                                ScheduledTasksPresenter, ScheduledTasksViewModel, TaskScheduleFormatter
+    Settings/                   SettingsView (the list), SettingsSections, SettingsPresenter (+Servers, +Status, +Profile,
+                                +Notifications, +Sync), SettingsViewModel, SettingsPageKind (the pushed pages and the rows that
+                                open them), SettingsCard, and the pages: ProfileSection, MemoryPage, WebSearchPage, VoicePage,
+                                PicturesPage, NotificationsPage, ServersPage, SyncPage
+    Tasks/                      ScheduledTasksView (the page), ScheduledTaskEditorView, TaskSheets (the editor and the
+                                needs-sync notice over the chat), ScheduledTasksPresenter, ScheduledTasksViewModel,
+                                TaskScheduleFormatter
     Voice/                      VoiceView, VoicePresenter (+Camera), VoiceViewModel, VoiceOrb, VoiceControls, and the
                                 camera's card: VoiceCameraCard, CameraPreviewSurface, VoiceCameraLayout
     Canvas/                     CanvasView, CanvasPresenter, CanvasViewModel, CanvasCodeSection, CanvasWebPreview (the
                                 locked-down web view) and CanvasLayout (how a wide screen is shared)
-    Lock/                       LockView, LockPresenter, LockViewModel, LockWindowController
+    Lock/                       LockView, LockPresenter, LockViewModel, LockWindowController, UnlockWording
   Components/                   Views shared between screens that know about the domain: Markdown, the error configuration
   DesignSystem/
     Tokens/                     HearthColor, HearthFont, HearthSpacing, HearthRadius, HearthSize, HearthShadow
@@ -394,6 +396,11 @@ they filed. The body is the hub's (`WIRE_FORMAT.md`, section 7; `Spec/wire/task*
   the hub keeps running the tasks.
 - **Needs sync.** `ScheduledTasksPresenter.isSyncOn`: without it the page explains that tasks run on the hub, leads to
   the sync page through the settings' own navigation, and Add is disabled.
+- **From the composer.** "Schedule a task" in the + menu asks the coordinator (`chatPresenter(_:didRequestTaskWith:)`)
+  for a task asking what is being written; the composer keeps its text. With sync on, `beginTaskAction(prompt:)` fills
+  the editor, title left empty, and the router shows it over the chat (`AppRouter.taskSheet`); the presenter's
+  delegate closes it on save, cancel or delete. With sync off the router shows the same notice instead, and Set up
+  sync opens the settings on the sync page once the notice has gone.
 - **On screen.** Settings → Scheduled tasks lists each task with `TaskScheduleFormatter`'s words ("Every day at 7:30",
   "Every Friday at 18:00", "Once, 20 Nov at 9:00"; 12-hour where the language uses it) and its last run ("Ran today
   at 7:30", "Last run failed", "Not run yet"), with a switch; a tap opens `ScheduledTaskEditorView` as a sheet.
@@ -408,28 +415,49 @@ they filed. The body is the hub's (`WIRE_FORMAT.md`, section 7; `Spec/wire/task*
 
 ## Settings, the profile and erasing
 
-Settings is one sheet with one Presenter. Its first page is a form; the profile and the notifications are pages
-pushed from it, drawn as cards (`SettingsPage`, `SettingsCard`).
+Settings is one sheet with one Presenter. Its first page is a list (`SettingsView` and `SettingsSections`): the
+profile row, then Chats (Memory, Suggest follow-up questions, Web search, Scheduled tasks), Voice & Pictures,
+Notifications, Appearance & Privacy (theme, Vibration, the lock), Servers & Sync, and Erase all data on this device
+last. Section headings are in Title Case, as written. Most rows lead to a page pushed from the list, drawn as cards
+(`SettingsPage`, `SettingsCard`), and say beneath their title how things stand there (`SettingsPresenter+Status`:
+"On · 12 saved", "Connected · 14 models", "On · synced 2 min ago"), which VoiceOver reads with the title as one
+label ("Memory, On, 12 saved"). A Cloud providers row will go under Servers & Sync.
 
-- **One draft.** `SettingsViewModel` holds a draft of every setting, filled as the sheet opens and written by
-  Done; Cancel lets it go. The pushed pages take part in the same draft: the names and the instructions typed on
-  the profile page are kept by Done like any field on the first page.
-- **What takes effect at once**, because it is an act more than a setting or has to be felt to be judged: the
-  theme, the memories, the profile photo, the haptics switch, the notification switches, the sync page, and erasing
-  everything.
-  Each is written straight to its store, so Cancel does not undo it.
+- **Saved as it is made.** There is no Done and no Cancel, only Close. A switch or a choice is kept at once
+  (`SettingsPresenter.keepAction`). Typed text, the names, the instructions, a voice's name and the server addresses,
+  is kept when its field is left or submitted (`keepOnLeaving`), when its page closes, when the app leaves the front,
+  and when the sheet goes, by Close or by a swipe (`RootView` reports the dismissal). Nothing is written per letter
+  and nothing typed is lost.
+- **Pages are opened by path.** A row appends a `SettingsPageKind` to `SettingsViewModel.path` with a plain button
+  (`SettingsLinkRow`). A `NavigationLink` was pushed again on the Mac whenever its row changed, and the profile row
+  changes with each letter of the name typed on the page it opens. Keeping the path in the view model also lets the
+  coordinator open the settings straight on the sync page.
+- **Servers are asked once an address is typed.** `serverAddressesEditedAction` compares the addresses with those
+  last acted on: a new chat server makes the coordinator fetch the models, a new speech server lists its voices, a
+  new picture server says what it can do. Test connection sits under the four fields and keeps them first.
+- **Kept their own way**: the lock, which is only turned on once the owner has unlocked (`lockAction`); the
+  notification switches, which may ask the system for permission; and the sync page, kept in `SyncStore`. Their
+  values are carried over as saved when anything else is kept, so another change cannot turn them on early.
+- **The lock's words.** `AuthenticationProvider.biometry` reports a `BiometryKind` from `LAContext.biometryType`, and
+  `UnlockWording` names the switch, the lock screen's button and the reasons shown by the system from it: "Require
+  Face ID or passcode", "Require Touch ID or password" on a Mac, "Require passcode" without biometrics.
+- **VoiceOver** is told the outcome of the connection test and of the hub check (`Dependencies.announce`). A memory
+  can be deleted by swiping it, from its menu, with Edit, or by the VoiceOver action.
+- **The access key** is what the sync page calls the hub's token. Code and storage still say token, so a key saved
+  by an earlier version is found.
 - **The profile.** The full name and the nickname are fields of `ServerSettings` (`UserProfile` gives the
   initials and the name to call the user by). The nickname took the place of the earlier `userName`, whose saved
   key is still read. The greeting prefers the nickname, then the first word of the full name, then a name found
   among the memories; `PromptBuilder` tells the model the name in one line, in private chats too, since it is a
   setting and not a memory. The photo is cut to a small square JPEG and kept by `ProfileStore` in a `Profile`
   folder beside `Conversations`.
-- **Erasing.** There are no accounts, so the profile page offers to erase what the device holds. Sync is stopped,
+- **Erasing.** The last row of the list erases what the device holds, behind a confirmation. Sync is stopped,
   turned off and forgotten first, so nothing erased here is deleted from the hub or another device.
   `EraseInteractor` asks each store in turn (`ConversationStore.deleteAll`, `ProjectStore.deleteAll`,
   `MemoryStore.eraseAll`, `ProfileStore.removePhoto`) and last `SettingsStore.reset`, which removes the saved
   settings and goes back to the build-time defaults, as on first launch. The chat is quietened first so that
-  nothing is written meanwhile, and a failure part of the way leaves the settings in place to try again.
+  nothing is written meanwhile, and a failure part of the way leaves the settings in place to try again. The screen
+  is then refilled from what is saved, so that closing the sheet does not write the erased settings back.
 
 ## Hold to talk
 

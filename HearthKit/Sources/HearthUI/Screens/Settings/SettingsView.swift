@@ -1,82 +1,32 @@
 import HearthDomain
 import SwiftUI
 
-/// The settings sheet: the profile, servers, voice, pictures, memory, notifications, the lock, haptics and the theme.
+/// The settings sheet: one list of rows, most leading to a page of their own, and a Close button.
 ///
-/// The profile and the notifications are pages pushed from here. What is typed on them is part of the same draft,
-/// kept by Done; `SettingsPresenter` says which switches take effect at once.
+/// Every change is kept as it is made; there is no Done and no Cancel. The rows say how things stand on the page they
+/// lead to, so that most settings can be read without opening anything.
 struct SettingsView: View {
     let presenter: SettingsPresenter
     /// The scheduled tasks page, a screen of its own pushed from here.
     let tasksPresenter: ScheduledTasksPresenter
 
-    /// The pages pushed on from the settings, the last on top.
-    @State private var path: [SettingsPageKind] = []
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         @Bindable var viewModel = presenter.viewModel
-        NavigationStack(path: $path) {
+        NavigationStack(path: $viewModel.path) {
             Form {
                 ProfileSection(presenter: presenter, openAction: openAction)
+                SettingsChatsSection(presenter: presenter, tasksPresenter: tasksPresenter, openAction: openAction)
+                SettingsVoicePicturesSection(presenter: presenter, openAction: openAction)
                 Section {
-                    addressField(Strings.ollamaAddress, text: $viewModel.ollamaAddress)
-                    addressField(Strings.searchAddress, text: $viewModel.searchAddress)
-                    addressField(Strings.speechAddress, text: $viewModel.speechAddress)
-                        .onSubmit { Task { await presenter.loadVoicesAction() } }
-                    addressField(Strings.imageAddress, text: $viewModel.imageAddress)
-                        .onSubmit { Task { await presenter.loadImageModelsAction() } }
+                    SettingsStatusRow(title: Strings.notifications, status: presenter.notificationsStatus) { openAction(.notifications) }
                 } header: {
-                    Text(Strings.servers)
-                } footer: {
-                    Text(Strings.serversFooter)
+                    SettingsSectionHeader(title: Strings.notifications)
                 }
-                Section {
-                    Toggle(Strings.readPages, isOn: $viewModel.isPageReadingEnabled)
-                } header: {
-                    Text(Strings.searchLabel)
-                } footer: {
-                    Text(Strings.readPagesFooter)
-                }
-                Section {
-                    Button(Strings.testConnection) { Task { await presenter.testAction() } }
-                        .foregroundStyle(HearthColor.pine)
-                    connectionStatus(viewModel.connectionCheck)
-                }
-                Section(Strings.voice) {
-                    voiceControl(voice: $viewModel.voice, voices: viewModel.voices)
-                        .onChange(of: viewModel.voice) { Task { await presenter.stopVoicePreviewAction() } }
-                    voicePreviewButton(viewModel.voicePreview)
-                        .disabled(viewModel.speechAddress.trimmingCharacters(in: .whitespaces).isEmpty)
-                    Toggle(Strings.readRepliesAloud, isOn: $viewModel.isAutoReadEnabled)
-                }
-                PictureSettingsSection(model: $viewModel.imageModel, capabilities: viewModel.imageCapabilities)
-                MemorySection(presenter: presenter, openAction: openAction)
-                NotificationsSection(presenter: presenter, openAction: openAction)
-                SyncSection(presenter: presenter, openAction: openAction)
-                TasksSection(presenter: tasksPresenter, openAction: openAction)
-                Section {
-                    Toggle(Strings.requireUnlock, isOn: $viewModel.isLockEnabled)
-                        .onChange(of: viewModel.isLockEnabled) { Task { await presenter.lockAction() } }
-                } header: {
-                    Text(Strings.privacy)
-                } footer: {
-                    Text(Strings.requireUnlockFooter)
-                }
-                Section {
-                    Toggle(Strings.haptics, isOn: $viewModel.isHapticsEnabled)
-                        .onChange(of: viewModel.isHapticsEnabled) { presenter.hapticsAction() }
-                } footer: {
-                    Text(Strings.hapticsFooter)
-                }
-                Section(Strings.theme) {
-                    Picker(Strings.theme, selection: $viewModel.appearance) {
-                        ForEach(AppearanceKind.allCases, id: \.self) { appearance in
-                            Text(appearance.title).tag(appearance)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .onChange(of: viewModel.appearance) { presenter.appearanceAction() }
-                }
+                SettingsAppearancePrivacySection(presenter: presenter)
+                SettingsServersSyncSection(presenter: presenter, openAction: openAction)
+                SettingsEraseSection(presenter: presenter)
             }
             .scrollContentBackground(.hidden)
             .background(HearthColor.paper)
@@ -84,29 +34,32 @@ struct SettingsView: View {
             .navigationTitle(Strings.settings)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(Strings.cancel, action: presenter.cancelAction)
-                        .foregroundStyle(HearthColor.mute)
-                }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(Strings.done, action: presenter.saveAction)
+                    Button(Strings.close) { Task { await presenter.closeAction() } }
                         .fontWeight(.semibold)
                         .foregroundStyle(HearthColor.pine)
+                        .accessibilityLabel(Strings.close)
                 }
             }
         }
         .tint(HearthColor.pine)
         .task { await presenter.loadAction() }
+        // What is being typed is kept if the app is left in the middle of it.
+        .onChange(of: scenePhase) {
+            if scenePhase != .active {
+                presenter.keepAction()
+            }
+        }
     }
 
     // MARK: Pages
 
     /// Opens a page, unless it is already the one on top.
     private func openAction(_ kind: SettingsPageKind) {
-        guard path.last != kind else {
+        guard presenter.viewModel.path.last != kind else {
             return
         }
-        path.append(kind)
+        presenter.viewModel.path.append(kind)
     }
 
     /// The page a row leads on to.
@@ -116,87 +69,32 @@ struct SettingsView: View {
         case .profile:
             ProfilePage(presenter: presenter)
         case .memories:
-            MemoryListView(presenter: presenter)
-        case .notifications:
-            NotificationsPage(presenter: presenter)
-        case .sync:
-            SyncPage(presenter: presenter)
+            MemoryPage(presenter: presenter)
+        case .webSearch:
+            WebSearchPage(presenter: presenter)
         case .tasks:
             ScheduledTasksPage(presenter: tasksPresenter, openAction: openAction)
+        case .voice:
+            VoicePage(presenter: presenter)
+        case .pictures:
+            PicturesPage(presenter: presenter)
+        case .notifications:
+            NotificationsPage(presenter: presenter)
+        case .servers:
+            ServersPage(presenter: presenter)
+        case .sync:
+            SyncPage(presenter: presenter)
         }
     }
+}
 
-    // MARK: Rows
+/// A heading over a section of the main list, in Title Case as written rather than in capitals.
+struct SettingsSectionHeader: View {
+    let title: String
 
-    /// A server address under a small caption, typed without autocorrection.
-    private func addressField(_ title: String, text: Binding<String>) -> some View {
-        VStack(alignment: .leading, spacing: HearthSpacing.s4) {
-            Text(title)
-                .font(.hearth(.caption))
-                .foregroundStyle(HearthColor.mute)
-                .accessibilityHidden(true)
-            TextField("https://", text: text)
-                .font(.hearth(.body))
-                .keyboardType(.URL)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .accessibilityLabel(title)
-        }
-    }
-
-    /// The outcome of the connection test. Nothing is shown until one has been run.
-    @ViewBuilder
-    private func connectionStatus(_ check: ConnectionCheckKind) -> some View {
-        switch check {
-        case .idle:
-            EmptyView()
-        case .checking:
-            Label(Strings.checking, systemImage: "ellipsis")
-                .font(.hearth(.footnote))
-                .foregroundStyle(HearthColor.mute)
-        case .succeeded(let modelCount):
-            Label(Strings.testSucceeded(modelCount: modelCount), systemImage: "checkmark.circle.fill")
-                .font(.hearth(.footnote))
-                .foregroundStyle(HearthColor.online)
-        case .failed(let message):
-            Label(message, systemImage: "exclamationmark.triangle.fill")
-                .font(.hearth(.footnote))
-                .foregroundStyle(HearthColor.danger)
-        }
-    }
-
-    /// A picker of the server's voices, or a field for the voice's name when the server has not listed any.
-    /// A saved voice the server no longer lists is kept at the head of the picker.
-    @ViewBuilder
-    private func voiceControl(voice: Binding<String>, voices: [String]) -> some View {
-        if voices.isEmpty {
-            TextField(Strings.voiceName, text: voice)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .accessibilityLabel(Strings.voiceName)
-        } else {
-            Picker(Strings.voice, selection: voice) {
-                ForEach(voices.contains(voice.wrappedValue) ? voices : [voice.wrappedValue] + voices, id: \.self) { name in
-                    Text(name).tag(name)
-                }
-            }
-        }
-    }
-
-    /// Plays a short sample, so a voice can be heard before it is kept.
-    private func voicePreviewButton(_ preview: VoicePreviewKind) -> some View {
-        let isPlaying = preview == .playing
-        return VStack(alignment: .leading, spacing: HearthSpacing.s6) {
-            Button(action: { Task { await presenter.previewVoiceAction() } }, label: {
-                Label(isPlaying ? Strings.stopVoiceSample : Strings.playVoiceSample, systemImage: isPlaying ? "stop.fill" : "play.fill")
-                    .foregroundStyle(HearthColor.pine)
-            })
-            Label(Strings.voiceSampleFailed, systemImage: "exclamationmark.triangle.fill")
-                .font(.hearth(.footnote))
-                .foregroundStyle(HearthColor.danger)
-                .opacity(preview == .failed ? 1 : 0)
-                .frame(height: preview == .failed ? nil : 0)
-                .accessibilityHidden(preview != .failed)
-        }
+    var body: some View {
+        Text(title)
+            .textCase(nil)
+            .accessibilityAddTraits(.isHeader)
     }
 }

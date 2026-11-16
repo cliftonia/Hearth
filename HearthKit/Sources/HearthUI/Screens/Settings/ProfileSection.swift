@@ -34,7 +34,8 @@ struct ProfileSection: View {
     }
 }
 
-/// Who the user is and how they like to be answered, and the way to erase everything.
+/// Who the user is and how they like to be answered: the photo, the names and the instructions. What is typed is
+/// kept as each field is left and as the page closes.
 struct ProfilePage: View {
     private static let avatarDiameter: CGFloat = 96
 
@@ -61,12 +62,11 @@ struct ProfilePage: View {
                     .padding(.horizontal, HearthSpacing.s16)
                     .padding(.vertical, HearthSpacing.s12)
                     .accessibilityLabel(Strings.profileInstructions)
+                    .keepOnLeaving(presenter.keepAction)
             }
-            SettingsCard(footer: Strings.followUpsFooter) {
-                SettingsSwitchRow(title: Strings.suggestFollowUps, isOn: $viewModel.isFollowUpsEnabled)
-            }
-            eraseCard(error: viewModel.profileError)
+            photoError(viewModel.profileError)
         }
+        .onDisappear(perform: presenter.keepAction)
         .photosPicker(isPresented: $isPhotoPickerPresented, selection: $pickedPhoto, matching: .images)
         .onChange(of: pickedPhoto) {
             guard let item = pickedPhoto else {
@@ -74,15 +74,6 @@ struct ProfilePage: View {
             }
             pickedPhoto = nil
             Task { await presenter.setPhotoAction(await PhotoLoader.avatarJPEG(from: item)) }
-        }
-        .confirmationDialog(Strings.eraseAllQuestion, isPresented: $viewModel.isConfirmingErase, titleVisibility: .visible) {
-            Button(Strings.eraseAllConfirm, role: .destructive) {
-                Haptics.play(.warning)
-                Task { await presenter.eraseAction() }
-            }
-            Button(Strings.cancel, role: .cancel) {}
-        } message: {
-            Text(Strings.eraseAllMessage)
         }
     }
 
@@ -126,34 +117,20 @@ struct ProfilePage: View {
                 .textInputAutocapitalization(.words)
                 .autocorrectionDisabled()
                 .accessibilityLabel(title)
+                .keepOnLeaving(presenter.keepAction)
         }
         .padding(.horizontal, HearthSpacing.s16)
         .padding(.vertical, HearthSpacing.s10)
     }
 
-    /// There are no accounts to delete, so what is offered is to erase what the device holds. Anything that goes
-    /// wrong on the page is said beneath it.
-    private func eraseCard(error: String?) -> some View {
-        VStack(alignment: .leading, spacing: HearthSpacing.s8) {
-            SettingsCard(footer: Strings.eraseAllFooter) {
-                Button(action: { presenter.viewModel.isConfirmingErase = true }, label: {
-                    Text(Strings.eraseAll)
-                        .font(.hearth(.body))
-                        .foregroundStyle(HearthColor.danger)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, HearthSpacing.s16)
-                        .padding(.vertical, HearthSpacing.s14)
-                        .contentShape(Rectangle())
-                })
-                .buttonStyle(.plain)
-            }
-            Label(error ?? "", systemImage: "exclamationmark.triangle.fill")
-                .font(.hearth(.footnote))
-                .foregroundStyle(HearthColor.danger)
-                .padding(.horizontal, HearthSpacing.s4)
-                .opacity(error == nil ? 0 : 1)
-                .frame(height: error == nil ? 0 : nil)
-                .accessibilityHidden(error == nil)
-        }
+    /// A photo that could not be kept, said beneath the cards; nothing while there is none.
+    private func photoError(_ error: String?) -> some View {
+        Label(error ?? "", systemImage: "exclamationmark.triangle.fill")
+            .font(.hearth(.footnote))
+            .foregroundStyle(HearthColor.danger)
+            .padding(.horizontal, HearthSpacing.s4)
+            .opacity(error == nil ? 0 : 1)
+            .frame(height: error == nil ? 0 : nil)
+            .accessibilityHidden(error == nil)
     }
 }

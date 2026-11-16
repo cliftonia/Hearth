@@ -3,8 +3,8 @@ import HearthCore
 import HearthDomain
 import os
 
-// Scheduled tasks: their page in the settings, announcing the answers the hub files, and the background refresh
-// that brings those answers in while the app is away.
+// Scheduled tasks: their page in the settings, a task begun from the composer, announcing the answers the hub
+// files, and the background refresh that brings those answers in while the app is away.
 extension AppCoordinator {
     static func makeTasksPresenter(dependencies: AppDependencies) -> ScheduledTasksPresenter {
         ScheduledTasksPresenter(dependencies: ScheduledTasksPresenter.Dependencies(
@@ -14,6 +14,23 @@ extension AppCoordinator {
             now: { Date() },
             calendar: { Calendar.current }
         ))
+    }
+
+    /// Shows the editor over the chat with a new task asking what was being written, or, while sync is off, the
+    /// notice that tasks need sync.
+    func presentTaskSheet(prompt: String) {
+        router.taskSheet = tasksPresenter.beginTaskAction(prompt: prompt) ? .editor : .needsSync
+    }
+
+    /// The task sheet over the chat has gone. If it went because Set up sync was chosen, the settings open on the
+    /// sync page now, since one sheet cannot be presented while another is still leaving.
+    func taskSheetDidDismiss() {
+        guard opensSyncAfterTaskSheet else {
+            return
+        }
+        opensSyncAfterTaskSheet = false
+        settingsPresenter.viewModel.path = [.sync]
+        router.isSettingsPresented = true
     }
 
     /// Reads the saved tasks. A failure leaves the list empty until the next sync brings them from the hub.
@@ -61,5 +78,21 @@ extension AppCoordinator {
             }
             await self.loadTasks()
         }
+    }
+}
+
+// MARK: - ScheduledTasksPresenterDelegate
+
+extension AppCoordinator: ScheduledTasksPresenterDelegate {
+    /// The editor over the chat closes with the presenter's; the one on the tasks page closes by itself.
+    func scheduledTasksPresenterDidCloseEditor(_ presenter: ScheduledTasksPresenter) {
+        if router.taskSheet == .editor {
+            router.taskSheet = nil
+        }
+    }
+
+    func scheduledTasksPresenterDidRequestSync(_ presenter: ScheduledTasksPresenter) {
+        opensSyncAfterTaskSheet = true
+        router.taskSheet = nil
     }
 }

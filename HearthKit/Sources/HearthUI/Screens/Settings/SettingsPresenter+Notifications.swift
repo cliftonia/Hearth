@@ -1,7 +1,7 @@
 import Foundation
 import HearthDomain
 
-// The notification switches and the haptics switch, which take effect as they are switched.
+// The notification switches, which may ask the system for permission as they are switched on.
 extension SettingsPresenter {
     /// Asks the system whether notifications are allowed, as the page appears and each time the app comes back
     /// from the Settings app, where the answer may have changed.
@@ -14,7 +14,7 @@ extension SettingsPresenter {
     func replyNotificationsAction() async {
         let isEnabled = viewModel.isReplyNotificationsEnabled
         let settings = dependencies.settingsStore.settings
-        // The form being filled as the settings open is not the user switching anything.
+        // The screen being filled as the settings open is not the user switching anything.
         guard settings.isReplyNotificationsEnabled != isEnabled else {
             return
         }
@@ -39,16 +39,7 @@ extension SettingsPresenter {
         await refreshNotificationPermissionAction()
     }
 
-    /// Keeps the haptics switch as it now stands, so that the next tap already follows it.
-    func hapticsAction() {
-        let settings = dependencies.settingsStore.settings
-        guard settings.isHapticsEnabled != viewModel.isHapticsEnabled else {
-            return
-        }
-        keep(settings.updating(isHapticsEnabled: viewModel.isHapticsEnabled))
-    }
-
-    /// Writes settings changed outside the draft.
+    /// Writes a notification switch, which the rest of the settings carry over as saved.
     private func keep(_ settings: ServerSettings) {
         do {
             try dependencies.settingsStore.update(settings)

@@ -149,7 +149,7 @@ HStack(spacing: HearthSpacing.s8) {
 ## Haptics
 
 `Haptics` is the only thing in the app that plays a haptic. It asks `Haptics.isEnabled`, which the root view
-keeps in step with the Haptics switch in Settings, and does nothing on an iPad or a Mac, which have nothing to
+keeps in step with the Vibration switch in Settings (shown on iPhone only, through `Haptics.isAvailable`), and does nothing on an iPad or a Mac, which have nothing to
 tap with. A kind is named for how it feels, not for what caused it:
 
 | `HapticKind` | Feels like | For |

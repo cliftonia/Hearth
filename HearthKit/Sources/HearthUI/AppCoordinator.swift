@@ -1,3 +1,4 @@
+import Accessibility
 import HearthDomain
 import SwiftUI
 
@@ -27,6 +28,8 @@ public final class AppCoordinator {
     let notifications: NotificationProvider
     /// A voice conversation asked for while locked, begun once the owner is in.
     private var isVoicePending = false
+    /// Settings are to open on the sync page once the task sheet over the chat has gone.
+    var opensSyncAfterTaskSheet = false
     private let lockWindowController = LockWindowController()
 
     public init(dependencies: AppDependencies) {
@@ -132,6 +135,7 @@ public final class AppCoordinator {
             settingsStore: dependencies.settingsStore,
             memoryStore: dependencies.memoryStore,
             profileStore: dependencies.profileStore,
+            modelStore: dependencies.modelStore,
             speech: dependencies.speech,
             image: dependencies.image,
             eraser: dependencies.eraser,
@@ -149,7 +153,9 @@ public final class AppCoordinator {
                 syncNow: { await dependencies.syncScheduler.syncNow() },
                 check: { url, token in await dependencies.sync.check(url, token: token) },
                 settingsChanged: { dependencies.syncScheduler.settingsChanged() }
-            )
+            ),
+            announce: { AccessibilityNotification.Announcement($0).post() },
+            now: { Date() }
         ))
     }
 
@@ -179,6 +185,7 @@ public final class AppCoordinator {
         voicePresenter.delegate = self
         lockPresenter.delegate = self
         canvasPresenter.delegate = self
+        tasksPresenter.delegate = self
     }
 
     /// Follows a link into the app, as a widget sends: `hearth://new` for a fresh chat, `hearth://voice` to talk.
@@ -216,6 +223,11 @@ public final class AppCoordinator {
         }
         router.closeOverlays()
         router.isVoicePresented = true
+    }
+
+    /// The settings sheet has gone, by Close or by a swipe: what was being typed in it is kept.
+    func settingsSheetDidDismiss() {
+        Task { await settingsPresenter.sheetDidDismissAction() }
     }
 
     /// Raises or removes the lock window to match whether the conversations should be hidden.
@@ -259,6 +271,10 @@ extension AppCoordinator: ChatPresenterDelegate {
 
     func chatPresenter(_ presenter: ChatPresenter, didRequestCanvasFor reference: CanvasReference) {
         openCanvas(reference)
+    }
+
+    func chatPresenter(_ presenter: ChatPresenter, didRequestTaskWith prompt: String) {
+        presentTaskSheet(prompt: prompt)
     }
 }
 
@@ -309,12 +325,13 @@ extension AppCoordinator: SidebarPresenterDelegate {
 // MARK: - SettingsPresenterDelegate
 
 extension AppCoordinator: SettingsPresenterDelegate {
-    /// Saved settings may point at another server, so the models are fetched afresh.
-    func settingsPresenterDidFinish(_ presenter: SettingsPresenter, didSave: Bool) {
+    func settingsPresenterDidFinish(_ presenter: SettingsPresenter) {
         router.isSettingsPresented = false
-        if didSave {
-            Task { await chatPresenter.refreshModelsAction() }
-        }
+    }
+
+    /// Another chat server may offer other models, so they are fetched afresh.
+    func settingsPresenterDidChangeChatServer(_ presenter: SettingsPresenter) {
+        Task { await chatPresenter.refreshModelsAction() }
     }
 
     /// With everything erased the app goes back to how it first opened: no sheet, every chat list choice
@@ -344,6 +361,7 @@ extension AppCoordinator: LockPresenterDelegate {
         let wasInVoice = router.isVoicePresented
         router.isSettingsPresented = false
         router.projectSheet = nil
+        router.taskSheet = nil
         router.isVoicePresented = false
         router.isSidebarOpen = false
         router.isCanvasOpen = false

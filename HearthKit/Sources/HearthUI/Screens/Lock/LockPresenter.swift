@@ -23,7 +23,7 @@ final class LockPresenter {
     init(authentication: AuthenticationProvider, isEnabled: @escaping @MainActor () -> Bool) {
         self.authentication = authentication
         self.isEnabled = isEnabled
-        self.viewModel = LockViewModel(isLocked: isEnabled())
+        self.viewModel = LockViewModel(isLocked: isEnabled(), wording: UnlockWording(biometry: authentication.biometry()))
     }
 
     /// Follows the app coming forward or leaving, then asks the owner to unlock if that is now due.
@@ -64,7 +64,7 @@ final class LockPresenter {
         }
         promptsWhenActive = false
         viewModel.isAuthenticating = true
-        let isOwner = await authentication.authenticate(Strings.unlockReason)
+        let isOwner = await authentication.authenticate(viewModel.wording.unlockReason)
         viewModel.isAuthenticating = false
         if isOwner {
             viewModel.isLocked = false

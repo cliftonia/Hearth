@@ -1398,57 +1398,112 @@
         }
       }
     },
-    "haptics.footer": {
+    "lock.biometry.faceID": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A light tap when a message is sent, a reply finishes or something is switched. iPad and Mac have none to give."
+            "value": "Face ID"
           }
         }
       }
     },
-    "haptics.title": {
+    "lock.biometry.opticID": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Haptics"
+            "value": "Optic ID"
           }
         }
       }
     },
-    "lock.enableReason": {
+    "lock.biometry.touchID": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confirm it is you to turn on the lock."
+            "value": "Touch ID"
           }
         }
       }
     },
-    "lock.reason": {
+    "lock.enableReasonBiometricOrSecret": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unlock your conversations."
+            "value": "Confirm it is you with %1$@ or your %2$@ to turn on the lock."
           }
         }
       }
     },
-    "lock.unlock": {
+    "lock.enableReasonSecret": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unlock"
+            "value": "Confirm it is you with your %@ to turn on the lock."
+          }
+        }
+      }
+    },
+    "lock.reasonBiometricOrSecret": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use %1$@ or your %2$@ to unlock your conversations."
+          }
+        }
+      }
+    },
+    "lock.reasonSecret": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use your %@ to unlock your conversations."
+          }
+        }
+      }
+    },
+    "lock.secret.passcode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "passcode"
+          }
+        }
+      }
+    },
+    "lock.secret.password": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "password"
+          }
+        }
+      }
+    },
+    "lock.unlockWith": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock with %@"
           }
         }
       }
@@ -1470,7 +1525,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Forget everything"
+            "value": "Forget all memories"
           }
         }
       }
@@ -1503,7 +1558,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to 50 short memories. Swipe one to delete it, or tell the model to forget it."
+            "value": "Up to 50 short memories. Delete one with Edit, or tell the model to forget it."
           }
         }
       }
@@ -1559,17 +1614,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "For example: I live in Brisbane"
-          }
-        }
-      }
-    },
-    "memory.saved": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Saved memories"
           }
         }
       }
@@ -1911,28 +1955,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notifications are made on this device; nothing is sent through a server. A private chat's notification says only that a reply is ready."
-          }
-        }
-      }
-    },
-    "notifications.off": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Off"
-          }
-        }
-      }
-    },
-    "notifications.on": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "On"
           }
         }
       }
@@ -2295,7 +2317,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add a picture server address above to make pictures."
+            "value": "Add a picture server in Servers to make pictures."
           }
         }
       }
@@ -2427,7 +2449,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hearth has no accounts. This removes everything it keeps on this device and turns sync off. Your hub and your other devices keep their copies; nothing is deleted there."
+            "value": "This removes everything Hearth keeps on this device and turns sync off. Your hub and your other devices keep their copies; nothing is deleted there."
           }
         }
       }
@@ -3076,7 +3098,29 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "That Ollama address is not valid."
+            "value": "That chat server address is not valid."
+          }
+        }
+      }
+    },
+    "settings.memory.on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On · %lld saved"
+          }
+        }
+      }
+    },
+    "settings.off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
           }
         }
       }
@@ -3087,18 +3131,18 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ollama address"
+            "value": "Chat server (Ollama)"
           }
         }
       }
     },
-    "settings.privacy": {
+    "settings.on": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Privacy"
+            "value": "On"
           }
         }
       }
@@ -3109,7 +3153,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read the pages a search finds"
+            "value": "Read whole pages, not just snippets"
           }
         }
       }
@@ -3136,13 +3180,24 @@
         }
       }
     },
-    "settings.requireUnlock": {
+    "settings.requireBiometricOrSecret": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Require Face ID or passcode"
+            "value": "Require %1$@ or %2$@"
+          }
+        }
+      }
+    },
+    "settings.requireSecret": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Require %@"
           }
         }
       }
@@ -3164,7 +3219,51 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search address (SearXNG)"
+            "value": "Web search server (SearXNG)"
+          }
+        }
+      }
+    },
+    "settings.section.appearancePrivacy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance & Privacy"
+          }
+        }
+      }
+    },
+    "settings.section.chats": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chats"
+          }
+        }
+      }
+    },
+    "settings.section.serversSync": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servers & Sync"
+          }
+        }
+      }
+    },
+    "settings.section.voicePictures": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice & Pictures"
           }
         }
       }
@@ -3180,13 +3279,35 @@
         }
       }
     },
+    "settings.servers.notChecked": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not checked"
+          }
+        }
+      }
+    },
+    "settings.servers.notConnected": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not connected"
+          }
+        }
+      }
+    },
     "settings.serversFooter": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search and speech are optional. An address without a scheme is taken to be HTTPS."
+            "value": "Only the chat server is required."
           }
         }
       }
@@ -3197,7 +3318,51 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Speech address (Kokoro)"
+            "value": "Speech server (Kokoro)"
+          }
+        }
+      }
+    },
+    "settings.sync.onSynced": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On · synced %@"
+          }
+        }
+      }
+    },
+    "settings.tasks.active": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld active"
+          }
+        }
+      }
+    },
+    "settings.tasks.needsSync": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs sync"
+          }
+        }
+      }
+    },
+    "settings.tasks.none": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
           }
         }
       }
@@ -3217,9 +3382,21 @@
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connected. %lld models found."
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Connected. %lld model found."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Connected. %lld models found."
+                }
+              }
+            }
           }
         }
       }
@@ -3268,6 +3445,17 @@
         }
       }
     },
+    "settings.vibration": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vibration"
+          }
+        }
+      }
+    },
     "settings.voice": {
       "extractionState": "manual",
       "localizations": {
@@ -3275,6 +3463,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Voice"
+          }
+        }
+      }
+    },
+    "settings.voice.needsServer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs a speech server"
+          }
+        }
+      }
+    },
+    "settings.voice.readsAloud": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · reads aloud"
           }
         }
       }
@@ -3307,7 +3517,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The voice could not be played. Check the speech address and the voice name."
+            "value": "The voice could not be played. Check the speech server and the voice name."
           }
         }
       }
@@ -3334,6 +3544,28 @@
         }
       }
     },
+    "settings.webSearch.readsPages": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reads full pages"
+          }
+        }
+      }
+    },
+    "settings.webSearch.snippetsOnly": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snippets only"
+          }
+        }
+      }
+    },
     "sidebar.chatTitle": {
       "extractionState": "manual",
       "localizations": {
@@ -3349,9 +3581,21 @@
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connected · %lld models"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Connected · %lld model"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Connected · %lld models"
+                }
+              }
+            }
           }
         }
       }
@@ -3582,7 +3826,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The hub needs an access token."
+            "value": "The hub needs an access key."
           }
         }
       }
@@ -3593,7 +3837,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The hub did not accept the access token."
+            "value": "The hub did not accept the access key."
           }
         }
       }
@@ -3697,35 +3941,13 @@
         }
       }
     },
-    "sync.off": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Off"
-          }
-        }
-      }
-    },
-    "sync.on": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "On"
-          }
-        }
-      }
-    },
     "sync.removeToken": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove token"
+            "value": "Remove key"
           }
         }
       }
@@ -3736,7 +3958,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Save token"
+            "value": "Save key"
           }
         }
       }
@@ -3791,7 +4013,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Access token"
+            "value": "Access key"
           }
         }
       }
@@ -3935,6 +4157,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Your Hearth Hub asks a cloud model each question at its time, and files the answer as a new chat on all your devices."
+          }
+        }
+      }
+    },
+    "tasks.fromComposer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule a task"
           }
         }
       }
@@ -4089,28 +4322,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Not run yet"
-          }
-        }
-      }
-    },
-    "tasks.off": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Off"
-          }
-        }
-      }
-    },
-    "tasks.on": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "On"
           }
         }
       }

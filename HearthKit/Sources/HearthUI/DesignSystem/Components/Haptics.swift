@@ -26,6 +26,9 @@ enum Haptics {
     /// Whether haptics are wanted. The root view keeps this in step with the switch in Settings.
     static var isEnabled = true
 
+    /// Whether the device has anything to tap with: an iPhone does; an iPad and a Mac do not.
+    static var isAvailable: Bool { UIDevice.current.userInterfaceIdiom == .phone }
+
     /// What plays a haptic once it is known to be wanted. Tests put their own in its place.
     static var output: @MainActor (HapticKind) -> Void = Haptics.playOnDevice
 

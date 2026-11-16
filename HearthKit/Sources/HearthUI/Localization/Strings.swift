@@ -106,7 +106,7 @@ enum Strings {
     static let pictureModelJuggernaut = String(localized: "picture.model.juggernaut", defaultValue: "Juggernaut XL · painterly", bundle: .module)
     static let pictureCanChange = String(localized: "picture.canChange", defaultValue: "Can change a picture you show it", bundle: .module)
     static let pictureCanEnlarge = String(localized: "picture.canEnlarge", defaultValue: "Can enlarge a picture", bundle: .module)
-    static let pictureNoModels = String(localized: "picture.noModels", defaultValue: "Add a picture server address above to make pictures.", bundle: .module)
+    static let pictureNoModels = String(localized: "picture.noModels", defaultValue: "Add a picture server in Servers to make pictures.", bundle: .module)
     static let picturesFooter = String(localized: "picture.footer", defaultValue: "To make a picture, tap + in a chat and choose Make a picture. Attach a photo to change it or enlarge it. The picture server is asked to free its memory after every picture.", bundle: .module)
     static let pictureAbilityThere = String(localized: "picture.abilityThere", defaultValue: "Available", bundle: .module)
     static let pictureAbilityMissing = String(localized: "picture.abilityMissing", defaultValue: "Not available", bundle: .module)
@@ -141,35 +141,29 @@ enum Strings {
     static let done = String(localized: "settings.done", defaultValue: "Done", bundle: .module)
     static let cancel = String(localized: "settings.cancel", defaultValue: "Cancel", bundle: .module)
     static let servers = String(localized: "settings.servers", defaultValue: "Servers", bundle: .module)
-    static let ollamaAddress = String(localized: "settings.ollama", defaultValue: "Ollama address", bundle: .module)
-    static let searchAddress = String(localized: "settings.search", defaultValue: "Search address (SearXNG)", bundle: .module)
-    static let speechAddress = String(localized: "settings.speech", defaultValue: "Speech address (Kokoro)", bundle: .module)
-    static let serversFooter = String(localized: "settings.serversFooter", defaultValue: "Search and speech are optional. An address without a scheme is taken to be HTTPS.", bundle: .module)
+    static let ollamaAddress = String(localized: "settings.ollama", defaultValue: "Chat server (Ollama)", bundle: .module)
+    static let searchAddress = String(localized: "settings.search", defaultValue: "Web search server (SearXNG)", bundle: .module)
+    static let speechAddress = String(localized: "settings.speech", defaultValue: "Speech server (Kokoro)", bundle: .module)
+    static let serversFooter = String(localized: "settings.serversFooter", defaultValue: "Only the chat server is required.", bundle: .module)
     static let voice = String(localized: "settings.voice", defaultValue: "Voice", bundle: .module)
     static let voiceName = String(localized: "settings.voiceName", defaultValue: "Voice name", bundle: .module)
     static let voiceSample = String(localized: "settings.voiceSample", defaultValue: "Hello. This is how I sound when I read a reply aloud.", bundle: .module)
     static let playVoiceSample = String(localized: "settings.voiceSamplePlay", defaultValue: "Hear this voice", bundle: .module)
     static let stopVoiceSample = String(localized: "settings.voiceSampleStop", defaultValue: "Stop", bundle: .module)
-    static let voiceSampleFailed = String(localized: "settings.voiceSampleFailed", defaultValue: "The voice could not be played. Check the speech address and the voice name.", bundle: .module)
+    static let voiceSampleFailed = String(localized: "settings.voiceSampleFailed", defaultValue: "The voice could not be played. Check the speech server and the voice name.", bundle: .module)
     static let instructionsPlaceholder = String(localized: "settings.instructionsPlaceholder", defaultValue: "For example: answer briefly. I live in Brisbane.", bundle: .module)
     static let readRepliesAloud = String(localized: "settings.readReplies", defaultValue: "Read replies aloud", bundle: .module)
-    static let privacy = String(localized: "settings.privacy", defaultValue: "Privacy", bundle: .module)
-    static let requireUnlock = String(localized: "settings.requireUnlock", defaultValue: "Require Face ID or passcode", bundle: .module)
     static let requireUnlockFooter = String(localized: "settings.requireUnlockFooter", defaultValue: "Asked for each time Hearth is opened. Your conversations are hidden in the app switcher.", bundle: .module)
-    static let lockEnableReason = String(localized: "lock.enableReason", defaultValue: "Confirm it is you to turn on the lock.", bundle: .module)
-    static let unlockReason = String(localized: "lock.reason", defaultValue: "Unlock your conversations.", bundle: .module)
-    static let unlock = String(localized: "lock.unlock", defaultValue: "Unlock", bundle: .module)
-    static let readPages = String(localized: "settings.readPages", defaultValue: "Read the pages a search finds", bundle: .module)
+    static let readPages = String(localized: "settings.readPages", defaultValue: "Read whole pages, not just snippets", bundle: .module)
     static let readPagesFooter = String(localized: "settings.readPagesFooter", defaultValue: "Gives the model the text of the top results, not just a snippet. Your phone fetches those pages itself, so the sites see your phone's address rather than your server's.", bundle: .module)
     static let memory = String(localized: "memory.title", defaultValue: "Memory", bundle: .module)
     static let memoryToggle = String(localized: "memory.toggle", defaultValue: "Remember things about me", bundle: .module)
-    static let savedMemories = String(localized: "memory.saved", defaultValue: "Saved memories", bundle: .module)
     static let memoryFooter = String(localized: "memory.footer", defaultValue: "Lasting facts you tell a model, or ask it to remember, are kept on this device and given to every conversation. Models that cannot call tools can read memories but not add to them.", bundle: .module)
     static let memoryPlaceholder = String(localized: "memory.placeholder", defaultValue: "For example: I live in Brisbane", bundle: .module)
     static let addMemory = String(localized: "memory.add", defaultValue: "Add memory", bundle: .module)
-    static let memoryListFooter = String(localized: "memory.listFooter", defaultValue: "Up to 50 short memories. Swipe one to delete it, or tell the model to forget it.", bundle: .module)
+    static let memoryListFooter = String(localized: "memory.listFooter", defaultValue: "Up to 50 short memories. Delete one with Edit, or tell the model to forget it.", bundle: .module)
     static let noMemories = String(localized: "memory.none", defaultValue: "Nothing is remembered yet.", bundle: .module)
-    static let clearMemories = String(localized: "memory.clear", defaultValue: "Forget everything", bundle: .module)
+    static let clearMemories = String(localized: "memory.clear", defaultValue: "Forget all memories", bundle: .module)
     static let clearMemoriesQuestion = String(localized: "memory.clearQuestion", defaultValue: "Forget every saved memory?", bundle: .module)
     static let theme = String(localized: "settings.theme", defaultValue: "Theme", bundle: .module)
     static let themeSystem = String(localized: "settings.themeSystem", defaultValue: "System", bundle: .module)
@@ -177,7 +171,7 @@ enum Strings {
     static let themeDark = String(localized: "settings.themeDark", defaultValue: "Dark", bundle: .module)
     static let testConnection = String(localized: "settings.test", defaultValue: "Test connection", bundle: .module)
     static let checking = String(localized: "settings.checking", defaultValue: "Checking…", bundle: .module)
-    static let invalidAddress = String(localized: "settings.invalidAddress", defaultValue: "That Ollama address is not valid.", bundle: .module)
+    static let invalidAddress = String(localized: "settings.invalidAddress", defaultValue: "That chat server address is not valid.", bundle: .module)
 
     static let listening = String(localized: "voice.listening", defaultValue: "Listening", bundle: .module)
     static let voiceThinking = String(localized: "voice.thinking", defaultValue: "Thinking", bundle: .module)
@@ -245,11 +239,11 @@ enum Strings {
     }
 
     static func connected(modelCount: Int) -> String {
-        String(localized: "sidebar.connected", defaultValue: "Connected · \(modelCount) models", bundle: .module)
+        String(localized: "sidebar.connected", defaultValue: "Connected · \(modelCount) models", bundle: .module) // one: "Connected · \(modelCount) model"
     }
 
     static func testSucceeded(modelCount: Int) -> String {
-        String(localized: "settings.testOK", defaultValue: "Connected. \(modelCount) models found.", bundle: .module)
+        String(localized: "settings.testOK", defaultValue: "Connected. \(modelCount) models found.", bundle: .module) // one: "Connected. \(modelCount) model found."
     }
 
     static func source(number: Int, host: String) -> String {

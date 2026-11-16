@@ -11,8 +11,6 @@ extension Strings {
     static let tasksEmpty = String(localized: "tasks.empty", defaultValue: "No scheduled tasks yet.", bundle: .module)
     static let tasksAdd = String(localized: "tasks.add", defaultValue: "Add task", bundle: .module)
     static let taskEnabled = String(localized: "tasks.enabled", defaultValue: "Run this task", bundle: .module)
-    static let taskOn = String(localized: "tasks.on", defaultValue: "On", bundle: .module)
-    static let taskOff = String(localized: "tasks.off", defaultValue: "Off", bundle: .module)
     static let taskNotRunYet = String(localized: "tasks.notRunYet", defaultValue: "Not run yet", bundle: .module)
     static let taskLastRunFailed = String(localized: "tasks.lastRunFailed", defaultValue: "Last run failed", bundle: .module)
     static let taskActionFailed = String(localized: "tasks.actionFailed", defaultValue: "The task could not be saved on this device. Try again.", bundle: .module)
@@ -43,6 +41,8 @@ extension Strings {
 
     static let notifyTasks = String(localized: "notifications.tasks", defaultValue: "Scheduled tasks", bundle: .module)
     static let notifyTasksDetail = String(localized: "notifications.tasksDetail", defaultValue: "When the answer to a scheduled task arrives while Hearth is not on screen.", bundle: .module)
+
+    static let scheduleTask = String(localized: "tasks.fromComposer", defaultValue: "Schedule a task", bundle: .module)
 
     static let scheduledTaskMark = String(localized: "tasks.mark", defaultValue: "Scheduled task", bundle: .module)
 

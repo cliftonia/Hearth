@@ -1,7 +1,7 @@
 import Foundation
 import HearthDomain
 
-// What the menu at the top of the chat does to the open conversation.
+// What the menu at the top of the chat does to the open conversation, and the + menu's scheduled task.
 extension ChatPresenter {
     var isChatPinned: Bool {
         dependencies.conversationStore.conversation(for: viewModel.conversation.id)?.isPinned ?? false
@@ -21,6 +21,11 @@ extension ChatPresenter {
             logger.error("Pinning the chat failed: \(error.localizedDescription, privacy: .public)")
             viewModel.error = ErrorViewConfiguration(message: Strings.errorChangeFailed, retryActionLabel: nil)
         }
+    }
+
+    /// Asks for a scheduled task that asks what is being written. The composer keeps its text either way.
+    func scheduleTaskAction() {
+        delegate?.chatPresenter(self, didRequestTaskWith: viewModel.draft)
     }
 
     /// Opens the rename alert with the chat's present title in its field.

@@ -3,7 +3,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 /// The plus button: photos from the library or the camera for models that can see, files for any model,
-/// and the switch that makes the next message ask for a picture.
+/// the switch that makes the next message ask for a picture, and a scheduled task asking what is being written.
 struct AttachmentMenu: View {
     private static let maximumPhotoCount = 4
 
@@ -19,12 +19,6 @@ struct AttachmentMenu: View {
         // A photo can be shown to a model that sees, or handed to the picture server to change or enlarge.
         let canSee = presenter.viewModel.selectedModel?.canSee == true || isPictureMode
         Menu {
-            if presenter.isPictureAvailable {
-                Button(action: presenter.togglePictureModeAction) {
-                    Label(Strings.pictureMode, systemImage: isPictureMode ? "checkmark" : "paintbrush")
-                }
-                .accessibilityAddTraits(isPictureMode ? .isSelected : [])
-            }
             Button(action: { isFileImporterPresented = true }, label: {
                 Label(Strings.chooseFile, systemImage: "doc")
             })
@@ -38,6 +32,17 @@ struct AttachmentMenu: View {
                 Label(Strings.photoLibrary, systemImage: "photo.on.rectangle")
             })
             .disabled(!canSee)
+            Divider()
+            if presenter.isPictureAvailable {
+                Button(action: presenter.togglePictureModeAction) {
+                    Label(Strings.pictureMode, systemImage: isPictureMode ? "checkmark" : "paintbrush")
+                }
+                .accessibilityAddTraits(isPictureMode ? .isSelected : [])
+            }
+            Button(action: presenter.scheduleTaskAction) {
+                Label(Strings.scheduleTask, systemImage: "calendar.badge.clock")
+            }
+            .accessibilityLabel(Strings.scheduleTask)
         } label: {
             Image(systemName: "plus")
                 .font(.hearth(.footnote).weight(.semibold))
@@ -46,6 +51,8 @@ struct AttachmentMenu: View {
                 .capsuleOutline()
         }
         .accessibilityLabel(Strings.attach)
+        // Read top to bottom as written, with Schedule a task last, rather than turned around when the menu opens upwards.
+        .menuOrder(.fixed)
         .photosPicker(isPresented: $isPhotoPickerPresented, selection: $pickedItems, maxSelectionCount: Self.maximumPhotoCount, matching: .images)
         .onChange(of: pickedItems) {
             let items = pickedItems

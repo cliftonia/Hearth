@@ -1,8 +1,9 @@
 import Foundation
 import HearthDomain
 
-// The sync page: where the hub is, its token, the switch, and syncing now. Each takes effect at once, like the
-// notification switches; none of it is part of the draft that Done keeps.
+// The sync page: where the hub is, its access key, the switch, and syncing now. Each takes effect at once, and is
+// kept in the sync store rather than with the other settings. The access key is still called a token in code and in
+// what is stored, so that a key saved by an earlier version is found.
 extension SettingsPresenter {
     /// What the sync page is built from.
     struct SyncControls {
@@ -72,14 +73,18 @@ extension SettingsPresenter {
         keepTypedToken()
         guard let url = syncStore.settings.hubURL else {
             viewModel.syncCheck = .failed(message: Strings.syncFailedNotConfigured)
+            dependencies.announce(Strings.syncFailedNotConfigured)
             return
         }
         viewModel.syncCheck = .checking
         switch await dependencies.sync.check(url, syncStore.token()) {
         case .reachable:
             viewModel.syncCheck = .succeeded
+            dependencies.announce(Strings.syncCheckSucceeded)
         case .failed(let failure):
-            viewModel.syncCheck = .failed(message: Self.words(for: failure))
+            let message = Self.words(for: failure)
+            viewModel.syncCheck = .failed(message: message)
+            dependencies.announce(message)
         }
     }
 

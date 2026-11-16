@@ -24,8 +24,8 @@ struct SettingsPage<Content: View>: View {
     }
 }
 
-/// One card on a settings page, with a small heading above it and a line of explanation beneath, where given.
-/// Rows inside it are divided with `Hairline`.
+/// One card on a settings page, with a small heading above it in Title Case and a line of explanation beneath,
+/// where given. Rows inside it are divided with `Hairline`.
 struct SettingsCard<Content: View>: View {
     var header: String?
     var footer: String?
@@ -34,8 +34,8 @@ struct SettingsCard<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: HearthSpacing.s6) {
             Text(header ?? "")
-                .font(.hearth(.caption).weight(.medium))
-                .textCase(.uppercase)
+                .font(.hearth(.footnote).weight(.medium))
+                .textCase(nil)
                 .foregroundStyle(HearthColor.mute)
                 .padding(.horizontal, HearthSpacing.s4)
                 .frame(height: header == nil ? 0 : nil)

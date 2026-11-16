@@ -3,10 +3,21 @@ import HearthCore
 import HearthDomain
 import os
 
+/// What the tasks tell the coordinator, for the editor and the notice it shows over the chat.
+@MainActor
+protocol ScheduledTasksPresenterDelegate: AnyObject {
+    /// The editor was closed: by Cancel, by saving or by deleting.
+    func scheduledTasksPresenterDidCloseEditor(_ presenter: ScheduledTasksPresenter)
+    /// The notice that tasks need sync was answered with Set up sync.
+    func scheduledTasksPresenterDidRequestSync(_ presenter: ScheduledTasksPresenter)
+}
+
 /// The scheduled tasks page in the settings, and the sheet that makes or edits a task.
 ///
 /// Tasks run on the hub, so nothing can be added while sync is off; the page says so and leads to the sync page,
 /// which is the settings' own navigation. Every change is kept at once through `TaskStore`, which sync then sends.
+/// A task can also be begun from the composer's + menu, with what was being written as its question; the
+/// coordinator then shows the editor over the chat, or, while sync is off, the notice.
 @MainActor
 final class ScheduledTasksPresenter {
     /// What the page is built from.
@@ -22,6 +33,7 @@ final class ScheduledTasksPresenter {
 
     let viewModel = ScheduledTasksViewModel()
     let dependencies: Dependencies
+    weak var delegate: (any ScheduledTasksPresenterDelegate)?
     private let logger = Logger(for: ScheduledTasksPresenter.self)
 
     init(dependencies: Dependencies) {
@@ -36,6 +48,18 @@ final class ScheduledTasksPresenter {
     var isSyncOn: Bool {
         let settings = dependencies.syncStore.settings
         return settings.isEnabled && settings.hubURL != nil
+    }
+
+    /// What the row in the settings says: "2 active", "None", or "Needs sync".
+    var rowStatus: String {
+        guard isSyncOn else {
+            return Strings.tasksNeedsSync
+        }
+        let tasks = taskStore.tasks
+        guard !tasks.isEmpty else {
+            return Strings.tasksNone
+        }
+        return Strings.tasksActive(number: tasks.filter(\.isEnabled).count)
     }
 
     var rows: [TaskRowViewConfiguration] {
@@ -95,13 +119,34 @@ final class ScheduledTasksPresenter {
         guard isSyncOn else {
             return
         }
+        fillNewTask(prompt: "")
+        viewModel.isEditorPresented = true
+    }
+
+    /// Fills the editor with a new task asking what was being written in the composer, for the coordinator to show
+    /// over the chat. The title is left for the user. Returns `false`, filling nothing, while sync is off.
+    func beginTaskAction(prompt: String) -> Bool {
+        guard isSyncOn else {
+            return false
+        }
+        fillNewTask(prompt: prompt.trimmingCharacters(in: .whitespacesAndNewlines))
+        return true
+    }
+
+    /// The notice that tasks need sync was answered with Set up sync.
+    func setUpSyncAction() {
+        delegate?.scheduledTasksPresenterDidRequestSync(self)
+    }
+
+    /// A new task: every day at the next full hour, with the hub choosing the model.
+    private func fillNewTask(prompt: String) {
         let calendar = dependencies.calendar()
         let now = dependencies.now()
         let nextHour = calendar.date(byAdding: .hour, value: 1, to: now) ?? now
         let start = calendar.dateInterval(of: .hour, for: nextHour)?.start ?? now
         fillEditor(id: nil, with: EditorSeed(
             title: "",
-            prompt: "",
+            prompt: prompt,
             modelID: ScheduledTask.automaticModelID,
             schedule: .daily(Self.timeOfDay(start, calendar: calendar), timeZone: calendar.timeZone.identifier),
             usesWebSearch: false
@@ -116,11 +161,12 @@ final class ScheduledTasksPresenter {
         fillEditor(id: id, with: EditorSeed(
             title: task.title, prompt: task.prompt, modelID: task.modelID, schedule: task.schedule, usesWebSearch: task.usesWebSearch
         ))
+        viewModel.isEditorPresented = true
     }
 
     /// Closes the editor and lets the draft go.
     func cancelAction() {
-        viewModel.isEditorPresented = false
+        closeEditor()
     }
 
     /// Keeps the draft as a new task or as the changed one, set in the device's time zone, and closes the editor.
@@ -142,7 +188,7 @@ final class ScheduledTasksPresenter {
             )
         }
         if await keep(task) {
-            viewModel.isEditorPresented = false
+            closeEditor()
         }
     }
 
@@ -153,7 +199,7 @@ final class ScheduledTasksPresenter {
         }
         do {
             try await taskStore.delete(id)
-            viewModel.isEditorPresented = false
+            closeEditor()
         } catch {
             logger.error("Deleting a task failed: \(error.localizedDescription, privacy: .public)")
             viewModel.isShowingFailure = true
@@ -189,7 +235,7 @@ final class ScheduledTasksPresenter {
         let usesWebSearch: Bool
     }
 
-    /// Fills the editor from a task, or from a new one's starting values, and opens it.
+    /// Fills the editor from a task, or from a new one's starting values.
     private func fillEditor(id: ScheduledTask.ID?, with seed: EditorSeed) {
         let calendar = dependencies.calendar()
         let now = dependencies.now()
@@ -214,7 +260,12 @@ final class ScheduledTasksPresenter {
             viewModel.onceDate = date
         }
         viewModel.isConfirmingDelete = false
-        viewModel.isEditorPresented = true
+    }
+
+    /// Closes the editor wherever it is showing: on the tasks page, or over the chat.
+    private func closeEditor() {
+        viewModel.isEditorPresented = false
+        delegate?.scheduledTasksPresenterDidCloseEditor(self)
     }
 
     /// Keeps a task, saying so on the page if it cannot be kept. Returns whether it was.

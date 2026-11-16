@@ -40,8 +40,12 @@ struct RootView: View {
         .onChange(of: isCovered) { coordinator.showLockWindow(colorScheme: colorScheme) }
         .onChange(of: colorScheme) { coordinator.showLockWindow(colorScheme: colorScheme) }
         // Sheets are separate presentations, so each is given the chosen theme as well as the root.
-        .sheet(isPresented: $router.isSettingsPresented) {
+        .sheet(isPresented: $router.isSettingsPresented, onDismiss: coordinator.settingsSheetDidDismiss) {
             SettingsView(presenter: coordinator.settingsPresenter, tasksPresenter: coordinator.tasksPresenter)
+                .preferredColorScheme(colorScheme)
+        }
+        .sheet(item: $router.taskSheet, onDismiss: coordinator.taskSheetDidDismiss) { sheet in
+            taskSheet(sheet)
                 .preferredColorScheme(colorScheme)
         }
         .sheet(item: $router.projectSheet) { sheet in
@@ -63,6 +67,17 @@ struct RootView: View {
         }
         .tint(HearthColor.pine)
         .preferredColorScheme(colorScheme)
+    }
+
+    /// The editor of a task begun from the composer, or the notice that tasks need sync.
+    @ViewBuilder
+    private func taskSheet(_ sheet: TaskSheetKind) -> some View {
+        switch sheet {
+        case .editor:
+            ChatTaskEditorSheet(presenter: coordinator.tasksPresenter)
+        case .needsSync:
+            TaskSyncNoticeSheet(presenter: coordinator.tasksPresenter)
+        }
     }
 
     /// The sheet that makes or edits a project, or the one that files a chat in a project.

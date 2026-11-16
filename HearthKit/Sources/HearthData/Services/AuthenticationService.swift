@@ -8,4 +8,12 @@ public struct AuthenticationService: Sendable {
     public func authenticate(reason: String) async -> Bool {
         (try? await LAContext().evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason)) ?? false
     }
+
+    /// The kind of biometrics the device has. The system only fills this in once it has been asked whether
+    /// biometrics can be used, whatever that answer is.
+    public func biometryType() -> LABiometryType {
+        let context = LAContext()
+        _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
+        return context.biometryType
+    }
 }

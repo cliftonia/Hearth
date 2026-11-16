@@ -1,7 +1,7 @@
 import Foundation
 import HearthDomain
 
-// The profile page: the photo, and erasing everything on the device.
+// The profile page's photo, and erasing everything on the device from the foot of the main list.
 extension SettingsPresenter {
     /// The profile photo as JPEG data; `nil` when none has been chosen.
     var photoJPEG: Data? { dependencies.profileStore.photoJPEG }
@@ -15,7 +15,7 @@ extension SettingsPresenter {
         }
     }
 
-    /// Keeps the chosen photo, already made small. It is kept at once, without waiting for Done.
+    /// Keeps the chosen photo, already made small.
     ///
     /// - Parameter jpeg: The photo, or `nil` when what was chosen could not be read as a picture.
     func setPhotoAction(_ jpeg: Data?) async {
@@ -46,15 +46,17 @@ extension SettingsPresenter {
     /// Erases everything on the device, once the user has confirmed, and tells the coordinator to start afresh.
     /// If something could not be erased the settings stay open and say so.
     func eraseAction() async {
-        viewModel.profileError = nil
+        viewModel.eraseError = nil
         await stopVoicePreviewAction()
         await dependencies.quietChat()
         do {
             try await dependencies.eraser.eraseAll()
+            // The screen still shows what was erased, and closing keeps what the screen shows.
+            fillFromSaved()
             delegate?.settingsPresenterDidErase(self)
         } catch {
             logger.error("Erasing everything failed: \(error.localizedDescription, privacy: .public)")
-            viewModel.profileError = Strings.eraseAllFailed
+            viewModel.eraseError = Strings.eraseAllFailed
         }
     }
 }

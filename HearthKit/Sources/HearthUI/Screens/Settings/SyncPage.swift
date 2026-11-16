@@ -1,29 +1,7 @@
 import HearthDomain
 import SwiftUI
 
-/// The row in the settings that leads to the sync page, saying whether sync is on.
-struct SyncSection: View {
-    let presenter: SettingsPresenter
-    /// Opens the page this row leads to.
-    let openAction: (SettingsPageKind) -> Void
-
-    var body: some View {
-        let isOn = presenter.syncStore.settings.isEnabled
-        Section {
-            SettingsLinkRow(action: { openAction(.sync) }, label: {
-                HStack(spacing: HearthSpacing.s8) {
-                    Text(Strings.sync)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Text(isOn ? Strings.syncOn : Strings.syncOff)
-                        .foregroundStyle(HearthColor.mute)
-                }
-            })
-            .accessibilityLabel("\(Strings.sync), \(isOn ? Strings.syncOn : Strings.syncOff)")
-        }
-    }
-}
-
-/// Where the hub is, its access token, the switch, syncing now, and how the last sync went. Everything here takes
+/// Where the hub is, its access key, the switch, syncing now, and how the last sync went. Everything here takes
 /// effect at once.
 struct SyncPage: View {
     let presenter: SettingsPresenter
@@ -79,14 +57,14 @@ struct SyncPage: View {
                 .keyboardType(.URL)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .onSubmit { Task { await presenter.syncAddressAction() } }
                 .accessibilityLabel(Strings.syncHubAddress)
+                .keepOnLeaving { Task { await presenter.syncAddressAction() } }
         }
         .padding(.horizontal, HearthSpacing.s16)
         .padding(.vertical, HearthSpacing.s10)
     }
 
-    /// A field for a new token, which is never filled with the saved one, and the buttons that keep or forget it.
+    /// A field for a new access key, which is never filled with the saved one, and the buttons that keep or forget it.
     private func tokenField(text: Binding<String>, hasToken: Bool) -> some View {
         VStack(alignment: .leading, spacing: HearthSpacing.s8) {
             Text(Strings.syncToken)

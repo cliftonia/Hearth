@@ -14,7 +14,7 @@ struct LockView: View {
                 .font(HearthFont.display)
                 .foregroundStyle(HearthColor.ink)
             Button(action: { Task { await presenter.unlockAction() } }, label: {
-                Label(Strings.unlock, systemImage: "lock.open")
+                Label(viewModel.wording.unlockTitle, systemImage: "lock.open")
                     .font(.hearth(.subheadline).weight(.semibold))
                     .foregroundStyle(HearthColor.onPine)
                     .padding(.horizontal, HearthSpacing.s20)

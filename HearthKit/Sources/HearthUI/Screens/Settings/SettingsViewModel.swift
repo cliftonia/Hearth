@@ -24,11 +24,14 @@ enum VoicePreviewKind: Hashable {
     case failed
 }
 
-/// The settings form: a draft of each setting, bound to its field, and the state of the form's own controls.
+/// The settings: each setting as it stands on screen, bound to its control, and the state of the controls themselves.
+///
+/// Every change is kept as it is made. A switch or a choice is kept at once; typed text is kept when its field is
+/// left, when its page closes and when the settings close, so that nothing is written for each letter.
 @MainActor
 @Observable
 final class SettingsViewModel {
-    // MARK: Draft
+    // MARK: Settings
 
     var ollamaAddress = ""
     var searchAddress = ""
@@ -42,21 +45,24 @@ final class SettingsViewModel {
     var appearance: AppearanceKind = .system
     var customInstructions = ""
     var isAutoReadEnabled = false
+    /// The lock's switch. Turning it on is only kept once the owner has shown they can open it.
     var isLockEnabled = false
     var isFollowUpsEnabled = true
     var isPageReadingEnabled = true
     var isMemoryEnabled = true
-
-    // MARK: Applied at once
-
-    /// Whether haptics are played. Like the theme, it takes effect as it is switched, without waiting for Done.
     var isHapticsEnabled = true
-    /// Whether a reply that finishes off screen is announced. Takes effect as it is switched.
+    /// Whether a reply that finishes off screen is announced.
     var isReplyNotificationsEnabled = false
-    /// Whether the answer to a scheduled task that arrives off screen is announced. Takes effect as it is switched.
+    /// Whether the answer to a scheduled task that arrives off screen is announced.
     var isTaskNotificationsEnabled = false
 
-    // MARK: Form state
+    // MARK: Navigation
+
+    /// The pages pushed on from the main list, the last on top. A row opens its page by adding to this, never with
+    /// a `NavigationLink`; see `SettingsPageKind`.
+    var path: [SettingsPageKind] = []
+
+    // MARK: Controls
 
     /// The voices the speech server offers. Empty until it answers, in which case the voice is typed by name.
     var voices: [String] = []
@@ -70,18 +76,22 @@ final class SettingsViewModel {
     /// Whether the system lets the app post notifications, as last asked.
     var notificationPermission: NotificationPermissionKind = .notDetermined
     var isConfirmingErase = false
-    /// What went wrong on the profile page, if something did: a photo that could not be kept, or an erasure that failed.
+    /// A photo that could not be kept, said on the profile page.
     var profileError: String?
+    /// An erasure that failed part of the way, said beneath the Erase button.
+    var eraseError: String?
+    /// How the lock's switch names the way this device unlocks.
+    var unlockWording = UnlockWording(biometry: .none)
 
     // MARK: Sync, applied at once
 
     /// The hub's address as typed; kept when typing ends, when the page closes, and before anything uses it.
     var syncAddress = ""
-    /// A new access token being typed. It is never filled from the Keychain, and is emptied once saved.
+    /// A new access key being typed. It is never filled from the Keychain, and is emptied once saved.
     var syncTokenDraft = ""
     var isSyncEnabled = false
     var syncCheck: SyncCheckKind = .idle
 
-    /// The names as they stand in the form.
+    /// The names as they stand on screen.
     var profile: UserProfile { UserProfile(fullName: fullName, nickname: nickname) }
 }

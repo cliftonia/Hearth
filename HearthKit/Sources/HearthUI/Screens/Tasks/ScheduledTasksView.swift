@@ -1,28 +1,6 @@
 import HearthDomain
 import SwiftUI
 
-/// The row in the settings that leads to the scheduled tasks, saying how many there are.
-struct TasksSection: View {
-    let presenter: ScheduledTasksPresenter
-    /// Opens the page this row leads to.
-    let openAction: (SettingsPageKind) -> Void
-
-    var body: some View {
-        let count = presenter.dependencies.taskStore.tasks.count
-        Section {
-            SettingsLinkRow(action: { openAction(.tasks) }, label: {
-                HStack(spacing: HearthSpacing.s8) {
-                    Text(Strings.tasks)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Text("\(count)")
-                        .foregroundStyle(HearthColor.mute)
-                }
-            })
-            .accessibilityLabel("\(Strings.tasks), \(count)")
-        }
-    }
-}
-
 /// The scheduled tasks: each with its schedule, how its last run went and a switch, and a way to add one. Without
 /// sync the page says that tasks run on the hub and leads to the sync page.
 struct ScheduledTasksPage: View {
