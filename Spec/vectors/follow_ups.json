@@ -1,0 +1,31 @@
+{
+  "about": "FollowUpTransformer.questions: one question per line, without a list marker (-, *, •, 1. or 1)) or wrapping quotes, asterisks or underscores, kept only when it is 8 to 140 characters and ends with a question mark, and never more than three.",
+  "cases": [
+    {
+      "answer": "1. What is the tide?\n2) When is low tide?\n- Is it safe to swim?\n* One more question here?",
+      "expected": [
+        "What is the tide?",
+        "When is low tide?",
+        "Is it safe to swim?"
+      ]
+    },
+    {
+      "answer": "\"Why is the sky blue?\"\nNot a question.\nShort?\n“What about sunsets?”",
+      "expected": [
+        "Why is the sky blue?",
+        "What about sunsets?"
+      ]
+    },
+    {
+      "answer": "• How deep is the bay?\n\n**Where can I park?**",
+      "expected": [
+        "How deep is the bay?",
+        "Where can I park?"
+      ]
+    },
+    {
+      "answer": "",
+      "expected": []
+    }
+  ]
+}

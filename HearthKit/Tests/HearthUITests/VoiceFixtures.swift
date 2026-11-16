@@ -61,7 +61,12 @@ final class CameraFixture {
 
     private func flip() -> CameraPositionKind {
         flipCount += 1
-        position = position.flipped
+        switch position {
+        case .back:
+            position = .front
+        case .front:
+            position = .back
+        }
         return position
     }
 

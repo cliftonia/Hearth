@@ -75,6 +75,6 @@ public struct OllamaService: Sendable {
         if let message = (try? OllamaChatChunkDTO(line: line))?.error {
             return .server(message: message)
         }
-        return .status(code: statusCode, body: String(line.prefix(500)))
+        return .failedStatus(statusCode, text: line)
     }
 }

@@ -375,17 +375,6 @@
         }
       }
     },
-    "chat.cloudTag": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "cloud"
-          }
-        }
-      }
-    },
     "chat.connectMessage": {
       "extractionState": "manual",
       "localizations": {
@@ -437,17 +426,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "On your server"
-          }
-        }
-      }
-    },
-    "chat.localTag": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "local"
           }
         }
       }
@@ -712,17 +690,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove photo"
-          }
-        }
-      }
-    },
-    "composer.search": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search"
           }
         }
       }
@@ -1086,17 +1053,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "No server address is set. Add one in Settings."
-          }
-        }
-      }
-    },
-    "error.speechFailed": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The reply could not be spoken."
           }
         }
       }
@@ -2311,17 +2267,6 @@
         }
       }
     },
-    "picture.models": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Picture models"
-          }
-        }
-      }
-    },
     "picture.noModels": {
       "extractionState": "manual",
       "localizations": {
@@ -2560,17 +2505,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Add your name"
-          }
-        }
-      }
-    },
-    "profile.photo": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Profile photo"
           }
         }
       }

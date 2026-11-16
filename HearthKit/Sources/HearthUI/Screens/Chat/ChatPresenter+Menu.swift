@@ -29,11 +29,11 @@ extension ChatPresenter {
         viewModel.isRenamingChat = true
     }
 
-    /// Saves the title typed into the rename alert. An empty title changes nothing.
+    /// Saves the title typed into the rename alert, as `Conversation.renamedTitle(from:)` has it. An empty title
+    /// changes nothing.
     func commitRenameChatAction() async {
-        let title = viewModel.chatTitleDraft.trimmingCharacters(in: .whitespacesAndNewlines)
         let id = viewModel.conversation.id
-        guard !title.isEmpty else {
+        guard let title = Conversation.renamedTitle(from: viewModel.chatTitleDraft) else {
             return
         }
         do {

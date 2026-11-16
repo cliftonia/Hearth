@@ -1,0 +1,74 @@
+{
+  "about": "MemoryLedger saving one fact among those already remembered. A fact is one line, trimmed, its white space runs made single spaces, cut to 200 characters. It is refused as alreadySaved when one already remembered is the same whatever its case or accents, and as empty when nothing is left. savedText is the fact as kept.",
+  "cases": [
+    {
+      "existing": [
+        "Lives in Brisbane"
+      ],
+      "save": "lives in brisbane",
+      "expected": "alreadySaved"
+    },
+    {
+      "existing": [
+        "Likes café au lait"
+      ],
+      "save": "LIKES CAFE AU LAIT",
+      "expected": "alreadySaved"
+    },
+    {
+      "existing": [
+        "Résumé is up to date"
+      ],
+      "save": "resume is up to date",
+      "expected": "alreadySaved"
+    },
+    {
+      "existing": [
+        "Naïve about tides"
+      ],
+      "save": "NAIVE ABOUT TIDES",
+      "expected": "alreadySaved"
+    },
+    {
+      "existing": [
+        "Drinks café"
+      ],
+      "save": "Drinks café",
+      "expected": "alreadySaved"
+    },
+    {
+      "existing": [
+        "Lives in Brisbane"
+      ],
+      "save": "  Lives   in\nBrisbane  ",
+      "expected": "alreadySaved"
+    },
+    {
+      "existing": [
+        "Lives in Brisbane"
+      ],
+      "save": "Lives in Sydney",
+      "expected": "saved",
+      "savedText": "Lives in Sydney"
+    },
+    {
+      "existing": [
+        "Has a cat"
+      ],
+      "save": "Has  a\tdog ",
+      "expected": "saved",
+      "savedText": "Has a dog"
+    },
+    {
+      "existing": [],
+      "save": "   \n ",
+      "expected": "empty"
+    },
+    {
+      "existing": [],
+      "save": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expected": "saved",
+      "savedText": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ]
+}

@@ -40,7 +40,7 @@ struct AttachmentMenu: View {
             .disabled(!canSee)
         } label: {
             Image(systemName: "plus")
-                .font(.footnote.weight(.semibold))
+                .font(.hearth(.footnote).weight(.semibold))
                 .foregroundStyle(HearthColor.mute)
                 .frame(size: HearthSize.composerControl)
                 .capsuleOutline()

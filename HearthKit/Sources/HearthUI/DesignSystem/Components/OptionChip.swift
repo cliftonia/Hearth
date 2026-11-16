@@ -9,7 +9,7 @@ struct OptionChip: View {
 
     var body: some View {
         Image(systemName: systemImage)
-            .font(.footnote.weight(.medium))
+            .font(.hearth(.footnote).weight(.medium))
             .foregroundStyle(isOn ? HearthColor.pine : HearthColor.mute)
             .frame(size: HearthSize.optionChip)
             .surface(Capsule(), fill: isOn ? HearthColor.pineSoft : .clear, border: isOn ? .clear : HearthColor.line)

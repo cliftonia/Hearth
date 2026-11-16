@@ -48,7 +48,7 @@ struct MemoryListView: View {
             Section {
                 ForEach(memories) { memory in
                     Text(memory.text)
-                        .font(.body)
+                        .font(.hearth(.body))
                         .foregroundStyle(HearthColor.ink)
                         .swipeActions {
                             Button(Strings.delete, role: .destructive) {

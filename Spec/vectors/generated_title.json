@@ -1,0 +1,33 @@
+{
+  "about": "The title read out of a model's answer: its first line that is not blank, without the quotes, asterisks, hashes, full stops and spaces at either end, cut to 60 characters. Empty when there is none.",
+  "cases": [
+    {
+      "answer": "\"Tides at Mooloolaba.\"",
+      "expected": "Tides at Mooloolaba"
+    },
+    {
+      "answer": "\n\n## Garden Plans\nMore text",
+      "expected": "Garden Plans"
+    },
+    {
+      "answer": "**Bold Title**",
+      "expected": "Bold Title"
+    },
+    {
+      "answer": "   \nTitle after a blank line",
+      "expected": "Title after a blank line"
+    },
+    {
+      "answer": "'It's fine'",
+      "expected": "It's fine"
+    },
+    {
+      "answer": "",
+      "expected": ""
+    },
+    {
+      "answer": "An unusually long title that a model wrote although it was asked for five words",
+      "expected": "An unusually long title that a model wrote although it was a"
+    }
+  ]
+}

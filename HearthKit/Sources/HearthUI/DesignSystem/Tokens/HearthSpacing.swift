@@ -18,4 +18,8 @@ enum HearthSpacing {
     static let s24: CGFloat = 24
     static let s28: CGFloat = 28
     static let s32: CGFloat = 32
+
+    /// On a Mac, the gap between the window's bottom edge and the controls resting on it, the composer and the
+    /// sidebar's buttons alike, so their bottoms line up. A Mac window has no home indicator to hold them off the edge.
+    static let macBottomEdge: CGFloat = s20
 }

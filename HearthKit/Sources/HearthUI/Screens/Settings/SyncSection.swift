@@ -55,7 +55,7 @@ struct SyncPage: View {
             }
             SettingsCard(header: Strings.syncStatus) {
                 Text(presenter.syncStatusText)
-                    .font(.footnote)
+                    .font(.hearth(.footnote))
                     .foregroundStyle(store.failure == nil ? HearthColor.mute : HearthColor.danger)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, HearthSpacing.s16)
@@ -70,11 +70,11 @@ struct SyncPage: View {
     private func addressField(text: Binding<String>) -> some View {
         VStack(alignment: .leading, spacing: HearthSpacing.s2) {
             Text(Strings.syncHubAddress)
-                .font(.caption)
+                .font(.hearth(.caption))
                 .foregroundStyle(HearthColor.mute)
                 .accessibilityHidden(true)
             TextField("https://", text: text)
-                .font(.body)
+                .font(.hearth(.body))
                 .foregroundStyle(HearthColor.ink)
                 .keyboardType(.URL)
                 .textInputAutocapitalization(.never)
@@ -90,11 +90,11 @@ struct SyncPage: View {
     private func tokenField(text: Binding<String>, hasToken: Bool) -> some View {
         VStack(alignment: .leading, spacing: HearthSpacing.s8) {
             Text(Strings.syncToken)
-                .font(.caption)
+                .font(.hearth(.caption))
                 .foregroundStyle(HearthColor.mute)
                 .accessibilityHidden(true)
             SecureField(hasToken ? Strings.syncTokenSavedPlaceholder : Strings.syncTokenPlaceholder, text: text)
-                .font(.body)
+                .font(.hearth(.body))
                 .foregroundStyle(HearthColor.ink)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
@@ -108,10 +108,10 @@ struct SyncPage: View {
                     .disabled(!hasToken)
                     .accessibilityLabel(Strings.syncRemoveToken)
             }
-            .font(.subheadline.weight(.medium))
+            .font(.hearth(.subheadline).weight(.medium))
             .buttonStyle(.borderless)
             Text(Strings.syncTokenFooter)
-                .font(.footnote)
+                .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.mute)
         }
         .padding(.horizontal, HearthSpacing.s16)
@@ -121,7 +121,7 @@ struct SyncPage: View {
     private func actionRow(_ title: String, systemImage: String, action: @escaping () async -> Void) -> some View {
         Button(action: { Task { await action() } }, label: {
             Label(title, systemImage: systemImage)
-                .font(.body)
+                .font(.hearth(.body))
                 .foregroundStyle(HearthColor.pine)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, HearthSpacing.s16)
@@ -137,7 +137,7 @@ struct SyncPage: View {
         let look = CheckLook(check)
         let isShown = check != .idle
         return Label(look.text, systemImage: look.systemImage)
-            .font(.footnote)
+            .font(.hearth(.footnote))
             .foregroundStyle(look.color)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, HearthSpacing.s16)

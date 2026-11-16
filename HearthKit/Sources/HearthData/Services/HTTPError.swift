@@ -8,6 +8,19 @@ public enum HTTPError: Error, Sendable, Equatable {
     case status(code: Int, body: String)
     /// The server answered with an error message of its own in place of a reply.
     case server(message: String)
+
+    /// How much of a failed response's body is kept as a clue to what went wrong.
+    static let bodyClueLength = 500
+
+    /// A failure status, keeping the first bytes of the body as text.
+    static func failedStatus(_ code: Int, body: Data) -> HTTPError {
+        .status(code: code, body: String(bytes: body.prefix(bodyClueLength), encoding: .utf8) ?? "")
+    }
+
+    /// A failure status, keeping the first characters of a body already read as text.
+    static func failedStatus(_ code: Int, text: String) -> HTTPError {
+        .status(code: code, body: String(text.prefix(bodyClueLength)))
+    }
 }
 
 extension URLSession {
@@ -27,7 +40,7 @@ extension URLSession {
             throw HTTPError.invalidResponse
         }
         guard (200..<300).contains(http.statusCode) else {
-            throw HTTPError.status(code: http.statusCode, body: String(bytes: data.prefix(500), encoding: .utf8) ?? "")
+            throw HTTPError.failedStatus(http.statusCode, body: data)
         }
         return data
     }

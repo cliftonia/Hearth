@@ -15,17 +15,17 @@ struct DocumentStrip: View {
                 ForEach(documents) { document in
                     HStack(spacing: HearthSpacing.s6) {
                         Image(systemName: "doc.text")
-                            .font(.caption)
+                            .font(.hearth(.caption))
                             .foregroundStyle(HearthColor.pine)
                             .accessibilityHidden(true)
                         Text(document.name)
-                            .font(.caption)
+                            .font(.hearth(.caption))
                             .foregroundStyle(HearthColor.ink)
                             .lineLimit(1)
                         if let removeAction {
                             Button(action: { removeAction(document.id) }, label: {
                                 Image(systemName: "xmark")
-                                    .font(.caption2.weight(.bold))
+                                    .font(.hearth(.caption2).weight(.bold))
                                     .foregroundStyle(HearthColor.mute)
                                     .frame(width: Self.removeButtonSide, height: Self.removeButtonSide)
                             })

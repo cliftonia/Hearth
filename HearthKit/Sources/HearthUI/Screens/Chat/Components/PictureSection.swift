@@ -23,7 +23,7 @@ struct PictureSection: View {
                 HStack(spacing: HearthSpacing.s4) {
                     Button(action: { save(image) }, label: {
                         Label(Strings.pictureSave, systemImage: "square.and.arrow.down")
-                            .font(.footnote.weight(.medium))
+                            .font(.hearth(.footnote).weight(.medium))
                             .foregroundStyle(HearthColor.ink)
                             .padding(.horizontal, HearthSpacing.s12)
                             .padding(.vertical, HearthSpacing.s6)
@@ -32,7 +32,7 @@ struct PictureSection: View {
                     .buttonStyle(.plain)
                     ShareLink(item: Image(uiImage: image), preview: SharePreview(Strings.picture, image: Image(uiImage: image))) {
                         Label(Strings.share, systemImage: "square.and.arrow.up")
-                            .font(.footnote.weight(.medium))
+                            .font(.hearth(.footnote).weight(.medium))
                             .foregroundStyle(HearthColor.ink)
                             .padding(.horizontal, HearthSpacing.s12)
                             .padding(.vertical, HearthSpacing.s6)

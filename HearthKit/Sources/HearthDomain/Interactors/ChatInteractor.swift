@@ -128,9 +128,7 @@ public final class ChatInteractor: Sendable {
         let prompt = "Write a title of at most five words for a conversation that begins with the message below. "
             + "Reply with the title only, without quotes or a full stop.\n\n\(userText.prefix(600))"
         let request = ChatRequest(model: model, messages: [PromptMessage(role: .user, text: prompt)], thinking: .off)
-        let title = try await chat.complete(baseURL, request)
-            .split(whereSeparator: \.isNewline).first.map(String.init) ?? ""
-        return String(title.trimmingCharacters(in: CharacterSet(charactersIn: "\"'*#. ")).prefix(60))
+        return Conversation.generatedTitle(from: try await chat.complete(baseURL, request))
     }
 
     /// Questions the user might ask next, written by the model. Empty when there is nothing to go on.

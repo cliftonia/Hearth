@@ -54,7 +54,7 @@ struct MessageSection: View {
             }
             if !message.text.isEmpty {
                 Text(message.text)
-                    .font(.body)
+                    .font(.hearth(.body))
                     .foregroundStyle(HearthColor.ink)
                     .padding(.horizontal, HearthSpacing.s14)
                     .padding(.vertical, HearthSpacing.s10)
@@ -79,13 +79,13 @@ struct MessageSection: View {
             }
             if let pictureStatus, isStreaming {
                 Label(pictureStatus, systemImage: "paintbrush")
-                    .font(.footnote)
+                    .font(.hearth(.footnote))
                     .foregroundStyle(HearthColor.mute)
             }
             // The steps of research show until the report itself begins to arrive.
             if let researchStatus, isStreaming, message.text.isEmpty {
                 Label(researchStatus, systemImage: "text.magnifyingglass")
-                    .font(.footnote)
+                    .font(.hearth(.footnote))
                     .foregroundStyle(HearthColor.mute)
             }
             if let pictureJPEG = message.imagesJPEG.first {
@@ -93,7 +93,7 @@ struct MessageSection: View {
             }
             if let searchingQuery, isStreaming {
                 Label(Strings.searching(for: searchingQuery), systemImage: "globe")
-                    .font(.footnote)
+                    .font(.hearth(.footnote))
                     .foregroundStyle(HearthColor.mute)
                     .lineLimit(2)
             }
@@ -103,7 +103,7 @@ struct MessageSection: View {
             // Under a picture the text is only a note on how it was made.
             if !message.text.isEmpty, !message.imagesJPEG.isEmpty {
                 Text(message.text)
-                    .font(.footnote)
+                    .font(.hearth(.footnote))
                     .foregroundStyle(HearthColor.mute)
             }
             // A report lists its sources in full once it is finished, when their numbers are settled.
@@ -160,7 +160,7 @@ struct MessageSection: View {
         actionButton(systemImage: "doc.on.doc", label: Strings.copy, action: copyAction)
         ShareLink(item: message.text) {
             Image(systemName: "square.and.arrow.up")
-                .font(.footnote)
+                .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.mute)
                 .frame(size: HearthSize.messageAction)
                 .contentShape(Rectangle())
@@ -186,7 +186,7 @@ struct MessageSection: View {
                 .disabled(index == 0)
                 .opacity(index == 0 ? 0.35 : 1)
             Text(verbatim: "\(index + 1)/\(message.versionCount)")
-                .font(.footnote.monospacedDigit())
+                .font(.hearth(.footnote).monospacedDigit())
                 .foregroundStyle(HearthColor.mute)
                 .accessibilityLabel(Strings.versionPosition(number: index + 1, total: message.versionCount))
             actionButton(systemImage: "chevron.right", label: Strings.nextVersion) {
@@ -201,7 +201,7 @@ struct MessageSection: View {
     private func actionButton(systemImage: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.footnote)
+                .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.mute)
                 .frame(size: HearthSize.messageAction)
                 .contentShape(Rectangle())
@@ -233,10 +233,10 @@ private struct ThinkingSection: View {
                         .opacity(isActive ? 0.35 : 1)
                         .animation(isActive ? .easeInOut(duration: 0.7).repeatForever(autoreverses: true) : .default, value: isActive)
                     Text(title)
-                        .font(.footnote)
+                        .font(.hearth(.footnote))
                         .foregroundStyle(HearthColor.mute)
                     Image(systemName: "chevron.right")
-                        .font(.caption2.weight(.semibold))
+                        .font(.hearth(.caption2).weight(.semibold))
                         .foregroundStyle(HearthColor.mute)
                         .rotationEffect(.degrees(isExpanded ? 90 : 0))
                         .accessibilityHidden(true)
@@ -248,7 +248,7 @@ private struct ThinkingSection: View {
             .accessibilityAddTraits(isExpanded ? .isSelected : [])
             if isExpanded {
                 Text(thinking.trimmingCharacters(in: .whitespacesAndNewlines))
-                    .font(.footnote)
+                    .font(.hearth(.footnote))
                     .foregroundStyle(HearthColor.mute)
                     .padding(.leading, HearthSpacing.s12)
                     .overlay(alignment: .leading) {
@@ -298,7 +298,7 @@ private struct SourcesSection: View {
                     let host = source.url.host()?.replacingOccurrences(of: "www.", with: "") ?? source.title
                     Link(destination: source.url) {
                         Text("\(number)  \(host)")
-                            .font(.caption)
+                            .font(.hearth(.caption))
                             .foregroundStyle(HearthColor.mute)
                             .padding(.horizontal, HearthSpacing.s10)
                             .padding(.vertical, HearthSpacing.s6)

@@ -13,8 +13,9 @@ the values and `Components/` holds the few pieces built from them that are used 
 4. **A measurement that belongs to one view stays with that view**, as a `private static let` with a name
    that says what it is: an orb's diameter, a row's vertical padding tuned by eye. It becomes a token
    when a second view needs it.
-5. **Interface text uses the system text styles** (`.body`, `.subheadline`, `.footnote`, `.caption`), so it
-   follows Dynamic Type. `HearthFont` is for the serif and monospaced faces only. Never set a fixed
+5. **Interface text uses the system text styles through `Font.hearth(_:)`** (`.hearth(.body)`,
+   `.hearth(.footnote)`), so it follows Dynamic Type on iPhone and iPad and is set a little larger on a Mac,
+   which ignores Dynamic Type. `HearthFont` is for the serif and monospaced faces only. Never set a fixed
    point size.
 6. **Reach for a component before drawing a pattern again.** If the same shape appears a second time,
    it moves into `DesignSystem/Components`.
@@ -121,6 +122,7 @@ Apply one with `.hearthShadow(.composer)`.
 | `Hairline(axis:)` | A one-point line in the line colour | Dividers, horizontal by default |
 | `Avatar(photoJPEG:initials:diameter:)` | A round picture of a person: a photo, else initials, else a person symbol | The profile row and the profile page |
 | `PermissionNotice(systemImage:message:actionTitle:action:)` | A card saying the system is holding something back, with a button to where that is changed | Notifications refused; the camera refused |
+| `SheetHeader(title:closeAction:)` | A sheet's title, centred, with a round close button at the leading edge | The top of the model picker and the project picker |
 | `Haptics.play(_:)`, `.haptic(_:trigger:when:)` | The one place a haptic is played from | Every haptic; see below |
 | `.surface(_:fill:border:)` | A filled shape with a hairline border inside its edge | Any bordered shape; the modifiers below are built on it |
 | `.cardSurface(radius:border:)` | A card-coloured rounded rectangle with a border | Code blocks, tables, the search field, the composer, the error banner |

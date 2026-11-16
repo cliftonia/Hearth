@@ -67,7 +67,7 @@ extension ChatPresenter {
         let conversation = viewModel.conversation
         let isFirstMessage = conversation.messages.isEmpty
         viewModel.conversation = conversation.updating(
-            title: isFirstMessage ? String(message.text.prefix(48)) : nil,
+            title: isFirstMessage ? Conversation.provisionalTitle(from: message.text) : nil,
             modelID: model.id,
             messages: conversation.messages + [message]
         )
@@ -89,25 +89,17 @@ extension ChatPresenter {
         let reply = previous?.startingNewVersion() ?? Message(role: .assistant, text: "", isResearch: true)
         let request = ResearchInteractor.Request(question: asked.text, context: Array(history.dropLast()), model: model, settings: settings)
         viewModel.conversation = viewModel.conversation.updating(messages: history + [reply], updatedAt: Date())
-        viewModel.error = nil
-        viewModel.followUps = []
-        viewModel.memoryNotice = nil
-        viewModel.isStreaming = true
+        beginTurn()
         viewModel.researchStatus = Self.status(for: .planning)
         let events = dependencies.research.run(request)
         // Research takes minutes; it should outlive a glance at another app, for as long as iOS allows.
         backgroundActivity.begin(named: "Research")
         await stopSpeaking()
-        let task = Task {
+        await runTurn(replyID: reply.id) {
             await self.consume(events, reportID: reply.id)
-            self.viewModel.isStreaming = false
+        } settle: {
             self.viewModel.researchStatus = nil
-            await self.save(self.discardingEmptyReply(reply.id))
         }
-        turnTask = task
-        await task.value
-        await notifyReplyFinished(reply.id)
-        backgroundActivity.end()
         await suggestFollowUps(model: model)
     }
 

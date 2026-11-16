@@ -6,7 +6,7 @@ struct MemoryNoticeSection: View {
 
     var body: some View {
         Label(notice, systemImage: "bookmark.fill")
-            .font(.footnote)
+            .font(.hearth(.footnote))
             .foregroundStyle(HearthColor.pine)
             .padding(.horizontal, HearthSpacing.s12)
             .padding(.vertical, HearthSpacing.s8)

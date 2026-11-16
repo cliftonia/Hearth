@@ -144,9 +144,7 @@ public final class AppCoordinator {
 
     /// Goes straight to a chat, as a tapped notification asks. While the app is locked the chat opens behind the lock.
     private func openConversation(_ id: Conversation.ID) {
-        router.isSidebarOpen = false
-        router.isSettingsPresented = false
-        router.projectSheet = nil
+        router.closeOverlays()
         Task { await chatPresenter.openNotifiedConversationAction(id) }
     }
 
@@ -170,9 +168,7 @@ public final class AppCoordinator {
         }
         let destination = url.host()?.lowercased()
         if destination == "new" {
-            router.isSidebarOpen = false
-            router.isSettingsPresented = false
-            router.projectSheet = nil
+            router.closeOverlays()
             router.isVoicePresented = false
             Task { await chatPresenter.newChatAction() }
         } else if destination == "voice" {
@@ -197,9 +193,7 @@ public final class AppCoordinator {
             isVoicePending = true
             return
         }
-        router.isSidebarOpen = false
-        router.isSettingsPresented = false
-        router.projectSheet = nil
+        router.closeOverlays()
         router.isVoicePresented = true
     }
 

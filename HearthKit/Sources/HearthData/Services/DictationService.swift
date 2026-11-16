@@ -18,7 +18,7 @@ public enum DictationError: Error, Sendable {
 /// Live speech-to-text from the microphone, using the phone's own recogniser.
 @MainActor
 public final class DictationService {
-    private let engine = AVAudioEngine()
+    private var engine = AVAudioEngine()
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?
     private var continuation: AsyncStream<DictationUpdateDTO>.Continuation?
@@ -45,6 +45,9 @@ public final class DictationService {
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetoothHFP])
         try session.setActive(true, options: .notifyOthersOnDeactivation)
+        // A fresh engine each time, made once the session is recording: on a Mac, an engine whose microphone was
+        // looked at before then offers no audio at all.
+        engine = AVAudioEngine()
 
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.shouldReportPartialResults = true

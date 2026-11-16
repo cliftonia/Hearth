@@ -59,4 +59,12 @@ final class AppRouter {
     var isVoicePresented = false
     /// The project sheet that is showing, if one is.
     var projectSheet: ProjectSheetKind?
+
+    /// Closes the drawer of chats, Settings and any project sheet, so that the chat underneath can be reached.
+    /// Voice and the canvas are left as they are.
+    func closeOverlays() {
+        isSidebarOpen = false
+        isSettingsPresented = false
+        projectSheet = nil
+    }
 }

@@ -81,7 +81,7 @@ struct ChatHeader: View {
     private var privateMark: some View {
         let isShown = hasBegun && presenter.viewModel.conversation.isPrivate
         return Image(systemName: "eye.slash.fill")
-            .font(.footnote)
+            .font(.hearth(.footnote))
             .foregroundStyle(HearthColor.pine)
             .frame(width: HearthSize.iconButton, height: HearthSize.iconButton)
             .background(HearthColor.pineSoft, in: Circle())
@@ -97,9 +97,9 @@ struct ChatHeader: View {
         let name = presenter.chatProject?.name
         return HStack(spacing: HearthSpacing.s4) {
             Image(systemName: "folder")
-                .font(.caption2)
+                .font(.hearth(.caption2))
             Text(name ?? "")
-                .font(.caption)
+                .font(.hearth(.caption))
                 .lineLimit(1)
         }
         .foregroundStyle(HearthColor.mute)

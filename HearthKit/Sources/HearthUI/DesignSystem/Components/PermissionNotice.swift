@@ -11,11 +11,11 @@ struct PermissionNotice: View {
     var body: some View {
         VStack(alignment: .leading, spacing: HearthSpacing.s8) {
             Label(message, systemImage: systemImage)
-                .font(.footnote)
+                .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.ink)
             if let actionTitle {
                 Button(actionTitle, action: action)
-                    .font(.footnote.weight(.semibold))
+                    .font(.hearth(.footnote).weight(.semibold))
                     .foregroundStyle(HearthColor.pine)
                     .buttonStyle(.plain)
             }

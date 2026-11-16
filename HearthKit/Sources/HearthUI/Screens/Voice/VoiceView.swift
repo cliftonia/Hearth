@@ -61,7 +61,7 @@ struct VoiceView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(Strings.interrupt)
                 Text(stateTitle(viewModel.state))
-                    .font(.caption.weight(.semibold))
+                    .font(.hearth(.caption).weight(.semibold))
                     .textCase(.uppercase)
                     .kerning(1.2)
                     .foregroundStyle(viewModel.state == .unavailable ? HearthColor.danger : HearthColor.pine)
@@ -94,10 +94,10 @@ struct VoiceView: View {
             }
             HStack(spacing: HearthSpacing.s6) {
                 Text(viewModel.modelName)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.hearth(.subheadline).weight(.semibold))
                     .foregroundStyle(HearthColor.ink)
                 Text(viewModel.voiceName)
-                    .font(.footnote)
+                    .font(.hearth(.footnote))
                     .foregroundStyle(HearthColor.mute)
             }
             .lineLimit(1)

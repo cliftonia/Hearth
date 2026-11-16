@@ -114,10 +114,10 @@ final class SidebarPresenter {
         viewModel.isRenaming = true
     }
 
-    /// Saves the title typed into the rename alert. An empty title changes nothing.
+    /// Saves the title typed into the rename alert, as `Conversation.renamedTitle(from:)` has it. An empty title
+    /// changes nothing.
     func commitRenameAction() async {
-        let title = viewModel.renameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let id = viewModel.renamingID, !title.isEmpty else {
+        guard let id = viewModel.renamingID, let title = Conversation.renamedTitle(from: viewModel.renameDraft) else {
             return
         }
         viewModel.renamingID = nil

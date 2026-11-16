@@ -6,10 +6,16 @@ import SwiftUI
 ///
 /// The projects, and the heading of a project whose chats are being looked at, are drawn in `SidebarView+Projects`.
 struct SidebarView: View {
+    /// The gap beneath the settings and new chat buttons, the same as beneath the composer.
+    #if targetEnvironment(macCatalyst)
+    private static let footerBottomGap = HearthSpacing.macBottomEdge
+    #else
+    private static let footerBottomGap = HearthSpacing.s10
+    #endif
     /// The vertical padding that gives the search field and each chat their height.
     static let rowVerticalPadding: CGFloat = 9
     /// Room for the last chat to be scrolled clear of the floating controls.
-    private static let listBottomClearance: CGFloat = 84
+    private static let listBottomClearance: CGFloat = 74 + footerBottomGap
     private static let statusDotRingWidth: CGFloat = 2
     /// How far down the floating controls the list has faded out completely.
     private static let fadeEnd = UnitPoint(x: 0.5, y: 0.4)
@@ -50,11 +56,11 @@ struct SidebarView: View {
     private func searchField(text: Binding<String>) -> some View {
         HStack(spacing: HearthSpacing.s8) {
             Image(systemName: "magnifyingglass")
-                .font(.footnote)
+                .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.mute)
                 .accessibilityHidden(true)
             TextField(Strings.searchChats, text: text)
-                .font(.subheadline)
+                .font(.hearth(.subheadline))
                 .foregroundStyle(HearthColor.ink)
                 .autocorrectionDisabled()
         }
@@ -79,7 +85,7 @@ struct SidebarView: View {
                 }
                 // The note keeps its place in the list when hidden, beneath the projects, which are always there.
                 Text(presenter.selectedProject == nil ? Strings.noChats : Strings.noProjectChats)
-                    .font(.subheadline)
+                    .font(.hearth(.subheadline))
                     .foregroundStyle(HearthColor.mute)
                     .frame(maxWidth: .infinity)
                     .padding(.top, HearthSpacing.s32)
@@ -95,7 +101,7 @@ struct SidebarView: View {
     /// The small capitals above a group of rows.
     func heading(_ title: String) -> some View {
         Text(title)
-            .font(.caption.weight(.medium))
+            .font(.hearth(.caption).weight(.medium))
             .textCase(.uppercase)
             .kerning(0.6)
             .foregroundStyle(HearthColor.mute)
@@ -113,24 +119,24 @@ struct SidebarView: View {
         return Button(action: { presenter.selectAction(row.id) }, label: {
             HStack(spacing: HearthSpacing.s6) {
                 Text(row.title)
-                    .font(.subheadline)
+                    .font(.hearth(.subheadline))
                     .foregroundStyle(HearthColor.ink)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Image(systemName: "folder")
-                    .font(.caption2)
+                    .font(.hearth(.caption2))
                     .foregroundStyle(HearthColor.mute)
                     .opacity(hasProjectMark ? 1 : 0)
                     .frame(width: hasProjectMark ? nil : 0)
                     .accessibilityHidden(true)
                 Image(systemName: "eye.slash")
-                    .font(.caption2)
+                    .font(.hearth(.caption2))
                     .foregroundStyle(HearthColor.mute)
                     .opacity(row.isPrivate ? 1 : 0)
                     .frame(width: row.isPrivate ? nil : 0)
                     .accessibilityHidden(true)
                 Image(systemName: "pin.fill")
-                    .font(.caption2)
+                    .font(.hearth(.caption2))
                     .foregroundStyle(HearthColor.pine)
                     .opacity(row.isPinned ? 1 : 0)
                     .accessibilityHidden(true)
@@ -197,7 +203,7 @@ struct SidebarView: View {
         }
         .padding(.horizontal, HearthSpacing.s16)
         .padding(.top, HearthSpacing.s28)
-        .padding(.bottom, HearthSpacing.s10)
+        .padding(.bottom, Self.footerBottomGap)
         .background {
             LinearGradient(colors: [HearthColor.paper.opacity(0), HearthColor.paper], startPoint: .top, endPoint: Self.fadeEnd)
                 // The fade runs to the very bottom of the screen, so no chat shows beneath the buttons.
@@ -209,7 +215,7 @@ struct SidebarView: View {
     private var newChatButton: some View {
         Button(action: presenter.newChatAction) {
             Label(Strings.newChat, systemImage: "plus")
-                .font(.subheadline.weight(.semibold))
+                .font(.hearth(.subheadline).weight(.semibold))
                 .foregroundStyle(HearthColor.onPine)
                 .padding(.horizontal, HearthSpacing.s18)
                 .frame(height: HearthSize.floatingButton)
@@ -224,7 +230,7 @@ struct SidebarView: View {
         let status = presenter.status
         return Button(action: presenter.settingsAction) {
             Image(systemName: "gearshape")
-                .font(.body)
+                .font(.hearth(.body))
                 .foregroundStyle(HearthColor.ink)
                 .frame(width: HearthSize.floatingButton, height: HearthSize.floatingButton)
                 .surface(Circle())

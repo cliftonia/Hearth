@@ -34,7 +34,7 @@ struct SettingsCard<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: HearthSpacing.s6) {
             Text(header ?? "")
-                .font(.caption.weight(.medium))
+                .font(.hearth(.caption).weight(.medium))
                 .textCase(.uppercase)
                 .foregroundStyle(HearthColor.mute)
                 .padding(.horizontal, HearthSpacing.s4)
@@ -47,7 +47,7 @@ struct SettingsCard<Content: View>: View {
             }
             .cardSurface(radius: HearthRadius.bubble)
             Text(footer ?? "")
-                .font(.footnote)
+                .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.mute)
                 .padding(.horizontal, HearthSpacing.s4)
                 .frame(height: footer == nil ? 0 : nil)
@@ -67,10 +67,10 @@ struct SettingsSwitchRow: View {
         Toggle(isOn: $isOn) {
             VStack(alignment: .leading, spacing: HearthSpacing.s2) {
                 Text(title)
-                    .font(.body)
+                    .font(.hearth(.body))
                     .foregroundStyle(HearthColor.ink)
                 Text(detail ?? "")
-                    .font(.footnote)
+                    .font(.hearth(.footnote))
                     .foregroundStyle(HearthColor.mute)
                     .frame(height: detail == nil ? 0 : nil)
             }

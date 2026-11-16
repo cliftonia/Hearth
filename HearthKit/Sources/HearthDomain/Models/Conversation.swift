@@ -323,3 +323,35 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
         updating(messages: messages.map { $0.id == message.id ? message : $0 })
     }
 }
+
+// The title a conversation is given as its first message is sent, before the model is asked for a better one.
+extension Conversation {
+    /// How many characters of the first message make the title until the model names the chat.
+    public static let provisionalTitleLength = 48
+
+    /// The opening characters of the given text, kept as the title while the model is asked for a short one, and
+    /// for good if it cannot give one.
+    public static func provisionalTitle(from text: String) -> String {
+        String(text.prefix(provisionalTitleLength))
+    }
+
+    /// The longest title a chat may be given by hand.
+    public static let maximumRenamedTitleLength = 80
+
+    /// A title typed by hand, trimmed and cut to `maximumRenamedTitleLength`; `nil` when nothing is left, which
+    /// changes nothing.
+    public static func renamedTitle(from text: String) -> String? {
+        let title = String(text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(maximumRenamedTitleLength))
+        return title.isEmpty ? nil : title
+    }
+
+    /// The longest title a model may give a chat.
+    public static let maximumGeneratedTitleLength = 60
+
+    /// The title in a model's answer: its first line that is not blank, without the quotes, asterisks, hashes and
+    /// full stops models wrap titles in, and cut to `maximumGeneratedTitleLength`. Empty when the answer holds none.
+    public static func generatedTitle(from answer: String) -> String {
+        let line = answer.split(whereSeparator: \.isNewline).first { !$0.allSatisfy(\.isWhitespace) }.map(String.init) ?? ""
+        return String(line.trimmingCharacters(in: CharacterSet(charactersIn: "\"'*#. ")).prefix(maximumGeneratedTitleLength))
+    }
+}

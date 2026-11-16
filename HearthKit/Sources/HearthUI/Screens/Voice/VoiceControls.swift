@@ -61,7 +61,7 @@ struct VoiceControls: View {
         let cannotSee = viewModel.cameraControl == .disabled
         return VStack(spacing: 0) {
             Text(Strings.cameraModelCannotSee)
-                .font(.footnote)
+                .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.mute)
                 .multilineTextAlignment(.center)
                 .folded(!cannotSee)
@@ -100,7 +100,7 @@ struct VoiceRoundButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.title3.weight(.medium))
+                .font(.hearth(.title3).weight(.medium))
                 .foregroundStyle(symbolColor)
                 .frame(width: HearthSize.voiceButton, height: HearthSize.voiceButton)
                 .surface(Circle(), fill: fillColor, border: borderColor)

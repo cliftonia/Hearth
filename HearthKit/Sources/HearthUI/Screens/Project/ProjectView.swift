@@ -104,17 +104,17 @@ struct ProjectView: View {
     private func fileRow(_ document: AttachedDocument) -> some View {
         HStack(spacing: HearthSpacing.s10) {
             Image(systemName: "doc.text")
-                .font(.body)
+                .font(.hearth(.body))
                 .foregroundStyle(HearthColor.pine)
                 .accessibilityHidden(true)
             Text(document.name)
-                .font(.body)
+                .font(.hearth(.body))
                 .foregroundStyle(HearthColor.ink)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button(action: { presenter.removeDocumentAction(document.id) }, label: {
                 Image(systemName: "xmark")
-                    .font(.footnote.weight(.semibold))
+                    .font(.hearth(.footnote).weight(.semibold))
                     .foregroundStyle(HearthColor.mute)
                     .frame(width: Self.removeButtonSide, height: Self.removeButtonSide)
                     .contentShape(Rectangle())

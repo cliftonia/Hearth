@@ -19,6 +19,7 @@ public struct PromptBuilder: Sendable {
     private let isPrivate: Bool
     private let project: Project?
     private let projectFence: String
+    private let timeZone: TimeZone
 
     /// - Parameters:
     ///   - instructions: The user's standing instructions, if any.
@@ -27,13 +28,15 @@ public struct PromptBuilder: Sendable {
     ///   - isPrivate: Whether the conversation is private, with no memory to read or write.
     ///   - project: The project the conversation belongs to, whose instructions and reference files it is given.
     ///   - projectFence: The marker that opens and closes each quoted reference file.
+    ///   - timeZone: The time zone the date is told in: the device's.
     public init(
         instructions: String,
         profile: UserProfile = UserProfile(),
         memories: [Memory] = [],
         isPrivate: Bool = false,
         project: Project? = nil,
-        projectFence: String = PromptBuilder.makeFence(prefix: "FILE")
+        projectFence: String = PromptBuilder.makeFence(prefix: "FILE"),
+        timeZone: TimeZone = .current
     ) {
         self.instructions = instructions.trimmingCharacters(in: .whitespacesAndNewlines)
         self.profile = profile
@@ -41,6 +44,7 @@ public struct PromptBuilder: Sendable {
         self.isPrivate = isPrivate
         self.project = project
         self.projectFence = projectFence
+        self.timeZone = timeZone
     }
 
     /// The system message, followed by every message of the conversation that has anything in it.
@@ -141,13 +145,20 @@ public struct PromptBuilder: Sendable {
         "\(prefix)-" + UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(16).lowercased()
     }
 
-    /// The text to search the web for: the user's latest message, kept to a searchable length.
+    /// The most characters of the user's message that are searched for.
+    public static let maximumSearchQueryLength = 200
+
+    /// The text to search the web for: the user's latest message on one line, its blank lines left out, kept to a
+    /// searchable length; `nil` when there is none or it is only white space.
     public func searchQuery(history: [Message]) -> String? {
         guard let text = history.last(where: { $0.role == .user })?.text else {
             return nil
         }
-        let query = text.split(whereSeparator: \.isNewline).joined(separator: " ").prefix(200)
-        return query.isEmpty ? nil : String(query)
+        let query = text.split(whereSeparator: \.isNewline)
+            .filter { !$0.allSatisfy(\.isWhitespace) }
+            .joined(separator: " ")
+            .prefix(Self.maximumSearchQueryLength)
+        return query.allSatisfy(\.isWhitespace) ? nil : String(query)
     }
 
     /// Who the model is talking to, in one line; `nil` when the user has given no name.
@@ -169,7 +180,7 @@ public struct PromptBuilder: Sendable {
     /// The system message: who the model is and the date, then how to write, who the user is, the user's
     /// instructions, the project's instructions and files, memories and any search results.
     private func systemText(sources: [SearchSource], style: ReplyStyle, now: Date) -> String {
-        var parts = ["You are a helpful, direct assistant. Today is \(now.formatted(date: .complete, time: .omitted))."]
+        var parts = ["You are a helpful, direct assistant. Today is \(Self.dateText(for: now, timeZone: timeZone))."]
         switch style {
         case .chat:
             parts.append("Format replies in Markdown when it helps the reader.")

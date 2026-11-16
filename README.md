@@ -168,7 +168,8 @@ that only depend downwards:
 ```
 HearthUI      Coordinator, Presenters, ViewModels, SwiftUI views       (@MainActor)
 HearthDomain  Models, Interactors, Stores, DataProviders, Transformers  (Sendable)
-HearthData    Services and DTOs: Ollama, SearXNG, Kokoro, files, audio  (Sendable)
+HearthData    Services and DTOs: Ollama, SearXNG, Kokoro, ComfyUI, web pages, the hub,
+              files, Keychain, audio, dictation, camera, notifications   (Sendable)
 HearthCore    Tagged identifiers, logging
 ```
 
@@ -189,7 +190,8 @@ HearthCore    Tagged identifiers, logging
   and can fetch nothing: every `http`, `https` and WebSocket request is blocked, every navigation away from the
   page is cancelled, so a tapped link opens nothing, and it is given no window, camera, microphone or files, and no
   peer connection in any frame.
-- **Design system**: colours, type, spacing, radii, sizes and shadows are tokens, and views use nothing else.
+- **Design system**: colours, type, spacing, radii, sizes and shadows are tokens, and views draw on them. A view keeps
+  a measurement of its own, such as an avatar's diameter, as a named constant only where no token fits.
 - **Strings** live in `Localizable.xcstrings`, rebuilt from `Strings.swift` by `python3 Tools/sync_strings.py`.
 
 More in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), which covers the layers, how a screen is wired and how to add
@@ -218,6 +220,11 @@ what it does when nothing can be read; and sync: every synced model to the wire 
 research and fields from a newer app kept), which copy wins, tombstones both ways, private chats never sent, a
 streaming chat put off, a refused older copy replaced by the hub's, paging, the settings page, when syncs run, and
 that erasing sends nothing. The codebase holds a zero-warning SwiftLint bar.
+
+`Spec/` holds test vectors shared with the Android app and Hearth Hub: the system message, the date line, the
+search query, memory duplicates, titles, follow-up questions, maths, sync decisions and examples of the sync wire.
+The tests here read it in place; the Android repository copies it with its `tools/sync-spec.sh`. `Spec/README.md`
+says how to add a vector.
 
 The same checks run on every push and pull request through GitHub Actions (`.github/workflows/ci.yml`), together with
 a check that the string catalog matches `Strings.swift` and that each layer imports only the layers beneath it.

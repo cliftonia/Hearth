@@ -1,0 +1,33 @@
+{
+  "about": "Every optional field left out, in the body and in a message. Read with the defaults of section 4, exactly as conversation-null-fields.json.",
+  "kind": "conversation",
+  "id": "4a3c9d2f-6e5b-4c8f-8d1e-2b3c4d5e6f70",
+  "put": {
+    "updatedAt": "2026-11-15T08:00:00.000Z",
+    "updatedBy": "a1d0c9a4-0b6e-4f4e-8f43-2f6f4a0c7a11",
+    "deleted": false,
+    "body": {
+      "schema": 1,
+      "createdAt": "2026-11-15T08:00:00.000Z",
+      "messages": [
+        {
+          "id": "d1e2f3a4-b5c6-4d7e-8f90-a1b2c3d4e5f6",
+          "role": "user",
+          "createdAt": "2026-11-15T08:00:00.000Z"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "deleted": false,
+    "schema": 1,
+    "title": "",
+    "modelId": null,
+    "isPinned": false,
+    "projectId": null,
+    "messageIds": [
+      "d1e2f3a4-b5c6-4d7e-8f90-a1b2c3d4e5f6"
+    ],
+    "unknownBodyFields": []
+  }
+}

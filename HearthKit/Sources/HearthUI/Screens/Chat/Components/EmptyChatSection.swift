@@ -30,7 +30,7 @@ struct EmptyChatSection: View {
             // The note keeps its place when hidden, so the title does not jump as a chat is made private.
             if isServerConfigured, hasDetail {
                 Text(Strings.privateChatNote)
-                    .font(.footnote)
+                    .font(.hearth(.footnote))
                     .foregroundStyle(HearthColor.mute)
                     .multilineTextAlignment(.center)
                     .opacity(isPrivate ? 1 : 0)
@@ -39,12 +39,12 @@ struct EmptyChatSection: View {
             if !isServerConfigured {
                 if hasDetail {
                     Text(Strings.connectMessage)
-                        .font(.subheadline)
+                        .font(.hearth(.subheadline))
                         .foregroundStyle(HearthColor.mute)
                         .multilineTextAlignment(.center)
                 }
                 Button(Strings.openSettings, action: settingsAction)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.hearth(.subheadline).weight(.semibold))
                     .foregroundStyle(HearthColor.onPine)
                     .padding(.horizontal, HearthSpacing.s18)
                     .padding(.vertical, HearthSpacing.s10)

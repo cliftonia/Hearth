@@ -1,0 +1,30 @@
+{
+  "about": "The date every prompt is told, in English whatever the device's language, as weekday, day, month and year with no commas, in the given time zone. The research report's system message is checked to carry it as \"Today is <date>.\"",
+  "cases": [
+    {
+      "nowMilliseconds": 1794781800000,
+      "timeZone": "UTC",
+      "expected": "Sunday 15 November 2026"
+    },
+    {
+      "nowMilliseconds": 1794781800000,
+      "timeZone": "Australia/Brisbane",
+      "expected": "Monday 16 November 2026"
+    },
+    {
+      "nowMilliseconds": 1794781800000,
+      "timeZone": "America/Los_Angeles",
+      "expected": "Sunday 15 November 2026"
+    },
+    {
+      "nowMilliseconds": 1835438400000,
+      "timeZone": "Europe/Berlin",
+      "expected": "Tuesday 29 February 2028"
+    },
+    {
+      "nowMilliseconds": 1798718400000,
+      "timeZone": "Pacific/Kiritimati",
+      "expected": "Friday 1 January 2027"
+    }
+  ]
+}

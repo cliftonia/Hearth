@@ -13,23 +13,23 @@ struct ErrorBannerSection: View {
         HStack(alignment: .top, spacing: HearthSpacing.s10) {
             VStack(alignment: .leading, spacing: HearthSpacing.s2) {
                 Text(configuration.title)
-                    .font(.footnote.weight(.semibold))
+                    .font(.hearth(.footnote).weight(.semibold))
                     .foregroundStyle(HearthColor.ink)
                 Text(configuration.message)
-                    .font(.footnote)
+                    .font(.hearth(.footnote))
                     .foregroundStyle(HearthColor.mute)
                     .lineLimit(Self.messageLineLimit)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             if let retryActionLabel = configuration.retryActionLabel {
                 Button(retryActionLabel, action: retryAction)
-                    .font(.footnote.weight(.semibold))
+                    .font(.hearth(.footnote).weight(.semibold))
                     .foregroundStyle(HearthColor.pine)
                     .buttonStyle(.plain)
             }
             Button(action: dismissAction) {
                 Image(systemName: "xmark")
-                    .font(.footnote.weight(.semibold))
+                    .font(.hearth(.footnote).weight(.semibold))
                     .foregroundStyle(HearthColor.mute)
                     .frame(size: Self.dismissButtonSize)
             }

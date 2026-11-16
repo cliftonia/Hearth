@@ -6,16 +6,6 @@ public enum CameraPositionKind: Hashable, Sendable {
     case back
     /// Towards the user.
     case front
-
-    /// The camera on the other side.
-    public var flipped: CameraPositionKind {
-        switch self {
-        case .back:
-            .front
-        case .front:
-            .back
-        }
-    }
 }
 
 /// What cameras the device has.

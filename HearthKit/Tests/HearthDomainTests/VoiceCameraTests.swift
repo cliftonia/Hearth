@@ -171,8 +171,6 @@ struct VoiceCameraTests {
         var running = makeRunningSubject()
         running.face(.front)
         #expect(running.position == .front)
-        #expect(CameraPositionKind.front.flipped == .back)
-        #expect(CameraPositionKind.back.flipped == .front)
 
         var off = VoiceCamera()
         off.face(.front)

@@ -18,7 +18,7 @@ protocol ChatPresenterDelegate: AnyObject {
 /// Runs the chat screen: sends messages, streams replies, and keeps the open conversation saved.
 ///
 /// The work is spread over extensions by subject: `+Replying`, `+Pictures`, `+Research`, `+Editing`, `+FollowUps`, `+Menu`, `+Greeting`, `+Canvas`,
-/// `+Notifications` and `+Voice`.
+/// `+Notifications`, `+Sync` and `+Voice`.
 @MainActor
 final class ChatPresenter {
     /// What the chat is built from: the interactors, the dictation provider and the stores it shares with other screens.
@@ -144,7 +144,7 @@ final class ChatPresenter {
         let isFirstMessage = conversation.messages.isEmpty
         let text = message.text.isEmpty ? (message.documents.first?.name ?? "") : message.text
         viewModel.conversation = conversation.updating(
-            title: isFirstMessage ? String(text.prefix(48)) : nil,
+            title: isFirstMessage ? Conversation.provisionalTitle(from: text) : nil,
             modelID: model.id,
             messages: conversation.messages + [message]
         )
@@ -230,15 +230,7 @@ final class ChatPresenter {
     ///
     /// - Parameter projectID: The project the new chat belongs to; `nil` for an ordinary chat.
     func newChatAction(in projectID: Project.ID? = nil) async {
-        await stopAction()
-        await stopSpeaking()
-        cancelEditAction()
-        viewModel.draft = ""
-        viewModel.followUps = []
-        viewModel.memoryNotice = nil
-        viewModel.isResearchMode = false
-        viewModel.conversation = Conversation(modelID: viewModel.selectedModel?.id, projectID: projectID)
-        viewModel.error = nil
+        await show(Conversation(modelID: viewModel.selectedModel?.id, projectID: projectID))
     }
 
     /// Opens a saved conversation, and switches to the model it was held with if the server still offers it.
@@ -246,6 +238,14 @@ final class ChatPresenter {
         guard id != viewModel.conversation.id, let conversation = dependencies.conversationStore.conversation(for: id) else {
             return
         }
+        await show(conversation)
+        if let model = dependencies.modelStore.model(for: conversation.modelID) {
+            viewModel.selectedModel = model
+        }
+    }
+
+    /// Stops whatever is under way, clears what belonged to the conversation on screen, and shows the given one.
+    private func show(_ conversation: Conversation) async {
         await stopAction()
         await stopSpeaking()
         cancelEditAction()
@@ -254,9 +254,6 @@ final class ChatPresenter {
         viewModel.isResearchMode = false
         viewModel.conversation = conversation
         viewModel.error = nil
-        if let model = dependencies.modelStore.model(for: conversation.modelID) {
-            viewModel.selectedModel = model
-        }
     }
 
     // MARK: Composer

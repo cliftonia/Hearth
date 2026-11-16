@@ -53,7 +53,7 @@ public struct SyncService: Sendable {
         case 413:
             return .tooLarge
         default:
-            throw HTTPError.status(code: http.statusCode, body: String(bytes: data.prefix(500), encoding: .utf8) ?? "")
+            throw HTTPError.failedStatus(http.statusCode, body: data)
         }
     }
 

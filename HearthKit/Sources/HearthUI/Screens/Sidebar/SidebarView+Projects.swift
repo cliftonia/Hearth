@@ -38,11 +38,11 @@ extension SidebarView {
             .padding(.top, HearthSpacing.s8)
         HStack(spacing: HearthSpacing.s8) {
             Image(systemName: "folder.fill")
-                .font(.subheadline)
+                .font(.hearth(.subheadline))
                 .foregroundStyle(HearthColor.pine)
                 .accessibilityHidden(true)
             Text(project.name)
-                .font(.headline)
+                .font(.hearth(.headline))
                 .foregroundStyle(HearthColor.ink)
                 .lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -65,12 +65,12 @@ extension SidebarView {
         Button(action: action) {
             HStack(spacing: HearthSpacing.s8) {
                 Image(systemName: systemImage)
-                    .font(.footnote)
+                    .font(.hearth(.footnote))
                     .foregroundStyle(symbolTint)
                     .frame(width: HearthSpacing.s20)
                     .accessibilityHidden(true)
                 Text(title)
-                    .font(.subheadline)
+                    .font(.hearth(.subheadline))
                     .foregroundStyle(tint)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)

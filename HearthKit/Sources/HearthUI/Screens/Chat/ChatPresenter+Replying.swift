@@ -22,28 +22,47 @@ extension ChatPresenter {
             project: chatProject
         )
         viewModel.conversation = viewModel.conversation.updating(messages: viewModel.conversation.messages + [reply], updatedAt: Date())
-        viewModel.error = nil
-        viewModel.followUps = []
-        viewModel.memoryNotice = nil
-        viewModel.isStreaming = true
+        beginTurn()
         let events = dependencies.chat.run(turn)
         // A reply should outlive a glance at another app, for as long as iOS allows.
         backgroundActivity.begin(named: "Reply")
         await stopSpeaking()
         let narration = style == .chat ? beginNarration(of: reply.id) : nil
-        let task = Task {
+        await runTurn(replyID: reply.id) {
             await self.consume(events, replyID: reply.id) { delta in
                 onDelta?(delta)
                 narration?.append(delta)
             }
             narration?.finish()
-            self.viewModel.isStreaming = false
+        } settle: {
             self.viewModel.searchingQuery = nil
-            await self.save(self.discardingEmptyReply(reply.id))
+        }
+    }
+
+    /// Clears what the last turn left on screen, and marks a new one as under way.
+    func beginTurn() {
+        viewModel.error = nil
+        viewModel.followUps = []
+        viewModel.memoryNotice = nil
+        viewModel.isStreaming = true
+    }
+
+    /// Does a turn's work as the task that Stop cancels, then saves what arrived and lets the user know it is done.
+    /// Called once the reply is in the conversation and the background allowance has begun, which this ends.
+    ///
+    /// - Parameters:
+    ///   - work: Fills the reply; it returns once the turn has finished, failed or been stopped.
+    ///   - settle: Clears the turn's own passing state, once streaming has ended and before the reply is saved.
+    func runTurn(replyID: Message.ID, work: @escaping @MainActor () async -> Void, settle: @escaping @MainActor () -> Void) async {
+        let task = Task {
+            await work()
+            self.viewModel.isStreaming = false
+            settle()
+            await self.save(self.discardingEmptyReply(replyID))
         }
         turnTask = task
         await task.value
-        await notifyReplyFinished(reply.id)
+        await notifyReplyFinished(replyID)
         backgroundActivity.end()
     }
 

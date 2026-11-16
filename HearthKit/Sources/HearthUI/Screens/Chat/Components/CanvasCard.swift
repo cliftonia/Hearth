@@ -40,17 +40,17 @@ struct CanvasCard: View {
         Button(action: openAction) {
             HStack(spacing: HearthSpacing.s12) {
                 Image(systemName: piece.kind.systemImage)
-                    .font(.subheadline.weight(.medium))
+                    .font(.hearth(.subheadline).weight(.medium))
                     .foregroundStyle(HearthColor.pine)
                     .frame(width: Self.iconSide, height: Self.iconSide)
                     .background(HearthColor.pineSoft, in: RoundedRectangle(cornerRadius: HearthRadius.row, style: .continuous))
                 VStack(alignment: .leading, spacing: HearthSpacing.s2) {
                     Text(piece.displayTitle)
-                        .font(.subheadline.weight(.semibold))
+                        .font(.hearth(.subheadline).weight(.semibold))
                         .foregroundStyle(HearthColor.ink)
                         .lineLimit(1)
                     Text(isWriting ? "\(Strings.canvasWriting) \(piece.lineCountText)" : detail)
-                        .font(.caption.monospacedDigit())
+                        .font(.hearth(.caption).monospacedDigit())
                         .foregroundStyle(HearthColor.mute)
                         .lineLimit(1)
                 }
@@ -61,7 +61,7 @@ struct CanvasCard: View {
                         .controlSize(.small)
                         .opacity(isWriting ? 1 : 0)
                     Text(Strings.canvasOpen)
-                        .font(.subheadline.weight(.medium))
+                        .font(.hearth(.subheadline).weight(.medium))
                         .foregroundStyle(HearthColor.pine)
                         .opacity(isWriting ? 0 : 1)
                 }

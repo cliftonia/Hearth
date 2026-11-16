@@ -5,8 +5,6 @@ import SwiftUI
 /// into a reply: how hard the chosen model thinks, or deep research. While pictures are being made it lists the
 /// picture models instead.
 struct ModelPickerSheet: View {
-    private static let closeButtonSide: CGFloat = 36
-
     let presenter: ChatPresenter
 
     @Environment(\.dismiss) private var dismiss
@@ -14,7 +12,7 @@ struct ModelPickerSheet: View {
     var body: some View {
         let isPictureMode = presenter.viewModel.isPictureMode
         VStack(spacing: 0) {
-            header(title: isPictureMode ? Strings.pictureModelSheetTitle : Strings.modelSheetTitle)
+            SheetHeader(title: isPictureMode ? Strings.pictureModelSheetTitle : Strings.modelSheetTitle) { dismiss() }
             ScrollView {
                 VStack(alignment: .leading, spacing: HearthSpacing.s16) {
                     if isPictureMode {
@@ -39,27 +37,6 @@ struct ModelPickerSheet: View {
         .presentationDragIndicator(.visible)
     }
 
-    private func header(title: String) -> some View {
-        Text(title)
-            .font(.headline)
-            .foregroundStyle(HearthColor.ink)
-            .frame(maxWidth: .infinity)
-            .overlay(alignment: .leading) {
-                Button(action: { dismiss() }, label: {
-                    Image(systemName: "xmark")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(HearthColor.ink)
-                        .frame(width: Self.closeButtonSide, height: Self.closeButtonSide)
-                        .surface(Circle())
-                })
-                .buttonStyle(.plain)
-                .accessibilityLabel(Strings.close)
-            }
-            .padding(.horizontal, HearthSpacing.s16)
-            .padding(.top, HearthSpacing.s24)
-            .padding(.bottom, HearthSpacing.s16)
-    }
-
     // MARK: Chat models
 
     /// The models on the server, then those in the cloud.
@@ -68,7 +45,7 @@ struct ModelPickerSheet: View {
         let cloud = presenter.models.filter(\.isCloud)
         if presenter.models.isEmpty {
             Text(Strings.noModel)
-                .font(.subheadline)
+                .font(.hearth(.subheadline))
                 .foregroundStyle(HearthColor.mute)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, HearthSpacing.s24)
@@ -84,7 +61,7 @@ struct ModelPickerSheet: View {
     private func group(title: String, models: [ChatModel]) -> some View {
         VStack(alignment: .leading, spacing: HearthSpacing.s6) {
             Text(title)
-                .font(.caption.weight(.medium))
+                .font(.hearth(.caption).weight(.medium))
                 .textCase(.uppercase)
                 .foregroundStyle(HearthColor.mute)
                 .padding(.horizontal, HearthSpacing.s4)
@@ -138,14 +115,14 @@ struct ModelPickerSheet: View {
         } label: {
             HStack(spacing: HearthSpacing.s8) {
                 Text(Strings.effort)
-                    .font(.body)
+                    .font(.hearth(.body))
                     .foregroundStyle(HearthColor.ink)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text(title)
-                    .font(.body)
+                    .font(.hearth(.body))
                     .foregroundStyle(chosen == .research ? HearthColor.pine : HearthColor.mute)
                 Image(systemName: "chevron.up.chevron.down")
-                    .font(.footnote)
+                    .font(.hearth(.footnote))
                     .foregroundStyle(HearthColor.mute)
                     .accessibilityHidden(true)
             }
@@ -164,7 +141,7 @@ struct ModelPickerSheet: View {
         let models = presenter.viewModel.pictureModels
         if models.isEmpty {
             Text(Strings.pictureNoModelsYet)
-                .font(.subheadline)
+                .font(.hearth(.subheadline))
                 .foregroundStyle(HearthColor.mute)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, HearthSpacing.s24)
@@ -198,18 +175,18 @@ struct ModelPickerSheet: View {
             HStack(spacing: HearthSpacing.s12) {
                 VStack(alignment: .leading, spacing: HearthSpacing.s2) {
                     Text(title)
-                        .font(.body)
+                        .font(.hearth(.body))
                         .foregroundStyle(HearthColor.ink)
                         .lineLimit(1)
                     Text(detail)
-                        .font(.footnote)
+                        .font(.hearth(.footnote))
                         .foregroundStyle(HearthColor.mute)
                         .lineLimit(1)
                         .frame(height: detail.isEmpty ? 0 : nil)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 Image(systemName: "checkmark")
-                    .font(.body.weight(.semibold))
+                    .font(.hearth(.body).weight(.semibold))
                     .foregroundStyle(HearthColor.pine)
                     .opacity(isSelected ? 1 : 0)
                     .accessibilityHidden(true)

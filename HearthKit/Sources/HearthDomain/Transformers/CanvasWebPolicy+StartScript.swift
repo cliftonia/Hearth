@@ -19,6 +19,16 @@ public extension CanvasWebPolicy {
     /// before the frame is put in the page, and setting one is ignored. A frame it still cannot reach is taken
     /// out of the page. Markup that would make a shadow root is read as plain markup, so a frame cannot be hidden
     /// in one. What it uses it takes before the page can change it.
+    ///
+    /// The Android app's script does three things more, each for a reason that does not hold in WebKit, so they are
+    /// left out here on purpose:
+    /// - It has `navigator.sendBeacon` answer that nothing was sent. A beacon is a load like any other to the content
+    ///   rules, which block it here, so nothing leaves either way; all that is left is a beacon answering that it
+    ///   was sent when it was then blocked, which tells the page nothing it could use to get out.
+    /// - It replaces `Document.parseHTMLUnsafe` only where the engine has it. Here it is put in place always, fixed,
+    ///   so that where WebKit lacks it a page cannot put in one of its own either; the stricter of the two.
+    /// - It wraps `DOMParser.parseFromString` so that a parser is never asked to `includeShadowRoots`, a Chromium
+    ///   option. WebKit's parser takes no such option and never makes a shadow root from markup.
     var startScript: String {
         """
         (function () {

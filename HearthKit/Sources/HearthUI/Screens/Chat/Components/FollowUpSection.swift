@@ -14,12 +14,12 @@ struct FollowUpSection: View {
                 Button(action: { action(question) }, label: {
                     HStack(alignment: .firstTextBaseline, spacing: HearthSpacing.s10) {
                         Text(question)
-                            .font(.subheadline)
+                            .font(.hearth(.subheadline))
                             .foregroundStyle(HearthColor.ink)
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         Image(systemName: "arrow.turn.down.right")
-                            .font(.footnote)
+                            .font(.hearth(.footnote))
                             .foregroundStyle(HearthColor.pine)
                             .accessibilityHidden(true)
                     }

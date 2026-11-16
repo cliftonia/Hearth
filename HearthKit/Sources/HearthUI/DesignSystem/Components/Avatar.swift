@@ -25,7 +25,7 @@ struct Avatar: View {
                 .frame(width: diameter * Self.contentFraction * 0.8, height: diameter * Self.contentFraction * 0.8)
                 .opacity(initials.isEmpty ? 1 : 0)
             Text(initials)
-                .font(.largeTitle.weight(.semibold))
+                .font(.hearth(.largeTitle).weight(.semibold))
                 .foregroundStyle(HearthColor.pine)
                 .lineLimit(1)
                 .minimumScaleFactor(0.2)

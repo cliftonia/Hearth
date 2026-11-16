@@ -40,12 +40,12 @@ struct CanvasView: View {
         HStack(spacing: HearthSpacing.s4) {
             VStack(alignment: .leading, spacing: HearthSpacing.s2) {
                 Text(content?.title ?? Strings.canvas)
-                    .font(.headline)
+                    .font(.hearth(.headline))
                     .foregroundStyle(HearthColor.ink)
                     .lineLimit(1)
                     .accessibilityAddTraits(.isHeader)
                 Text(content?.isWriting == true ? Strings.canvasWriting : content?.detail ?? "")
-                    .font(.caption)
+                    .font(.hearth(.caption))
                     .foregroundStyle(HearthColor.mute)
                     .lineLimit(1)
             }
@@ -105,7 +105,7 @@ struct CanvasView: View {
             .disabled(content?.hasEarlier != true)
             .opacity(content?.hasEarlier == true ? 1 : Self.disabledOpacity)
             Text(Strings.canvasVersion(number: number, total: total))
-                .font(.footnote.monospacedDigit())
+                .font(.hearth(.footnote).monospacedDigit())
                 .foregroundStyle(HearthColor.mute)
                 .accessibilityLabel(Strings.versionPosition(number: number, total: total))
             IconButton(systemImage: "chevron.right", label: Strings.canvasLater) {
@@ -139,7 +139,7 @@ struct CanvasView: View {
             .allowsHitTesting(isDocument)
             .accessibilityHidden(!isDocument)
             Text(Strings.canvasPreviewUnavailable)
-                .font(.subheadline)
+                .font(.hearth(.subheadline))
                 .foregroundStyle(HearthColor.mute)
                 .multilineTextAlignment(.center)
                 .padding(HearthSpacing.s24)

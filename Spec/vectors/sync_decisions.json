@@ -1,0 +1,192 @@
+{
+  "about": "SyncPlanner.decide: what to do with one received version, given the stamp of the local copy, of a local deletion not yet sent, and whether the local copy is being written. Stamps order by milliseconds, then by writer compared byte by byte. Expected is apply, delete, keepLocal, nothing or later.",
+  "cases": [
+    {
+      "name": "new item",
+      "remote": {
+        "milliseconds": 100,
+        "writer": "b"
+      },
+      "deleted": false,
+      "local": {},
+      "expected": "apply"
+    },
+    {
+      "name": "deletion of something never had",
+      "remote": {
+        "milliseconds": 100,
+        "writer": "b"
+      },
+      "deleted": true,
+      "local": {},
+      "expected": "nothing"
+    },
+    {
+      "name": "the same version",
+      "remote": {
+        "milliseconds": 100,
+        "writer": "b"
+      },
+      "deleted": false,
+      "local": {
+        "stamp": {
+          "milliseconds": 100,
+          "writer": "b"
+        }
+      },
+      "expected": "nothing"
+    },
+    {
+      "name": "local copy is newer",
+      "remote": {
+        "milliseconds": 100,
+        "writer": "b"
+      },
+      "deleted": false,
+      "local": {
+        "stamp": {
+          "milliseconds": 200,
+          "writer": "a"
+        }
+      },
+      "expected": "keepLocal"
+    },
+    {
+      "name": "received item is newer",
+      "remote": {
+        "milliseconds": 200,
+        "writer": "b"
+      },
+      "deleted": false,
+      "local": {
+        "stamp": {
+          "milliseconds": 100,
+          "writer": "a"
+        }
+      },
+      "expected": "apply"
+    },
+    {
+      "name": "received deletion is newer",
+      "remote": {
+        "milliseconds": 200,
+        "writer": "b"
+      },
+      "deleted": true,
+      "local": {
+        "stamp": {
+          "milliseconds": 100,
+          "writer": "a"
+        }
+      },
+      "expected": "delete"
+    },
+    {
+      "name": "newer version of a copy being written",
+      "remote": {
+        "milliseconds": 200,
+        "writer": "b"
+      },
+      "deleted": false,
+      "local": {
+        "stamp": {
+          "milliseconds": 100,
+          "writer": "a"
+        },
+        "isBusy": true
+      },
+      "expected": "later"
+    },
+    {
+      "name": "older version of a copy being written",
+      "remote": {
+        "milliseconds": 100,
+        "writer": "b"
+      },
+      "deleted": false,
+      "local": {
+        "stamp": {
+          "milliseconds": 200,
+          "writer": "a"
+        },
+        "isBusy": true
+      },
+      "expected": "keepLocal"
+    },
+    {
+      "name": "local deletion is newer",
+      "remote": {
+        "milliseconds": 100,
+        "writer": "b"
+      },
+      "deleted": false,
+      "local": {
+        "tombstone": {
+          "milliseconds": 200,
+          "writer": "a"
+        }
+      },
+      "expected": "keepLocal"
+    },
+    {
+      "name": "local deletion is older",
+      "remote": {
+        "milliseconds": 300,
+        "writer": "b"
+      },
+      "deleted": false,
+      "local": {
+        "tombstone": {
+          "milliseconds": 200,
+          "writer": "a"
+        }
+      },
+      "expected": "apply"
+    },
+    {
+      "name": "same moment, local writer sorts later",
+      "remote": {
+        "milliseconds": 100,
+        "writer": "a"
+      },
+      "deleted": false,
+      "local": {
+        "stamp": {
+          "milliseconds": 100,
+          "writer": "b"
+        }
+      },
+      "expected": "keepLocal"
+    },
+    {
+      "name": "same moment, received writer sorts later",
+      "remote": {
+        "milliseconds": 100,
+        "writer": "b"
+      },
+      "deleted": false,
+      "local": {
+        "stamp": {
+          "milliseconds": 100,
+          "writer": "a"
+        }
+      },
+      "expected": "apply"
+    },
+    {
+      "name": "writers compare byte by byte: capitals sort first",
+      "remote": {
+        "milliseconds": 100,
+        "writer": "a"
+      },
+      "deleted": false,
+      "local": {
+        "stamp": {
+          "milliseconds": 100,
+          "writer": "Z"
+        }
+      },
+      "expected": "apply"
+    }
+  ]
+}

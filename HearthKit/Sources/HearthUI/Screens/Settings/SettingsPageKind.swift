@@ -23,7 +23,7 @@ struct SettingsLinkRow<Label: View>: View {
                 label()
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
+                    .font(.hearth(.footnote).weight(.semibold))
                     .foregroundStyle(HearthColor.mute)
                     .accessibilityHidden(true)
             }

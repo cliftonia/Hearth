@@ -8,8 +8,6 @@ public enum SyncMappingError: Error, Sendable, Equatable {
     case invalidIdentifier
     /// A message's role is not one this app knows.
     case unknownRole
-    /// The body is not the shape its kind should have.
-    case malformedBody
 }
 
 // MARK: - From the wire

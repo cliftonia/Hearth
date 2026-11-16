@@ -50,24 +50,16 @@ extension ChatPresenter {
         let reply = Message(role: .assistant, text: "")
         let conversation = viewModel.conversation
         // A chat that begins with a photo and no words is still given a name.
-        let title = conversation.messages.isEmpty ? (message.text.isEmpty ? Strings.picture : String(message.text.prefix(48))) : nil
+        let title = conversation.messages.isEmpty ? (message.text.isEmpty ? Strings.picture : Conversation.provisionalTitle(from: message.text)) : nil
         viewModel.conversation = conversation.updating(title: title, messages: conversation.messages + [message, reply], updatedAt: Date())
-        viewModel.error = nil
-        viewModel.followUps = []
-        viewModel.memoryNotice = nil
-        viewModel.isStreaming = true
+        beginTurn()
         viewModel.pictureStatus = Self.status(for: request)
         backgroundActivity.begin(named: "Picture")
-        let task = Task {
+        await runTurn(replyID: reply.id) {
             await self.makePicture(request, replyID: reply.id)
-            self.viewModel.isStreaming = false
+        } settle: {
             self.viewModel.pictureStatus = nil
-            await self.save(self.discardingEmptyReply(reply.id))
         }
-        turnTask = task
-        await task.value
-        await notifyReplyFinished(reply.id)
-        backgroundActivity.end()
     }
 
     /// Has the picture made and puts it into the reply, with a line saying how it was made and how long it took.

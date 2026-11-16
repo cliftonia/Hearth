@@ -18,11 +18,11 @@ struct ProfileSection: View {
                     Avatar(photoJPEG: presenter.photoJPEG, initials: profile.initials, diameter: Self.avatarDiameter)
                     VStack(alignment: .leading, spacing: HearthSpacing.s2) {
                         Text(profile.displayName ?? Strings.profileNoName)
-                            .font(.body.weight(.medium))
+                            .font(.hearth(.body).weight(.medium))
                             .foregroundStyle(HearthColor.ink)
                             .lineLimit(1)
                         Text(Strings.profile)
-                            .font(.footnote)
+                            .font(.hearth(.footnote))
                             .foregroundStyle(HearthColor.mute)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -56,7 +56,7 @@ struct ProfilePage: View {
             SettingsCard(header: Strings.profileInstructions, footer: Strings.profileInstructionsFooter) {
                 TextField(Strings.instructionsPlaceholder, text: $viewModel.customInstructions, axis: .vertical)
                     .lineLimit(4...12)
-                    .font(.body)
+                    .font(.hearth(.body))
                     .foregroundStyle(HearthColor.ink)
                     .padding(.horizontal, HearthSpacing.s16)
                     .padding(.vertical, HearthSpacing.s12)
@@ -101,7 +101,7 @@ struct ProfilePage: View {
                 .disabled(!hasPhoto)
             } label: {
                 Text(Strings.profileEditPhoto)
-                    .font(.subheadline.weight(.medium))
+                    .font(.hearth(.subheadline).weight(.medium))
                     .foregroundStyle(HearthColor.pine)
                     .padding(.horizontal, HearthSpacing.s12)
                     .padding(.vertical, HearthSpacing.s6)
@@ -116,11 +116,11 @@ struct ProfilePage: View {
     private func nameField(_ title: String, text: Binding<String>, contentType: UITextContentType) -> some View {
         VStack(alignment: .leading, spacing: HearthSpacing.s2) {
             Text(title)
-                .font(.caption)
+                .font(.hearth(.caption))
                 .foregroundStyle(HearthColor.mute)
                 .accessibilityHidden(true)
             TextField(title, text: text)
-                .font(.body)
+                .font(.hearth(.body))
                 .foregroundStyle(HearthColor.ink)
                 .textContentType(contentType)
                 .textInputAutocapitalization(.words)
@@ -138,7 +138,7 @@ struct ProfilePage: View {
             SettingsCard(footer: Strings.eraseAllFooter) {
                 Button(action: { presenter.viewModel.isConfirmingErase = true }, label: {
                     Text(Strings.eraseAll)
-                        .font(.body)
+                        .font(.hearth(.body))
                         .foregroundStyle(HearthColor.danger)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, HearthSpacing.s16)
@@ -148,7 +148,7 @@ struct ProfilePage: View {
                 .buttonStyle(.plain)
             }
             Label(error ?? "", systemImage: "exclamationmark.triangle.fill")
-                .font(.footnote)
+                .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.danger)
                 .padding(.horizontal, HearthSpacing.s4)
                 .opacity(error == nil ? 0 : 1)

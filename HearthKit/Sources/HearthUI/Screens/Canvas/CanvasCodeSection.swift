@@ -64,7 +64,7 @@ struct CanvasCodeSection: View {
 
     /// The width of a number of that many digits in the face code is set in.
     private static func width(ofDigits count: Int) -> CGFloat {
-        let size = UIFont.preferredFont(forTextStyle: .footnote).pointSize
+        let size = Font.pointSize(of: .footnote)
         let digit = ("0" as NSString).size(withAttributes: [.font: UIFont.monospacedSystemFont(ofSize: size, weight: .regular)])
         return (digit.width * CGFloat(count)).rounded(.up)
     }

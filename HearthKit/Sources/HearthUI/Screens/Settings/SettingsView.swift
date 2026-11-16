@@ -127,11 +127,11 @@ struct SettingsView: View {
     private func addressField(_ title: String, text: Binding<String>) -> some View {
         VStack(alignment: .leading, spacing: HearthSpacing.s4) {
             Text(title)
-                .font(.caption)
+                .font(.hearth(.caption))
                 .foregroundStyle(HearthColor.mute)
                 .accessibilityHidden(true)
             TextField("https://", text: text)
-                .font(.body)
+                .font(.hearth(.body))
                 .keyboardType(.URL)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
@@ -147,15 +147,15 @@ struct SettingsView: View {
             EmptyView()
         case .checking:
             Label(Strings.checking, systemImage: "ellipsis")
-                .font(.footnote)
+                .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.mute)
         case .succeeded(let modelCount):
             Label(Strings.testSucceeded(modelCount: modelCount), systemImage: "checkmark.circle.fill")
-                .font(.footnote)
+                .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.online)
         case .failed(let message):
             Label(message, systemImage: "exclamationmark.triangle.fill")
-                .font(.footnote)
+                .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.danger)
         }
     }
@@ -187,7 +187,7 @@ struct SettingsView: View {
                     .foregroundStyle(HearthColor.pine)
             })
             Label(Strings.voiceSampleFailed, systemImage: "exclamationmark.triangle.fill")
-                .font(.footnote)
+                .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.danger)
                 .opacity(preview == .failed ? 1 : 0)
                 .frame(height: preview == .failed ? nil : 0)

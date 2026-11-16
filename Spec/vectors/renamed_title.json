@@ -1,0 +1,29 @@
+{
+  "about": "A title typed by hand: trimmed of white space and new lines, then cut to 80 characters. null when nothing is left, which leaves the title as it was.",
+  "cases": [
+    {
+      "input": "  Tides  ",
+      "expected": "Tides"
+    },
+    {
+      "input": "\n Garden plans \n",
+      "expected": "Garden plans"
+    },
+    {
+      "input": "   ",
+      "expected": null
+    },
+    {
+      "input": "",
+      "expected": null
+    },
+    {
+      "input": "A garden plan for the subtropics with tomatoes, beans, herbs and a few flowers for the bees",
+      "expected": "A garden plan for the subtropics with tomatoes, beans, herbs and a few flowers f"
+    },
+    {
+      "input": "   A garden plan for the subtropics with tomatoes, beans, herbs and a few flowers for the bees",
+      "expected": "A garden plan for the subtropics with tomatoes, beans, herbs and a few flowers f"
+    }
+  ]
+}

@@ -27,7 +27,7 @@ struct PhotoStrip: View {
                         if let removeAction {
                             Button(action: { removeAction(photo.id) }, label: {
                                 Image(systemName: "xmark.circle.fill")
-                                    .font(.body)
+                                    .font(.hearth(.body))
                                     .symbolRenderingMode(.palette)
                                     .foregroundStyle(HearthColor.onPine, HearthColor.ink.opacity(0.7))
                                     .padding(HearthSpacing.s4)

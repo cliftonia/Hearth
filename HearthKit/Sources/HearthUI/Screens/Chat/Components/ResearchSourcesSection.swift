@@ -38,7 +38,7 @@ struct ResearchSourcesSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: HearthSpacing.s6) {
             Text(Strings.researchSources)
-                .font(.caption.weight(.medium))
+                .font(.hearth(.caption).weight(.medium))
                 .textCase(.uppercase)
                 .foregroundStyle(HearthColor.mute)
                 .padding(.horizontal, HearthSpacing.s4)
@@ -59,17 +59,17 @@ struct ResearchSourcesSection: View {
         Link(destination: source.id) {
             HStack(alignment: .firstTextBaseline, spacing: HearthSpacing.s8) {
                 Text(verbatim: "\(source.number)")
-                    .font(.footnote.monospacedDigit().weight(.medium))
+                    .font(.hearth(.footnote).monospacedDigit().weight(.medium))
                     .foregroundStyle(HearthColor.pine)
                     .frame(width: Self.numberWidth, alignment: .trailing)
                 VStack(alignment: .leading, spacing: HearthSpacing.s2) {
                     Text(source.title)
-                        .font(.footnote)
+                        .font(.hearth(.footnote))
                         .foregroundStyle(HearthColor.ink)
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
                     Text(source.host)
-                        .font(.caption)
+                        .font(.hearth(.caption))
                         .foregroundStyle(HearthColor.mute)
                         .lineLimit(1)
                 }

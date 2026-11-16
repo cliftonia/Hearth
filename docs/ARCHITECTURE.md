@@ -10,7 +10,8 @@ HearthUI        Coordinator, Presenters, ViewModels, SwiftUI views, design syste
    │
 HearthDomain    Models, Interactors, Stores, DataProviders, Transformers             Sendable
    │
-HearthData      Services and DTOs: Ollama, SearXNG, Kokoro, the hub, files, Keychain, audio, speech, notifications   Sendable
+HearthData      Services and DTOs: Ollama, SearXNG, Kokoro, ComfyUI, the hub, files, Keychain, audio, speech,
+                camera, notifications                                                Sendable
    │
 HearthCore      Tagged identifiers, logging
 ```
@@ -35,7 +36,7 @@ The pattern is MVVMP+C: Model, View, ViewModel, Presenter and Coordinator.
 | **Coordinator** | `AppCoordinator`. Builds every Presenter, conforms to their delegate protocols in extensions, and changes the `AppRouter`. | `AppCoordinator` |
 | **Store** | An `@Observable`, `@MainActor` class of state shared by more than one screen, with `private(set)` properties and methods that change them. | `SettingsStore`, `ConversationStore`, `ProjectStore`, `MemoryStore`, `ProfileStore`, `ModelStore` |
 | **Interactor** | A concrete `Sendable` class that carries out a piece of business logic through the providers it is given. | `ChatInteractor`, `ResearchInteractor`, `SpeechInteractor`, `ProjectInteractor`, `EraseInteractor` |
-| **DataProvider** | A struct of `@Sendable` closures, a "protocol witness", with a `.live()` version that calls the services. Tests pass their own closures. | `ChatDataProvider`, `ProjectDataProvider`, `DictationProvider`, `CameraProvider`, `NotificationProvider` |
+| **DataProvider** | A struct of `@Sendable` closures, a "protocol witness", with a `.live()` version that calls the services. Tests pass their own closures. Conversations and projects share one generic `SavedItemDataProvider`, named for each by a typealias. | `ChatDataProvider`, `ProjectDataProvider`, `DictationProvider`, `CameraProvider`, `NotificationProvider` |
 | **Transformer** | Pure logic from one value to another, with no state beyond what it is fed. | `MarkdownTransformer`, `PromptBuilder`, `SentenceChunker`, `ReplyNotificationPlanner`, `ResearchSourceSelector`, `CanvasExtractor` |
 | **Service / DTO** | The data layer: a service makes the request or touches the device, a DTO is the shape on the wire. | `OllamaService`, `OllamaChatRequestDTO` |
 
@@ -77,23 +78,28 @@ App/
   HearthApp.swift               The entry point; reads the starting addresses from Info.plist
   StartVoiceIntent.swift        "Start Voice Conversation" for Siri, Shortcuts and the Action button
 
+Widgets/                        The widget extension: shortcuts that open `hearth://new` and `hearth://voice`
+Share/                          The share extension: writes what is shared into the app group's inbox, then opens `hearth://share`
+
 HearthKit/Sources/HearthUI/
   AppCoordinator.swift          Builds and connects the screens (+Projects: where the project sheets lead; +Canvas:
                                 opening and closing the canvas)
-  AppRouter.swift               What is presented besides the chat
+  AppRouter.swift               What is presented besides the chat, and closing it all to reach the chat
   AppDependencies.swift         Everything the screens are built from, and its live version
   AppDefaults.swift             The addresses the app starts with
   Sync/                         SyncScheduler (when to sync, one at a time) and SyncHooks (what sync asks of the chat)
   Screens/
     Root/                       RootView, DrawerContainer
-    Chat/                       ChatView, ChatPresenter (+Replying, +Pictures, +Research, +Editing, +FollowUps, +Notifications, +Voice, +Canvas), ChatViewModel
+    Chat/                       ChatView, ChatPresenter (+Replying, +Pictures, +Research, +Editing, +FollowUps, +Menu, +Greeting,
+                                +Notifications, +Sync, +Voice, +Canvas), ChatViewModel
       Components/               The header, a message, the composer and the other sections of the chat
       Attachments/              The camera, and loading photos and files
     Sidebar/                    SidebarView (+Projects), SidebarPresenter (+Projects), SidebarViewModel, its configurations, ConversationGrouper
     Project/                    ProjectView, ProjectPresenter, ProjectViewModel: the sheet that makes or edits a project
     ProjectPicker/              ProjectPickerView, ProjectPickerPresenter, ProjectPickerViewModel: the sheet that files a chat
-    Settings/                   SettingsView, SettingsPresenter (+Profile, +Notifications), SettingsViewModel, and its
-                                sections and pushed pages: ProfileSection, MemorySection, NotificationsSection, SyncSection, SettingsCard
+    Settings/                   SettingsView, SettingsPresenter (+Profile, +Notifications, +Sync), SettingsViewModel,
+                                SettingsPageKind (the pushed pages), and its sections and pages: ProfileSection, MemorySection,
+                                NotificationsSection, PictureSettingsSection, SyncSection, SettingsCard
     Voice/                      VoiceView, VoicePresenter (+Camera), VoiceViewModel, VoiceOrb, VoiceControls, and the
                                 camera's card: VoiceCameraCard, CameraPreviewSurface, VoiceCameraLayout
     Canvas/                     CanvasView, CanvasPresenter, CanvasViewModel, CanvasCodeSection, CanvasWebPreview (the
@@ -102,11 +108,13 @@ HearthKit/Sources/HearthUI/
   Components/                   Views shared between screens that know about the domain: Markdown, the error configuration
   DesignSystem/
     Tokens/                     HearthColor, HearthFont, HearthSpacing, HearthRadius, HearthSize, HearthShadow
-    Components/                 HearthMark, IconButton, OptionChip, Hairline, Avatar, PermissionNotice, Haptics and the
-                                surface modifiers
-  Extensions/                   How domain values are named and shown: AppearanceKind, ThinkingLevelKind
+    Components/                 HearthMark, IconButton, OptionChip, Hairline, Avatar, PermissionNotice, SheetHeader,
+                                Haptics and the surface modifiers
+  Extensions/                   How domain values are named and shown: AppearanceKind, CanvasKind, EffortChoiceKind,
+                                ImageModelKind, ThinkingLevelKind
   Localization/                 Every user-facing string: Strings.swift and its Strings+Topic.swift extensions
-  Platform/                     Thin wrappers over UIKit: the keyboard, background time
+  Platform/                     Thin wrappers over the system: the keyboard, background time, and SharedInbox (what the
+                                share extension left in the app group)
   Resources/                    Localizable.xcstrings
 
 HearthKit/Sources/HearthDomain/
@@ -120,10 +128,13 @@ HearthKit/Sources/HearthCore/
 
 HearthKit/Tests/
   HearthDataTests/  HearthDomainTests/  HearthUITests/
+
+Spec/                           Test vectors shared with the Android app and the hub (see "Kept in step with Android")
 ```
 
-Every screen folder has the same three files, `XView.swift`, `XPresenter.swift` and `XViewModel.swift`,
-with the screen's own sections and helpers beside them. A long Presenter is split by subject into
+Every screen folder but `Root/` has the same three files, `XView.swift`, `XPresenter.swift` and `XViewModel.swift`,
+with the screen's own sections and helpers beside them. `Root/` holds only the views that lay the screens out, which
+read the `AppRouter` and need no Presenter of their own. A long Presenter is split by subject into
 `XPresenter+Subject.swift` extensions.
 
 ## Projects
@@ -405,6 +416,34 @@ them and reports taps, and the domain reaches it through `NotificationProvider`,
 - **A tap** opens the chat: the coordinator listens to `NotificationProvider.taps` for as long as the app runs.
 - **A new kind of notification** gets a switch only once it does something. Its row goes in the card on
   `NotificationsPage`, where a comment marks the place.
+
+## Kept in step with Android
+
+The Android app is a separate code base that must behave like this one. What the two have to agree on is written
+down as data in `Spec/` (its `README.md` says how it is laid out and how to add to it), and each side's tests read
+it: here `HearthDomainTests` (`Spec*Tests.swift`) and `HearthDataTests` (`SpecWireTests.swift`), straight from the
+folder by `#filePath`, with no copy; on Android a copy kept by its `tools/sync-spec.sh`. Hearth Hub round-trips the
+wire examples. So far the vectors cover pure functions only, and they settle these:
+
+- **The date** in the system message and in every research prompt is `PromptBuilder.dateText(for:timeZone:)`:
+  English, weekday day month year with no commas (`Monday 16 November 2026`), whatever the device's language, in
+  the device's time zone. Both builders take a `timeZone`, the device's by default, so the tests can fix it.
+- **The tools** are explained in the system message memory first, then search.
+- **The search query** (`PromptBuilder.searchQuery`) is the latest user message on one line, blank lines left out,
+  joined by single spaces, cut to `maximumSearchQueryLength` (200); white space alone is no query.
+- **A memory** is refused as already saved when one is the same whatever its case or accents.
+- **Titles.** A provisional title is the first `Conversation.provisionalTitleLength` (48) characters; a title typed
+  by hand, in the chat list or the chat's menu, goes through `Conversation.renamedTitle(from:)`, trimmed and cut to
+  `maximumRenamedTitleLength` (80); a title a model wrote goes through `Conversation.generatedTitle(from:)`, its first
+  line that is not blank, unwrapped, cut to 60.
+- **Limits count characters as each platform sees them.** Swift counts whole characters, so an emoji with a skin
+  tone or a letter with a combining accent is one; Android counts UTF-16 units and cuts only where a character
+  begins. The same long text may be cut at a different place on each; no attempt is made to make the counts agree.
+- **The canvas start script** differs on purpose in three places, each a Chromium matter (see the comment on
+  `CanvasWebPolicy.startScript`): Android has `sendBeacon` answer that nothing was sent, where here the content rules
+  block a beacon like any other load; Android replaces `Document.parseHTMLUnsafe` only where the engine has it, where
+  here it is put in place always, the stricter choice; and Android keeps a `DOMParser` from being asked to
+  `includeShadowRoots`, an option WebKit's parser does not have.
 
 ## Conventions
 

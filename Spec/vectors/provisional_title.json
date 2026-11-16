@@ -1,0 +1,25 @@
+{
+  "about": "The title a chat carries from its first message until the model names it: the message's first 48 characters, as they stand.",
+  "cases": [
+    {
+      "input": "What time is high tide?",
+      "expected": "What time is high tide?"
+    },
+    {
+      "input": "",
+      "expected": ""
+    },
+    {
+      "input": "What time is high tide tomorrow at Mooloolaba, and how high will it be?",
+      "expected": "What time is high tide tomorrow at Mooloolaba, a"
+    },
+    {
+      "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "expected": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "input": "  spaced out  ",
+      "expected": "  spaced out  "
+    }
+  ]
+}

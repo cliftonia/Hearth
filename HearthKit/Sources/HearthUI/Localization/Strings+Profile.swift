@@ -5,7 +5,6 @@ import Foundation
 extension Strings {
     static let profile = String(localized: "profile.title", defaultValue: "Profile", bundle: .module)
     static let profileNoName = String(localized: "profile.noName", defaultValue: "Add your name", bundle: .module)
-    static let profilePhoto = String(localized: "profile.photo", defaultValue: "Profile photo", bundle: .module)
     static let profileEditPhoto = String(localized: "profile.editPhoto", defaultValue: "Edit photo", bundle: .module)
     static let profileChoosePhoto = String(localized: "profile.choosePhoto", defaultValue: "Choose from library", bundle: .module)
     static let profileRemovePhoto = String(localized: "profile.removePhoto", defaultValue: "Remove photo", bundle: .module)

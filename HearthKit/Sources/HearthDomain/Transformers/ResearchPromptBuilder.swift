@@ -19,10 +19,17 @@ public struct ResearchPromptBuilder: Sendable {
     ///   - context: The conversation before the question, of which the last few messages are given as background.
     ///   - now: The date, so that "this year" and "latest" mean what the user means.
     ///   - fence: The marker that opens and closes quoted material.
-    public init(question: String, context: [Message] = [], now: Date, fence: String = PromptBuilder.makeFence(prefix: "PAGE")) {
+    ///   - timeZone: The time zone the date is told in: the device's.
+    public init(
+        question: String,
+        context: [Message] = [],
+        now: Date,
+        fence: String = PromptBuilder.makeFence(prefix: "PAGE"),
+        timeZone: TimeZone = .current
+    ) {
         self.question = question.trimmingCharacters(in: .whitespacesAndNewlines)
         self.background = Self.background(from: context)
-        self.today = now.formatted(date: .complete, time: .omitted)
+        self.today = PromptBuilder.dateText(for: now, timeZone: timeZone)
         self.fence = fence
     }
 

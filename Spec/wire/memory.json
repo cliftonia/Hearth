@@ -1,0 +1,23 @@
+{
+  "about": "The memory of WIRE_FORMAT.md section 6.",
+  "kind": "memory",
+  "id": "8e7a3b6d-0c9f-4acd-8152-6f7a8b9cadb4",
+  "put": {
+    "updatedAt": "2026-10-02T07:15:30.000Z",
+    "updatedBy": "a1d0c9a4-0b6e-4f4e-8f43-2f6f4a0c7a11",
+    "deleted": false,
+    "body": {
+      "schema": 1,
+      "text": "Lives in Brisbane",
+      "isFromUser": true,
+      "createdAt": "2026-10-02T07:15:30.000Z"
+    }
+  },
+  "expect": {
+    "deleted": false,
+    "schema": 1,
+    "text": "Lives in Brisbane",
+    "isFromUser": true,
+    "unknownBodyFields": []
+  }
+}

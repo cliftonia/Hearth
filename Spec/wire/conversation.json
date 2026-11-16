@@ -1,0 +1,83 @@
+{
+  "about": "The conversation of WIRE_FORMAT.md section 4, every field given.",
+  "kind": "conversation",
+  "id": "3f2b8c1e-5d4a-4b7e-9c0d-1a2b3c4d5e6f",
+  "put": {
+    "updatedAt": "2026-11-15T21:06:44.900Z",
+    "updatedBy": "a1d0c9a4-0b6e-4f4e-8f43-2f6f4a0c7a11",
+    "deleted": false,
+    "body": {
+      "schema": 1,
+      "title": "Tides at Mooloolaba",
+      "modelId": "example-model:latest",
+      "isPinned": true,
+      "projectId": "0c6f5c2e-9a43-4a8e-bb2f-2d9a5a3b7e10",
+      "createdAt": "2026-11-15T21:04:05.120Z",
+      "lastActivityAt": "2026-11-15T21:06:44.900Z",
+      "messages": [
+        {
+          "id": "b9a3e7f0-1c2d-4e5f-8a9b-0c1d2e3f4a5b",
+          "role": "user",
+          "text": "When is high tide tomorrow?",
+          "thinking": "",
+          "thinkingSeconds": null,
+          "sources": [],
+          "images": [
+            "/9j/4AAQSkZJRg=="
+          ],
+          "documents": [
+            {
+              "id": "6d1f0e2a-3b4c-4d5e-8f60-718293a4b5c6",
+              "name": "tides.txt",
+              "text": "06:12 1.8 m ..."
+            }
+          ],
+          "otherVersions": [],
+          "versionIndex": 0,
+          "isResearch": false,
+          "createdAt": "2026-11-15T21:04:05.120Z"
+        },
+        {
+          "id": "c0b4f8a1-2d3e-4f60-9b0c-1d2e3f4a5b6c",
+          "role": "assistant",
+          "text": "High tide is at 06:12 [1].",
+          "thinking": "The table lists...",
+          "thinkingSeconds": 3,
+          "sources": [
+            {
+              "title": "Tide times",
+              "url": "https://tides.example/mooloolaba",
+              "snippet": "Tomorrow 06:12"
+            }
+          ],
+          "images": [],
+          "documents": [],
+          "otherVersions": [
+            {
+              "text": "Around six in the morning.",
+              "thinking": "",
+              "thinkingSeconds": null,
+              "sources": []
+            }
+          ],
+          "versionIndex": 1,
+          "isResearch": true,
+          "createdAt": "2026-11-15T21:04:09.002Z"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "deleted": false,
+    "schema": 1,
+    "title": "Tides at Mooloolaba",
+    "modelId": "example-model:latest",
+    "isPinned": true,
+    "projectId": "0c6f5c2e-9a43-4a8e-bb2f-2d9a5a3b7e10",
+    "messageIds": [
+      "b9a3e7f0-1c2d-4e5f-8a9b-0c1d2e3f4a5b",
+      "c0b4f8a1-2d3e-4f60-9b0c-1d2e3f4a5b6c"
+    ],
+    "unknownBodyFields": []
+  }
+}

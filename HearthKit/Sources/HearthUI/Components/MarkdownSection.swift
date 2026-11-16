@@ -33,7 +33,7 @@ struct MarkdownSection: View {
                 .accessibilityAddTraits(.isHeader)
         case .paragraph(let text):
             Text(Self.inline(text))
-                .font(.body)
+                .font(.hearth(.body))
                 .foregroundStyle(HearthColor.ink)
                 .lineSpacing(Self.paragraphLineSpacing)
         case .code(let language, let text):
@@ -42,7 +42,7 @@ struct MarkdownSection: View {
             ListSection(isOrdered: isOrdered, items: items)
         case .quote(let text):
             Text(Self.inline(text))
-                .font(.body)
+                .font(.hearth(.body))
                 .foregroundStyle(HearthColor.mute)
                 .padding(.leading, HearthSpacing.s12)
                 .overlay(alignment: .leading) {
@@ -94,7 +94,7 @@ private struct TableSection: View {
                 GridRow {
                     ForEach(Self.cells(header)) { cell in
                         Text(MarkdownSection.inline(cell.text))
-                            .font(.subheadline.weight(.semibold))
+                            .font(.hearth(.subheadline).weight(.semibold))
                             .foregroundStyle(HearthColor.ink)
                     }
                 }
@@ -104,7 +104,7 @@ private struct TableSection: View {
                     GridRow {
                         ForEach(row.cells) { cell in
                             Text(MarkdownSection.inline(cell.text))
-                                .font(.subheadline)
+                                .font(.hearth(.subheadline))
                                 .foregroundStyle(HearthColor.ink)
                         }
                     }
@@ -136,11 +136,11 @@ private struct ListSection: View {
             ForEach(items.enumerated().map { Item(id: $0.offset, text: $0.element) }) { item in
                 HStack(alignment: .firstTextBaseline, spacing: HearthSpacing.s8) {
                     Text(isOrdered ? "\(item.id + 1)." : "•")
-                        .font(.body.monospacedDigit())
+                        .font(.hearth(.body).monospacedDigit())
                         .foregroundStyle(HearthColor.mute)
                         .accessibilityHidden(!isOrdered)
                     Text(MarkdownSection.inline(item.text))
-                        .font(.body)
+                        .font(.hearth(.body))
                         .foregroundStyle(HearthColor.ink)
                         .lineSpacing(MarkdownSection.paragraphLineSpacing)
                 }
@@ -162,12 +162,12 @@ private struct CodeBlockSection: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: HearthSpacing.s8) {
                 Text(language ?? Strings.code)
-                    .font(.caption)
+                    .font(.hearth(.caption))
                     .foregroundStyle(HearthColor.mute)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Button(action: copyAction) {
                     Image(systemName: "doc.on.doc")
-                        .font(.caption)
+                        .font(.hearth(.caption))
                         .foregroundStyle(HearthColor.mute)
                         .frame(size: Self.copyButtonSize)
                 }

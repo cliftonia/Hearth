@@ -1,0 +1,41 @@
+{
+  "about": "MathTransformer.readableInline: LaTeX between \\( \\), $$ $$ and a $ pair that hugs maths becomes plain Unicode text; prices are left alone.",
+  "cases": [
+    {
+      "input": "Solve $x^2 + y^2 = r^2$ now",
+      "expected": "Solve x² + y² = r² now"
+    },
+    {
+      "input": "It costs $5 and $10",
+      "expected": "It costs $5 and $10"
+    },
+    {
+      "input": "\\(\\frac{a}{b} \\leq 1\\)",
+      "expected": "a/b ≤ 1"
+    },
+    {
+      "input": "$$\\sqrt{x+1}$$",
+      "expected": "√(x+1)"
+    },
+    {
+      "input": "\\(\\alpha_i \\to \\infty\\)",
+      "expected": "αᵢ → ∞"
+    },
+    {
+      "input": "\\(\\frac{a+b}{2}\\)",
+      "expected": "(a+b)/2"
+    },
+    {
+      "input": "\\(x^{10}\\)",
+      "expected": "x¹⁰"
+    },
+    {
+      "input": "\\(e^{i\\pi}\\)",
+      "expected": "e^(iπ)"
+    },
+    {
+      "input": "\\(\\text{area} = \\pi r^2\\)",
+      "expected": "area = π r²"
+    }
+  ]
+}

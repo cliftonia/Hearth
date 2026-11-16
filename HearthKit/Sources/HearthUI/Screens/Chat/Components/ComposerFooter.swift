@@ -9,6 +9,12 @@ struct ComposerFooter: View {
     private static let cancelEditSize = CGSize(width: 28, height: 24)
     /// How much larger the composer stands while a finger rests on it.
     private static let heldScale: CGFloat = 1.06
+    /// The gap beneath the composer.
+    #if targetEnvironment(macCatalyst)
+    private static let bottomGap = HearthSpacing.macBottomEdge
+    #else
+    private static let bottomGap = HearthSpacing.s8
+    #endif
 
     let presenter: ChatPresenter
 
@@ -35,7 +41,7 @@ struct ComposerFooter: View {
                 ComposerLayout(isCompact: !isExpanded, spacing: isExpanded ? HearthSpacing.s10 : HearthSpacing.s6) {
                     TextField(placeholder, text: $viewModel.draft, axis: .vertical)
                         .lineLimit(1...6)
-                        .font(.body)
+                        .font(.hearth(.body))
                         .foregroundStyle(HearthColor.ink)
                         .tint(HearthColor.pine)
                         .focused($isFocused)
@@ -74,7 +80,8 @@ struct ComposerFooter: View {
         // The moment a finger rests on it the composer grows a little, and stays so for as long as it is held.
         .scaleEffect(isPressed || isHeld ? Self.heldScale : 1)
         .padding(.horizontal, HearthSpacing.s12)
-        .padding(.vertical, HearthSpacing.s8)
+        .padding(.top, HearthSpacing.s8)
+        .padding(.bottom, Self.bottomGap)
         .haptic(.light, trigger: sendCount)
         .haptic(.light, trigger: viewModel.isPictureMode)
         .haptic(.light, trigger: isRecordingHeld, when: { _, isRecording in isRecording })
@@ -130,13 +137,13 @@ struct ComposerFooter: View {
         return Button(action: { viewModel.isModelPickerPresented = true }, label: {
             HStack(spacing: HearthSpacing.s6) {
                 Text(name)
-                    .font(.footnote.weight(.medium))
+                    .font(.hearth(.footnote).weight(.medium))
                     .foregroundStyle(HearthColor.ink)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 // Research stands out in the brand colour, so it is plain that the next message will be researched.
                 Text(effort)
-                    .font(.footnote)
+                    .font(.hearth(.footnote))
                     .foregroundStyle(presenter.isResearchChosen ? HearthColor.pine : HearthColor.mute)
                     .lineLimit(1)
                     // Research is never shortened; where room is tight the model's name gives way to it.
@@ -190,16 +197,16 @@ struct ComposerFooter: View {
     private var editingHeader: some View {
         HStack(spacing: HearthSpacing.s8) {
             Image(systemName: "pencil")
-                .font(.footnote)
+                .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.pine)
                 .accessibilityHidden(true)
             Text(Strings.editingMessage)
-                .font(.footnote.weight(.medium))
+                .font(.hearth(.footnote).weight(.medium))
                 .foregroundStyle(HearthColor.pine)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button(action: presenter.cancelEditAction) {
                 Image(systemName: "xmark")
-                    .font(.footnote.weight(.semibold))
+                    .font(.hearth(.footnote).weight(.semibold))
                     .foregroundStyle(HearthColor.mute)
                     .frame(size: Self.cancelEditSize)
             }
@@ -265,7 +272,7 @@ private extension ComposerFooter {
         let isDictating = presenter.viewModel.isDictating
         return Button(action: { Task { await presenter.dictationAction() } }, label: {
             Image(systemName: isDictating ? "mic.fill" : "mic")
-                .font(.footnote.weight(.medium))
+                .font(.hearth(.footnote).weight(.medium))
                 .foregroundStyle(isDictating ? HearthColor.danger : HearthColor.mute)
                 .frame(size: HearthSize.composerControl)
                 .capsuleOutline(isDictating ? HearthColor.danger : HearthColor.line)
@@ -281,7 +288,7 @@ private extension ComposerFooter {
         let label = viewModel.isStreaming ? Strings.stopReply : (viewModel.canSend ? Strings.send : Strings.startVoice)
         return Button(action: primaryAction) {
             Image(systemName: symbol)
-                .font(.footnote.weight(.bold))
+                .font(.hearth(.footnote).weight(.bold))
                 .foregroundStyle(HearthColor.onPine)
                 .frame(width: HearthSize.sendButton, height: HearthSize.sendButton)
                 .background(HearthColor.pine, in: Circle())

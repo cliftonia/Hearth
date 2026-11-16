@@ -1,0 +1,41 @@
+{
+  "about": "PromptBuilder.searchQuery: the latest user message on one line, blank (empty or white-space-only) lines left out, the rest joined by one space, cut to 200 characters. null as input means the conversation has no user message; null as expected means no search.",
+  "cases": [
+    {
+      "input": "What is the tide?",
+      "expected": "What is the tide?"
+    },
+    {
+      "input": "first line\n\nsecond line",
+      "expected": "first line second line"
+    },
+    {
+      "input": "first\n   \n\tsecond",
+      "expected": "first \tsecond"
+    },
+    {
+      "input": "line\r\nnext",
+      "expected": "line next"
+    },
+    {
+      "input": "  padded  ",
+      "expected": "  padded  "
+    },
+    {
+      "input": "   \n\t\n ",
+      "expected": null
+    },
+    {
+      "input": "",
+      "expected": null
+    },
+    {
+      "input": null,
+      "expected": null
+    },
+    {
+      "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expected": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ]
+}
