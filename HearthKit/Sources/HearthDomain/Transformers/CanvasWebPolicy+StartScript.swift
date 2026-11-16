@@ -18,9 +18,9 @@ public extension CanvasWebPolicy {
     /// reached is one with a `sandbox` that keeps it apart, so a sandbox is never given: it is taken off a frame
     /// before the frame is put in the page, and setting one is ignored. A frame it still cannot reach is taken
     /// out of the page. Markup that would make a shadow root is read as plain markup, so a frame cannot be hidden
-    /// in one: given to `setHTMLUnsafe` or `Document.parseHTMLUnsafe`, or written by `document.write`, which makes
-    /// one from markup as the parser does (measured in WebKit and Chromium; a name split between two writes is caught
-    /// too). The page's own markup has had the same done before it was loaded (`CanvasShadowRootTransformer`). An
+    /// in one: given to `setHTMLUnsafe` or `Document.parseHTMLUnsafe`. `document.write` and `writeln` do nothing,
+    /// since both engines make a shadow root from what they are given and a name split across writes cannot be
+    /// renamed reliably (measured in WebKit and Chromium). The page's own markup has had the same done before it was loaded (`CanvasShadowRootTransformer`). An
     /// open shadow root the sweep comes across that no script asked for is swept and watched like one a script made,
     /// and a frame in any shadow root is sealed when the sweep finds it or its window is asked for, since a frame there
     /// is not among the page's frames by index. What it uses it takes before the page can change it.
@@ -54,8 +54,7 @@ public extension CanvasWebPolicy {
             var iframeWindow = getterOf(HTMLIFrameElement.prototype, 'contentWindow');
             var frameWindow = getterOf(HTMLFrameElement.prototype, 'contentWindow');
             var objectWindow = getterOf(HTMLObjectElement.prototype, 'contentWindow');
-            var shadowOf = getterOf(Element.prototype, 'shadowRoot'), codeAt = String.prototype.charCodeAt, newline = String.fromCharCode(10);
-            var Memory = WeakMap, recall = WeakMap.prototype.get, remember = WeakMap.prototype.set, written = new Memory();
+            var shadowOf = getterOf(Element.prototype, 'shadowRoot');
             var findAll = {
                 1: Element.prototype.querySelectorAll,
                 9: Document.prototype.querySelectorAll,
@@ -63,10 +62,6 @@ public extension CanvasWebPolicy {
             };
             var root = window.top, roots = [];
             var FRAMES = 'iframe, frame, object, [sandbox]';
-            // The attributes that make a declarative shadow root, and the characters that may stand before and after one's name.
-            var SHADOW_NAMES = ['shadowrootmode', 'shadowroot', 'shadowrootdelegatesfocus', 'shadowrootclonable', 'shadowrootserializable'];
-            var BEFORE_NAME = { 9: 1, 10: 1, 12: 1, 13: 1, 32: 1, 34: 1, 39: 1, 47: 1 };
-            var AFTER_NAME = { 9: 1, 10: 1, 12: 1, 13: 1, 32: 1, 47: 1, 61: 1, 62: 1 };
             var NAMES = ['RTCPeerConnection', 'webkitRTCPeerConnection', 'RTCDataChannel', 'RTCIceCandidate', 'RTCSessionDescription'];
             var EVENTS = ['load', 'error', 'readystatechange', 'DOMContentLoaded', 'focus', 'focusin', 'toggle', 'slotchange'];
             // Each way a script reaches a frame's window, or puts a frame in the page.
@@ -199,44 +194,10 @@ public extension CanvasWebPolicy {
                     };
                 };
             }
-            // The name of an attribute that makes a declarative shadow root, if one begins at `at` and ends where a name can.
-            function shadowNameAt(text, at) {
-                for (var k = 0; k < SHADOW_NAMES.length; k++) {
-                    var name = SHADOW_NAMES[k], end = at + name.length;
-                    if (end > text.length || call(lower, call(cut, text, [at, end]), []) !== name) continue;
-                    if (end === text.length || AFTER_NAME[call(codeAt, text, [end])] === 1) return name;
-                }
-                return '';
-            }
-            // Markup with each attribute that would make a declarative shadow root renamed, as the app renames the page's own.
-            // `before` is the end of what the document was given last: a name begun there and ended here is cut in two where
-            // they meet, since the part already given cannot be renamed.
-            function inertMarkup(markup, before) {
-                var text = before + markup, from = before.length, out = '', last = from;
-                for (var i = 0; i < text.length; i++) {
-                    if (BEFORE_NAME[call(codeAt, text, [i])] !== 1) continue;
-                    var name = shadowNameAt(text, i + 1), end = i + 1 + name.length;
-                    if (name === '' || end <= from) continue;
-                    var at = i + 1 < from ? from : i + 1;
-                    out += call(cut, text, [last, at]) + (at === i + 1 ? 'data-hearth-' : '-');
-                    last = at;
-                    i = end - 1;
-                }
-                return out + call(cut, text, [last]);
-            }
-            // Both engines make a declarative shadow root from markup given to `document.write`, as from the page's own, so
-            // what is written is made inert first. The end of what each document was given is kept, for a name split in two.
-            function inertWrite(ending) {
-                return function (original) {
-                    return function () {
-                        var markup = '', before = '';
-                        for (var a = 0; a < arguments.length; a++) markup += toText(arguments[a]);
-                        try { before = call(recall, written, [this]) || ''; } catch (error) {}
-                        markup = inertMarkup(markup, before);
-                        try { call(remember, written, [this, call(cut, before + markup + ending, [-32])]); } catch (error) {}
-                        return call(original, this, [markup]);
-                    };
-                };
+            // Both engines make a declarative shadow root from markup given to `document.write`, as from the page's own,
+            // and a name split across writes slips past any renaming, so writing into a document does nothing here.
+            function refuseWrite() {
+                return function () { return undefined; };
             }
             // Watches a node for the frames put into it, with what one window has.
             function watcher(w) {
@@ -263,8 +224,8 @@ public extension CanvasWebPolicy {
                 var watch = watcher(w);
                 each(GETTERS, 'get', sweptBefore, w);
                 each(METHODS, 'value', tidiedAndSwept, w);
-                wrap(w, 'Document', 'write', 'value', inertWrite(''));
-                wrap(w, 'Document', 'writeln', 'value', inertWrite(newline));
+                wrap(w, 'Document', 'write', 'value', refuseWrite);
+                wrap(w, 'Document', 'writeln', 'value', refuseWrite);
                 each(SETTERS, 'set', sweptAfter, w);
                 for (var s = 0; s < SANDBOX_NAMED.length; s++) each([SANDBOX_NAMED[s]], 'value', refusingName(SANDBOX_NAMED[s][2]), w);
                 each(SANDBOX_NODES, 'value', refusingNode, w);

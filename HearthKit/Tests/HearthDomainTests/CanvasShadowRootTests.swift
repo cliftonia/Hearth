@@ -62,15 +62,11 @@ struct CanvasShadowRootTests {
         #expect(drawing.contains("<template data-hearth-shadowrootmode=open>"))
     }
 
-    @Test func `the script makes written markup inert, and sweeps the shadow roots the parser made`() {
+    @Test func `the script refuses document writes, and sweeps the shadow roots the parser made`() {
         let script = CanvasWebPolicy().startScript
 
-        for name in CanvasShadowRootTransformer.attributeNames {
-            #expect(script.contains("'\(name)'"), "\(name)")
-        }
-        #expect(script.contains("wrap(w, 'Document', 'write', 'value', inertWrite(''))"))
-        #expect(script.contains("wrap(w, 'Document', 'writeln', 'value', inertWrite(newline))"))
-        #expect(script.contains("'\(CanvasShadowRootTransformer.inertPrefix)'"))
+        #expect(script.contains("wrap(w, 'Document', 'write', 'value', refuseWrite)"))
+        #expect(script.contains("wrap(w, 'Document', 'writeln', 'value', refuseWrite)"))
         // Every open shadow root it comes across is kept and watched, and a frame it finds anywhere is sealed.
         #expect(script.contains("getterOf(Element.prototype, 'shadowRoot')"))
         #expect(script.contains("keep(shadow, watchHere)"))

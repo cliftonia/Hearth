@@ -280,9 +280,8 @@ sent to the model; a piece is read out of the saved text of its reply each time 
   `shadowroot`, `shadowrootdelegatesfocus`, `shadowrootclonable` and `shadowrootserializable`, in any case,
   wherever an attribute's name can begin and end, to `data-hearth-…`: the template stays an inert template. It
   does not read the markup as the parser does, so it also renames the words where one stands alone in the page's
-  text; one too many does no harm. The start script does the same to everything given to `document.write` and
-  `writeln`, keeping the end of what each document was last given so that a name split between two writes is cut
-  in two. And its sweep keeps every open shadow root it comes across, whoever made it, and watches it as it does
+  text; one too many does no harm. The start script makes `document.write` and `writeln` do nothing, since a name split between two writes
+  cannot be renamed reliably. And its sweep keeps every open shadow root it comes across, whoever made it, and watches it as it does
   one a script made; since a frame in a shadow root is not among the page's frames by index, a frame the sweep
   finds anywhere, or whose window is asked for, is sealed then and there. Which other ways make such a root was
   measured in a `WKWebView` on the Mac and in Chromium: `document.write` and `open` made one (one split between two
