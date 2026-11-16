@@ -15,7 +15,8 @@ public enum CanvasNavigationDecisionKind: Hashable, Sendable {
 ///   link therefore opens nothing, here or in the browser.
 /// - It is given no window, camera, microphone or motion sensor: the three constants below.
 /// - It is given no peer connection, in its own window or any frame's, and no frame it cannot reach:
-///   `startScript`.
+///   `startScript`, and no shadow root made from its markup, where a frame could be hidden from that script:
+///   `document(for:text:)`.
 ///
 /// The web view that enforces this is `CanvasWebPreview`; the decisions are here so that they can be tested.
 public struct CanvasWebPolicy: Sendable {
@@ -52,11 +53,12 @@ public struct CanvasWebPolicy: Sendable {
     }
 
     /// The document the web view is given for a piece: a page as it was written, a drawing centred in a page of
-    /// its own. `nil` for a kind that is not shown in a web view.
+    /// its own, each with its declarative shadow roots made inert (`CanvasShadowRootTransformer`). `nil` for a kind
+    /// that is not shown in a web view.
     public func document(for kind: CanvasKind, text: String) -> String? {
         switch kind {
         case .html:
-            text
+            CanvasShadowRootTransformer.inert(text)
         case .svg:
             """
             <!doctype html>
@@ -71,7 +73,7 @@ public struct CanvasWebPolicy: Sendable {
             </style>
             </head>
             <body>
-            \(text)
+            \(CanvasShadowRootTransformer.inert(text))
             </body>
             </html>
             """

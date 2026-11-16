@@ -40,12 +40,14 @@ public final class SyncStore {
 
     // MARK: Settings
 
-    /// Keeps new settings. Pointing at another hub forgets what was known of the last one.
+    /// Keeps new settings. Pointing at another hub, or at none, forgets what was known of the last one, its token
+    /// included: a token is only ever sent to the hub it was saved for, so the user enters one again for the new hub.
     public func update(_ settings: SyncSettings) {
         if settings.hubURL != self.settings.hubURL {
             journal.forgetHub()
             failure = nil
             persistJournal()
+            forgetToken()
         }
         self.settings = settings
         provider.saveSettings(try? JSONEncoder().encode(settings))
@@ -66,6 +68,16 @@ public final class SyncStore {
         let token = token?.trimmingCharacters(in: .whitespacesAndNewlines)
         try provider.writeToken(token?.isEmpty == false ? token : nil)
         hasToken = token?.isEmpty == false
+    }
+
+    /// Forgets the saved token. A failure is logged, and the page goes on showing that a token is saved.
+    private func forgetToken() {
+        do {
+            try provider.writeToken(nil)
+            hasToken = false
+        } catch {
+            logger.error("Forgetting the hub token failed")
+        }
     }
 
     // MARK: Changes made here
@@ -131,11 +143,7 @@ public final class SyncStore {
     public func reset() async {
         settings = SyncSettings()
         provider.saveSettings(nil)
-        do {
-            try provider.writeToken(nil)
-        } catch {
-            logger.error("Forgetting the hub token failed")
-        }
+        forgetToken()
         hasToken = false
         failure = nil
         isSyncing = false

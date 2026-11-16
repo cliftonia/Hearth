@@ -49,12 +49,14 @@ extension SettingsPresenter {
         }
     }
 
-    /// Saves the typed token in the Keychain and empties the field.
+    /// Saves the typed token in the Keychain and empties the field. The typed address is kept first, so that the
+    /// token is saved for the hub it was typed for, and is not forgotten when that address is kept later.
     func saveSyncTokenAction() {
         let token = viewModel.syncTokenDraft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !token.isEmpty else {
             return
         }
+        syncAddressAction()
         keepToken(token)
     }
 

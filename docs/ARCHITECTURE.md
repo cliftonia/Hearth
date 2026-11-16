@@ -273,13 +273,31 @@ sent to the model; a piece is read out of the saved text of its reply each time 
   removed before its own script can report; one written into a shadow root by `setHTMLUnsafe` is never made; and
   one sandboxed by `setAttribute`, the property, an attribute node, its list of flags, or after it was put in the
   page is given no sandbox and is sealed.
-- **What is not shut off.** A sandboxed frame inside a closed declarative shadow root written in the page's own
-  markup (or by `document.write`) cannot be found to be removed; the web view's own start script still runs in it,
-  and it measured sealed. The sweep is a script that stands between the page and the engine rather than a rule
-  the engine enforces: it covers every way to make or reach a frame the probe tried, but a way it does not
-  intercept would reopen it. `<link rel="dns-prefetch">`, `<link rel="preconnect">` (in the markup or added by a
-  script) and links caused no lookup and no connection from the canvas, measured by matching the Mac's DNS log
-  against lookups of the same names and by a listener on a local port, while the same page in Safari on the
+- **Declarative shadow roots.** The parser makes a shadow root from `<template shadowrootmode>` without any script
+  being asked, so the sweep neither sees it made nor looks inside it, and a frame there (in a closed one, a sandboxed
+  frame above all) was out of its reach. Three things close that. `CanvasWebPolicy.document(for:text:)` hands the
+  web view the page, and a drawing, through `CanvasShadowRootTransformer`, which renames `shadowrootmode`,
+  `shadowroot`, `shadowrootdelegatesfocus`, `shadowrootclonable` and `shadowrootserializable`, in any case,
+  wherever an attribute's name can begin and end, to `data-hearth-…`: the template stays an inert template. It
+  does not read the markup as the parser does, so it also renames the words where one stands alone in the page's
+  text; one too many does no harm. The start script does the same to everything given to `document.write` and
+  `writeln`, keeping the end of what each document was last given so that a name split between two writes is cut
+  in two. And its sweep keeps every open shadow root it comes across, whoever made it, and watches it as it does
+  one a script made; since a frame in a shadow root is not among the page's frames by index, a frame the sweep
+  finds anywhere, or whose window is asked for, is sealed then and there. Which other ways make such a root was
+  measured in a `WKWebView` on the Mac and in Chromium: `document.write` and `open` made one (one split between two
+  writes too), as did `setHTMLUnsafe` and `Document.parseHTMLUnsafe`, which were already covered;
+  `Range.createContextualFragment`, `DOMParser`, `innerHTML`, `insertAdjacentHTML` and `execCommand("insertHTML")`
+  made none. With a probe page making frames in shadow roots those ways and the script put in the page itself
+  (not run by the web view in each frame), the script as it was left every one of them working; after, every frame
+  was sealed and no write made a root.
+- **What is not shut off.** A closed declarative shadow root can still be made by a frame's own document, a `srcdoc`
+  whose markup hides the attribute's name behind character references, say; the web view's own start script runs in
+  that document, as it does in a sandboxed frame there. The sweep is a script that stands between the page and the
+  engine rather than a rule the engine enforces: it covers every way to make or reach a frame the probe tried, but a
+  way it does not intercept would reopen it. `<link rel="dns-prefetch">`, `<link rel="preconnect">` (in the markup
+  or added by a script) and links caused no lookup and no connection from the canvas, measured by matching the Mac's
+  DNS log against lookups of the same names and by a listener on a local port, while the same page in Safari on the
   simulator caused both; no change was needed for them.
 
 ## Sync
@@ -313,6 +331,9 @@ written down in the hub's `docs/WIRE_FORMAT.md`; this section says how this app 
   identifier, the hub's database identifier and the cursor, the stamp of each item as the hub holds it, the
   tombstones not yet sent, and the unknown fields kept for each item. It is read at once at launch so nothing is
   recorded before it. The hub address and the switch are in the user defaults; the token in the Keychain only.
+  A token is only ever sent to the hub it was saved for: `SyncStore.update` forgets it, with the journal, whenever
+  the address changes to another hub or to none, so the page shows that none is saved and asks for one again;
+  saving a token keeps the address typed with it first.
 - **A sync** (`SyncInteractor.sync`) pulls the hub's changes after the cursor, page by page, has the planner weigh
   each against the local copy (later stamp wins; an equal one is the same version), applies what wins and saves the
   cursor after each page; then it sends each local item whose stamp is not the one the hub holds, and each

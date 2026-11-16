@@ -86,6 +86,27 @@ struct SyncSettingsTests {
         #expect(!fixture.syncStore.hasToken)
     }
 
+    @Test func `a new address forgets the token saved for the old one, and a token typed with it is kept for it`() async {
+        let fixture = SettingsPresenterTests.Fixture()
+        fixture.syncStore.update(SyncSettings(hubAddress: "http://hub.local:8765", isEnabled: true))
+        try? fixture.syncStore.setToken("for-the-old-hub")
+        let subject = fixture.makeTestSubject()
+        await subject.loadAction()
+
+        subject.viewModel.syncAddress = "http://other.local:8765"
+        subject.syncAddressAction()
+        #expect(fixture.syncStore.token() == nil)
+        #expect(!fixture.syncStore.hasToken)
+
+        subject.viewModel.syncAddress = "http://third.local:8765"
+        subject.viewModel.syncTokenDraft = "for-the-third-hub"
+        subject.saveSyncTokenAction()
+        subject.syncAddressAction()
+        #expect(fixture.syncStore.settings.hubAddress == "http://third.local:8765")
+        #expect(fixture.syncStore.token() == "for-the-third-hub")
+        #expect(fixture.syncStore.hasToken)
+    }
+
     @Test func `a check of the hub says what it found in plain words`() async {
         let fixture = SettingsPresenterTests.Fixture()
         let subject = fixture.makeTestSubject()
