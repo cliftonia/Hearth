@@ -89,6 +89,7 @@ Rounded rectangles are always drawn with `style: .continuous`. Pills and round b
 |---|---|---|
 | `hairline` | 1 | Borders and dividers |
 | `iconButton` | 40 | An `IconButton`, and anything that lines up with one |
+| `glassButton` | 44 | A `GlassCircleButton`, and the pill of glass beside it at the top of the chat |
 | `composerControl` | 34 × 32 | Attach and dictate |
 | `optionChip` | 38 × 32 | A switch in the composer's options |
 | `sendButton` | 34 | The composer's send button |
@@ -117,7 +118,8 @@ Apply one with `.hearthShadow(.composer)`.
 | Component | What it is | Use it for |
 |---|---|---|
 | `HearthMark(sideLength:)` | The app's mark, drawn in proportion to its side | The brand in the chat list, the empty chat, the lock |
-| `IconButton(systemImage:label:action:)` | A round, borderless, 40-point button with one symbol | Header buttons. The label is what VoiceOver reads |
+| `IconButton(systemImage:label:action:)` | A round, borderless, 40-point button with one symbol | Buttons in a sheet's or a panel's header. The label is what VoiceOver reads |
+| `GlassCircleButton(systemImage:label:isSelected:action:)` | A 44-point round button in its own bubble of glass, tinted pine when what it switches is on | The lone buttons at the top of the chat: the chat list and the private switch |
 | `OptionChip(systemImage:isOn:)` | An icon-only capsule, filled when on and outlined when off | The label of a `Button` or `Menu` that switches something |
 | `Hairline(axis:)` | A one-point line in the line colour | Dividers, horizontal by default |
 | `Avatar(photoJPEG:initials:diameter:)` | A round picture of a person: a photo, else initials, else a person symbol | The profile row and the profile page |
@@ -128,6 +130,7 @@ Apply one with `.hearthShadow(.composer)`.
 | `.cardSurface(radius:border:)` | A card-coloured rounded rectangle with a border | Code blocks, tables, the search field, the composer, the error banner |
 | `.capsuleSurface(fill:)` | A bordered pill | The model picker, sources, attached files |
 | `.capsuleOutline(_:)` | A capsule's border with nothing behind it | Quiet controls such as attach and dictate |
+| `.glassSurface(_:tint:)` | The system's interactive glass in the given shape on iOS 26 and later; before that a frosted fill, a hairline edge and the floating shadow | The glass buttons, and the pill holding New chat and the chat's menu |
 | `.hearthShadow(_:)` | One of the shadows above | Lifting a surface off the paper |
 
 Order matters where a surface also casts a shadow: apply the surface first, then the shadow.

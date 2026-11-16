@@ -23,6 +23,8 @@ struct ProjectRowViewConfiguration: Hashable, Identifiable {
 /// The headings chats are sorted under, in the order they appear.
 enum SidebarGroupKind: Hashable, CaseIterable {
     case pinned
+    /// The chats a scheduled task filed, newest first, kept apart from the dated groups.
+    case scheduledTasks
     case today
     case yesterday
     case previousWeek

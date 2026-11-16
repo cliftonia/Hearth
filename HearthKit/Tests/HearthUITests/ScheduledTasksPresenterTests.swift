@@ -196,6 +196,38 @@ struct ScheduledTasksPresenterTests {
         #expect(saved.createdAt == task.createdAt)
     }
 
+    @Test func `opening a task that has already run once keeps its date, so saving it does not run it again`() async throws {
+        let ranAt = Self.now.addingTimeInterval(-7_200)
+        let task = ScheduledTask(
+            title: "Briefing", prompt: "News?", modelID: ChatModel.ID("auto"),
+            schedule: .once(ranAt), lastRunAt: ranAt, createdAt: ranAt, updatedAt: ranAt
+        )
+        let fixture = Fixture(tasks: [task])
+        let subject = await fixture.makeTestSubject()
+
+        subject.editAction(task.id)
+        #expect(subject.viewModel.onceDate == ranAt)
+        #expect(subject.viewModel.earliestOnceDate == ranAt)
+        subject.viewModel.title = "Morning briefing"
+        await subject.saveAction()
+
+        let saved = try #require(fixture.taskStore.task(for: task.id))
+        #expect(saved.schedule == .once(ranAt))
+    }
+
+    @Test func `the list names a cloud model as the model picker does, without its cloud tag`() {
+        #expect(ScheduledTasksPresenter.modelName(ChatModel.ID("deepseek-v4.1-flash:cloud")) == "deepseek-v4.1-flash")
+        #expect(ScheduledTasksPresenter.modelName(ChatModel.ID("kimi-k2:1t-cloud")) == "kimi-k2:1t-cloud")
+    }
+
+    @Test func `a new task that runs once cannot be set in the past`() async {
+        let subject = await Fixture().makeTestSubject()
+
+        subject.addAction()
+
+        #expect(subject.viewModel.earliestOnceDate == Self.now)
+    }
+
     @Test func `deleting from the editor removes the task and closes it`() async {
         let schedule = TaskSchedule.daily(TaskTimeOfDay(hour: 7, minute: 30)!, timeZone: "Australia/Brisbane")
         let briefing = Self.task("Briefing", schedule: schedule)

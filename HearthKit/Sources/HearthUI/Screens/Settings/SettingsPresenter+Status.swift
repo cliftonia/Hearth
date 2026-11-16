@@ -68,9 +68,16 @@ extension SettingsPresenter {
         guard let date = store.lastSyncedAt else {
             return Strings.settingsOn
         }
+        return Strings.syncOnSynced(when: Self.syncedWhen(date, now: dependencies.now()))
+    }
+
+    /// When the last sync was, said as time past: "now" for one just finished rather than "in 0 sec", and never in
+    /// the future, whatever the clock has done since.
+    nonisolated static func syncedWhen(_ date: Date, now: Date) -> String {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .short
-        return Strings.syncOnSynced(when: formatter.localizedString(for: min(date, dependencies.now()), relativeTo: dependencies.now()))
+        formatter.dateTimeStyle = .named
+        return formatter.localizedString(for: min(date, now), relativeTo: now)
     }
 
     /// What VoiceOver reads for a row: its title, then its status with the dots read as pauses.

@@ -6,6 +6,10 @@ import SwiftUI
 struct MemoryPage: View {
     let presenter: SettingsPresenter
 
+    /// Whether the list is being edited. Kept here, rather than left to the navigation, so that editing can end by
+    /// itself once the last memory is gone and Edit can no longer be tapped.
+    @State private var editMode: EditMode = .inactive
+
     var body: some View {
         @Bindable var viewModel = presenter.viewModel
         let memories = presenter.memories
@@ -62,8 +66,12 @@ struct MemoryPage: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 EditButton()
-                    .disabled(memories.isEmpty)
+                    .disabled(memories.isEmpty && !editMode.isEditing)
             }
+        }
+        .environment(\.editMode, $editMode)
+        .onChange(of: memories.isEmpty) { _, isEmpty in
+            editMode = Self.editMode(editMode, whenListIsEmpty: isEmpty)
         }
         .confirmationDialog(Strings.clearMemoriesQuestion, isPresented: $viewModel.isConfirmingClearMemories, titleVisibility: .visible) {
             Button(Strings.clearMemories, role: .destructive) {
@@ -72,6 +80,11 @@ struct MemoryPage: View {
             }
             Button(Strings.cancel, role: .cancel) {}
         }
+    }
+
+    /// How editing stands once the list has changed: an emptied list has nothing left to edit, so editing ends.
+    nonisolated static func editMode(_ mode: EditMode, whenListIsEmpty isEmpty: Bool) -> EditMode {
+        isEmpty ? .inactive : mode
     }
 
     /// One memory, with Delete in its menu and among its VoiceOver actions.

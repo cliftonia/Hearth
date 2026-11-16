@@ -4,7 +4,8 @@ import HearthDomain
 /// Sorts conversations into the sidebar's dated groups, and lists the projects above them.
 struct ConversationGrouper {
     /// The conversations whose title or messages contain the query, grouped by when they were last changed.
-    /// Pinned ones come first, whatever their age, and empty groups are left out.
+    /// Pinned ones come first, whatever their age; then the chats scheduled tasks filed, newest first, which are
+    /// listed there alone rather than among the dates. Empty groups are left out.
     ///
     /// - Parameters:
     ///   - projectID: The project whose chats alone are wanted; `nil` for every chat, in a project or not.
@@ -28,11 +29,14 @@ struct ConversationGrouper {
                 || conversation.messages.contains { $0.text.localizedCaseInsensitiveContains(needle) }
         }
         let grouped = Dictionary(grouping: matching) { conversation in
-            conversation.isPinned ? .pinned : kind(for: conversation.updatedAt, now: now, calendar: calendar)
+            group(for: conversation, now: now, calendar: calendar)
         }
         return SidebarGroupKind.allCases.compactMap { kind in
-            guard let members = grouped[kind], !members.isEmpty else {
+            guard var members = grouped[kind], !members.isEmpty else {
                 return nil
+            }
+            if kind == .scheduledTasks {
+                members.sort { $0.updatedAt > $1.updatedAt }
             }
             let rows = members.map { conversation in
                 SidebarRowViewConfiguration(
@@ -57,6 +61,18 @@ struct ConversationGrouper {
             .map { ProjectRowViewConfiguration(id: $0.id, name: $0.name) }
     }
 
+    /// Where a chat is listed: with the pinned ones if pinned, with the scheduled tasks' answers if a task filed it,
+    /// and otherwise by its age.
+    private func group(for conversation: Conversation, now: Date, calendar: Calendar) -> SidebarGroupKind {
+        if conversation.isPinned {
+            return .pinned
+        }
+        if conversation.taskID != nil {
+            return .scheduledTasks
+        }
+        return kind(for: conversation.updatedAt, now: now, calendar: calendar)
+    }
+
     /// Counts whole calendar days, so a chat from late last night is yesterday's however few hours ago it was.
     private func kind(for date: Date, now: Date, calendar: Calendar) -> SidebarGroupKind {
         let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: date), to: calendar.startOfDay(for: now)).day ?? 0
@@ -76,6 +92,8 @@ struct ConversationGrouper {
         switch kind {
         case .pinned:
             Strings.pinned
+        case .scheduledTasks:
+            Strings.tasks
         case .today:
             Strings.today
         case .yesterday:

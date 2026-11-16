@@ -119,7 +119,12 @@ struct ScheduledTaskEditorView: View {
                 .accessibilityLabel(Strings.taskWeekday)
             }
             if kind == .once {
-                DatePicker(Strings.taskDate, selection: viewModel.onceDate, in: Date()..., displayedComponents: [.date, .hourAndMinute])
+                DatePicker(
+                    Strings.taskDate,
+                    selection: viewModel.onceDate,
+                    in: viewModel.wrappedValue.earliestOnceDate...,
+                    displayedComponents: [.date, .hourAndMinute]
+                )
                     .font(.hearth(.body))
                     .accessibilityLabel(Strings.taskDate)
             } else {

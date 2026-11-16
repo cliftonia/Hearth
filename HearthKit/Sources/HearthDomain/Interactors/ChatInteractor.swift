@@ -185,7 +185,9 @@ private extension ChatInteractor {
             offersMemory: canRemember && sources.isEmpty
         )
         var progress = Progress(messages: messages, sources: sources)
+        var joiner = ReplyJoiner()
         for _ in 0..<Self.maximumRequests {
+            joiner.modelResumes()
             let offersSearch = isAutomatic && progress.searchRounds < Self.maximumSearchRounds
             // Once anything from the web is in the turn, memory is closed: a web page must not be able to plant a memory.
             let offersMemory = canRemember && progress.sources.isEmpty && progress.memoryWrites < Self.maximumMemoryWrites
@@ -196,7 +198,7 @@ private extension ChatInteractor {
                 isWebSearchOffered: offersSearch,
                 isMemoryOffered: offersMemory
             )
-            let asked = try await reply(to: request, at: baseURL, report: report)
+            let asked = try await reply(to: request, at: baseURL, joiner: &joiner, report: report)
             var hasActed = false
             if offersMemory, let remember = turn.remember, !asked.memoryChanges.isEmpty {
                 await apply(asked.memoryChanges, using: remember, to: &progress, report: report)
@@ -295,8 +297,14 @@ private extension ChatInteractor {
         }
     }
 
-    /// Streams one reply from the model and returns what it asked for along the way.
-    func reply(to request: ChatRequest, at baseURL: URL, report: (Event) -> Void) async throws -> (searches: [SearchRequest], memoryChanges: [MemoryRequest]) {
+    /// Streams one reply from the model and returns what it asked for along the way. The joiner keeps its words
+    /// apart from what the model wrote before it last stopped.
+    func reply(
+        to request: ChatRequest,
+        at baseURL: URL,
+        joiner: inout ReplyJoiner,
+        report: (Event) -> Void
+    ) async throws -> (searches: [SearchRequest], memoryChanges: [MemoryRequest]) {
         var searches: [SearchRequest] = []
         var memoryChanges: [MemoryRequest] = []
         for try await delta in chat.streamChat(baseURL, request) {
@@ -304,7 +312,7 @@ private extension ChatInteractor {
             case .thinking(let text):
                 report(.thinking(text))
             case .text(let text):
-                report(.text(text))
+                report(.text(joiner.join(text)))
             case .searchRequested(let search):
                 searches.append(search)
             case .memoryRequested(let change):

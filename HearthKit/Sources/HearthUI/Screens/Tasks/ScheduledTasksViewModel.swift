@@ -53,6 +53,9 @@ final class ScheduledTasksViewModel {
     var weekday = 1
     /// When a task that runs once is to run.
     var onceDate = Date()
+    /// The earliest the date of a task that runs once may be set to: now, or the task's own date if that has passed,
+    /// so that opening a task that has already run does not move it to now and have it run again.
+    var earliestOnceDate = Date()
     var usesWebSearch = false
     var isConfirmingDelete = false
 

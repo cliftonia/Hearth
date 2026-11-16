@@ -94,6 +94,11 @@ struct ModelPickerSheet: View {
         .joined(separator: " · ")
     }
 
+    /// The mark beside an option in the effort menu: a tick for the chosen one, and nothing for the rest.
+    nonisolated static func menuSymbol(isChosen: Bool) -> String? {
+        isChosen ? "checkmark" : nil
+    }
+
     /// The effort that goes into a reply: how hard the chosen model thinks before it, for a model that thinks, and
     /// deep research for any model. A menu, since the choices are few. Research is listed but cannot be chosen
     /// until there is a search address, and says so.
@@ -105,7 +110,12 @@ struct ModelPickerSheet: View {
             ForEach(presenter.effortChoices, id: \.self) { option in
                 let isAvailable = presenter.isEffortChoiceAvailable(option)
                 Button(action: { presenter.selectEffortAction(option) }, label: {
-                    Label(option.title(canThink: canThink), systemImage: option == chosen ? "checkmark" : "")
+                    // A symbol with no name is a fault in the system's symbol set, so an option not chosen has text alone.
+                    if let symbol = Self.menuSymbol(isChosen: option == chosen) {
+                        Label(option.title(canThink: canThink), systemImage: symbol)
+                    } else {
+                        Text(option.title(canThink: canThink))
+                    }
                     if option == .research {
                         Text(isAvailable ? Strings.researchDetail : Strings.researchNeedsSearch)
                     }

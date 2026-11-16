@@ -7,5 +7,10 @@
 	<true/>
 	<key>com.apple.security.device.camera</key>
 	<true/>
+	<!-- The hub's access key is kept in the keychain, which a Mac build reaches only through the app's own group. -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	</array>
 </dict>
 </plist>

@@ -105,7 +105,7 @@ final class ScheduledTasksPresenter {
 
     /// A model's name as the editor shows it: "Automatic" for the hub's own choice.
     static func modelName(_ id: ChatModel.ID) -> String {
-        id == ScheduledTask.automaticModelID ? Strings.taskModelAutomatic : id.rawValue
+        id == ScheduledTask.automaticModelID ? Strings.taskModelAutomatic : ChatModel(id: id).displayName
     }
 
     /// The weekdays from Monday, numbered as the wire numbers them, with their names.
@@ -246,6 +246,7 @@ final class ScheduledTasksPresenter {
         viewModel.usesWebSearch = seed.usesWebSearch
         viewModel.weekday = 1
         viewModel.onceDate = calendar.date(byAdding: .day, value: 1, to: now) ?? now
+        viewModel.earliestOnceDate = now
         switch seed.schedule {
         case .daily(let time, _):
             viewModel.scheduleKind = .daily
@@ -258,6 +259,7 @@ final class ScheduledTasksPresenter {
             viewModel.scheduleKind = .once
             viewModel.time = date
             viewModel.onceDate = date
+            viewModel.earliestOnceDate = min(date, now)
         }
         viewModel.isConfirmingDelete = false
     }

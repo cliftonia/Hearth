@@ -38,35 +38,32 @@ struct RootView: View {
         }
         .onChange(of: horizontalSizeClass, initial: true) { coordinator.router.isWide = horizontalSizeClass == .regular }
         .onChange(of: isCovered) { coordinator.showLockWindow(colorScheme: colorScheme) }
-        .onChange(of: colorScheme) { coordinator.showLockWindow(colorScheme: colorScheme) }
-        // Sheets are separate presentations, so each is given the chosen theme as well as the root.
+        .onChange(of: colorScheme, initial: true) {
+            // Set on the windows, the theme reaches every sheet and cover presented above the chat as well.
+            InterfaceStyle.apply(colorScheme)
+            coordinator.showLockWindow(colorScheme: colorScheme)
+        }
         .sheet(isPresented: $router.isSettingsPresented, onDismiss: coordinator.settingsSheetDidDismiss) {
             SettingsView(presenter: coordinator.settingsPresenter, tasksPresenter: coordinator.tasksPresenter)
-                .preferredColorScheme(colorScheme)
         }
         .sheet(item: $router.taskSheet, onDismiss: coordinator.taskSheetDidDismiss) { sheet in
             taskSheet(sheet)
-                .preferredColorScheme(colorScheme)
         }
         .sheet(item: $router.projectSheet) { sheet in
             projectSheet(sheet)
-                .preferredColorScheme(colorScheme)
         }
         // On a narrow screen the canvas is a sheet of the full height; a wide one shows it beside the chat.
         .sheet(isPresented: $router.isCanvasSheetPresented, onDismiss: coordinator.canvasSheetDidDismiss) {
             CanvasView(presenter: coordinator.canvasPresenter)
                 .presentationDetents([.large])
-                .preferredColorScheme(colorScheme)
         }
         // The canvas belongs to the chat it was opened from: it closes when its piece is no longer there.
         .onChange(of: coordinator.chatPresenter.viewModel.conversation.id) { coordinator.canvasPresenter.chatChangedAction() }
         .onChange(of: coordinator.chatPresenter.viewModel.conversation.messages.count) { coordinator.canvasPresenter.chatChangedAction() }
         .fullScreenCover(isPresented: $router.isVoicePresented) {
             VoiceView(presenter: coordinator.voicePresenter)
-                .preferredColorScheme(colorScheme)
         }
         .tint(HearthColor.pine)
-        .preferredColorScheme(colorScheme)
     }
 
     /// The editor of a task begun from the composer, or the notice that tasks need sync.

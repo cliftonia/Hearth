@@ -34,21 +34,21 @@ public struct AppDependencies {
 
     /// The real thing, talking to the servers and the device. The defaults seed the settings on first launch.
     public static func live(defaults: AppDefaults) -> AppDependencies {
-        let chatProvider = ChatDataProvider.live()
-        let settings = startingSettings(defaults)
-        let conversationStore = ConversationStore(provider: .live())
-        let projectStore = ProjectStore(provider: .live())
-        let memoryStore = MemoryStore(provider: .live())
-        let taskStore = TaskStore(provider: .live())
+        let sources = AppSources.make(defaults: defaults)
+        let chatProvider = sources.chat
+        let conversationStore = ConversationStore(provider: sources.conversations)
+        let projectStore = ProjectStore(provider: sources.projects)
+        let memoryStore = MemoryStore(provider: sources.memories)
+        let taskStore = TaskStore(provider: sources.tasks)
         let profileStore = ProfileStore(provider: .live())
-        let settingsStore = SettingsStore.live(defaults: settings)
+        let settingsStore = SettingsStore.live(defaults: sources.settings)
         let notifications = NotificationProvider.live()
-        let syncStore = SyncStore(provider: .live(), defaultHubAddress: defaults.hubAddress)
+        let syncStore = SyncStore(provider: sources.syncStore, defaultHubAddress: sources.hubAddress)
         let syncHooks = SyncHooks()
         let syncStores = SyncInteractor.Stores(
             conversations: conversationStore, projects: projectStore, memories: memoryStore, tasks: taskStore, sync: syncStore
         )
-        let (sync, syncScheduler) = makeSync(stores: syncStores, hooks: syncHooks)
+        let (sync, syncScheduler) = makeSync(stores: syncStores, provider: sources.sync, hooks: syncHooks)
         let stores = EraseInteractor.Stores(
             conversations: conversationStore,
             projects: projectStore,
@@ -85,23 +85,16 @@ public struct AppDependencies {
         )
     }
 
-    /// The settings of a first launch, from the addresses the app was built with.
-    private static func startingSettings(_ defaults: AppDefaults) -> ServerSettings {
-        ServerSettings(
-            ollamaAddress: defaults.ollamaAddress,
-            searchAddress: defaults.searchAddress,
-            speechAddress: defaults.speechAddress,
-            imageAddress: defaults.imageAddress,
-            defaultModelID: defaults.modelName.isEmpty ? nil : ChatModel.ID(defaults.modelName)
-        )
-    }
-
     /// Sync against the hub, and what decides when it runs. Each store tells sync of the changes made on this
     /// device: a deletion is noted at once, and a sync follows a few seconds after any change.
-    private static func makeSync(stores: SyncInteractor.Stores, hooks: SyncHooks) -> (SyncInteractor, SyncScheduler) {
+    private static func makeSync(
+        stores: SyncInteractor.Stores,
+        provider: SyncDataProvider,
+        hooks: SyncHooks
+    ) -> (SyncInteractor, SyncScheduler) {
         let sync = SyncInteractor(
             stores: stores,
-            provider: .live(),
+            provider: provider,
             isBusy: { hooks.isBusy($0) },
             didApplyRemote: { hooks.didApplyRemote($0) },
             didReceiveTaskResults: { hooks.didReceiveTaskResults($0) }

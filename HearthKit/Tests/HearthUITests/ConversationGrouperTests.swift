@@ -42,6 +42,57 @@ struct ConversationGrouperTests {
         #expect(groups.flatMap(\.rows).map(\.title) == ["Dinner", "Lamb prices"])
     }
 
+    // MARK: Scheduled tasks
+
+    /// A chat a scheduled task filed, last changed the given number of days before `now`.
+    private func taskChat(_ title: String, daysAgo: Int, isPinned: Bool = false) -> Conversation {
+        Conversation(
+            title: title,
+            isPinned: isPinned,
+            taskID: ScheduledTask.ID(UUID()),
+            updatedAt: now.addingTimeInterval(TimeInterval(-86_400 * daysAgo))
+        )
+    }
+
+    @Test func `chats filed by scheduled tasks are listed together, newest first, and not among the dates`() {
+        let conversations = [
+            taskChat("Monday news", daysAgo: 7),
+            conversation("Fresh", daysAgo: 0),
+            taskChat("Today's weather", daysAgo: 0),
+            taskChat("Yesterday's weather", daysAgo: 1)
+        ]
+
+        let groups = ConversationGrouper().groups(from: conversations, query: "", now: now, calendar: calendar)
+
+        #expect(groups.map(\.id) == [.scheduledTasks, .today])
+        #expect(groups.map { $0.rows.map(\.title) } == [["Today's weather", "Yesterday's weather", "Monday news"], ["Fresh"]])
+        #expect(groups.first?.title == "Scheduled tasks")
+        #expect(groups.first?.rows.allSatisfy(\.isFromTask) == true)
+    }
+
+    @Test func `a pinned task chat is listed with the pinned ones only`() {
+        let conversations = [taskChat("Pinned briefing", daysAgo: 0, isPinned: true), taskChat("Briefing", daysAgo: 0)]
+
+        let groups = ConversationGrouper().groups(from: conversations, query: "", now: now, calendar: calendar)
+
+        #expect(groups.map(\.id) == [.pinned, .scheduledTasks])
+        #expect(groups.map { $0.rows.map(\.title) } == [["Pinned briefing"], ["Briefing"]])
+    }
+
+    @Test func `there is no scheduled tasks group without task chats, and a search still finds them`() {
+        let plain = ConversationGrouper().groups(from: [conversation("Fresh", daysAgo: 0)], query: "", now: now, calendar: calendar)
+        let found = ConversationGrouper().groups(
+            from: [taskChat("Weather", daysAgo: 2), conversation("Fresh", daysAgo: 0)],
+            query: "weath",
+            now: now,
+            calendar: calendar
+        )
+
+        #expect(!plain.map(\.id).contains(.scheduledTasks))
+        #expect(found.map(\.id) == [.scheduledTasks])
+        #expect(found.flatMap(\.rows).map(\.title) == ["Weather"])
+    }
+
     // MARK: Projects
 
     private let garden = Project(name: "Garden")

@@ -86,6 +86,7 @@ HearthKit/Sources/HearthUI/
                                 opening and closing the canvas)
   AppRouter.swift               What is presented besides the chat, and closing it all to reach the chat
   AppDependencies.swift         Everything the screens are built from, and its live version
+  AppDependencies+Sources.swift Where the data comes from: the servers and files, or the simulator's screenshot stand-ins
   AppDefaults.swift             The addresses the app starts with
   Sync/                         SyncScheduler (when to sync, one at a time) and SyncHooks (what sync asks of the chat)
   Screens/
@@ -112,12 +113,13 @@ HearthKit/Sources/HearthUI/
   Components/                   Views shared between screens that know about the domain: Markdown, the error configuration
   DesignSystem/
     Tokens/                     HearthColor, HearthFont, HearthSpacing, HearthRadius, HearthSize, HearthShadow
-    Components/                 HearthMark, IconButton, OptionChip, Hairline, Avatar, PermissionNotice, SheetHeader,
-                                Haptics and the surface modifiers
+    Components/                 HearthMark, IconButton, GlassCircleButton, OptionChip, Hairline, Avatar, PermissionNotice,
+                                SheetHeader, Haptics and the surface modifiers
   Extensions/                   How domain values are named and shown: AppearanceKind, CanvasKind, EffortChoiceKind,
                                 ImageModelKind, ThinkingLevelKind
   Localization/                 Every user-facing string: Strings.swift and its Strings+Topic.swift extensions
-  Platform/                     Thin wrappers over the system: the keyboard, background time, BackgroundRefresh (asking
+  Platform/                     Thin wrappers over the system: the keyboard, the theme set on the windows (InterfaceStyle),
+                                background time, BackgroundRefresh (asking
                                 the system to wake the app for a sync), and SharedInbox (what the share extension left in
                                 the app group)
   Resources/                    Localizable.xcstrings
@@ -406,7 +408,10 @@ they filed. The body is the hub's (`WIRE_FORMAT.md`, section 7; `Spec/wire/task*
   at 7:30", "Last run failed", "Not run yet"), with a switch; a tap opens `ScheduledTaskEditorView` as a sheet.
 - **What they file.** A chat the hub filed carries `taskId`, which schema 1 does not define: it stays among the
   unknown fields (and so in the shared vectors) and is also read into `Conversation.taskID` and written back by
-  `Conversation.syncBody()`. The chat list row and the chat header show "Scheduled task".
+  `Conversation.syncBody()`. The chat header shows "Scheduled task". The chat list gathers these chats under their
+  own heading, Scheduled tasks, after Pinned and before Today, newest first (`ConversationGrouper`); they are left
+  out of the dated groups, a pinned one stays under Pinned alone, the heading is hidden when there are none, and a
+  search finds them as it finds any chat.
 - **Announcing an answer.** `SyncInteractor` reports, through `didReceiveTaskResults`, the chats with a `taskID` that
   a pull brought in new to this device, except during a pull from the start (a first sync, or a hub started afresh),
   which would bring in every answer ever filed. `TaskResultNotificationPlanner` posts at most three, only with the
@@ -501,6 +506,12 @@ the words end. No video is recorded or sent.
   `-HearthVoiceScript "words"` also puts a scripted listener in place of the recogniser, which hears those words
   once, twenty seconds after listening begins, and a voice that says nothing and asks no speech server; with empty
   words it hears nothing. All of it is inside `#if DEBUG && targetEnvironment(simulator)` and is in no build that ships.
+- **Pictures for the README.** Launched in the simulator with `-HearthScreenshots YES`, a debug build takes its data
+  from stand-ins instead (`AppSources.screenshots()`, `SimulatorStandIns+Screenshots.swift`, `ScreenshotSamples`):
+  placeholder server addresses such as `https://my-server:11434`, a chat server that lists `gemma4` and two cloud
+  models and answers with one fixed line, a hub that keeps what it is sent, and stores that start, when empty, with
+  the sample chats, project, memories and scheduled tasks of a made-up Sam. Install the app afresh before using it,
+  and pass the argument on every launch. It is behind the same `#if` and in no build that ships.
 
 ## Notifications
 

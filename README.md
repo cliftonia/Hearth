@@ -5,135 +5,102 @@
 ![Swift](https://img.shields.io/badge/Swift-5.9%2B-2C6B5A)
 ![Dependencies](https://img.shields.io/badge/dependencies-none-2C6B5A)
 
-A native iPhone, iPad and Mac chat app for your own [Ollama](https://ollama.com) server. Pick any model
-the server offers, chat with streamed replies, search the web through your own SearXNG, and talk
-hands-free with replies spoken by your own Kokoro voice. Nothing goes through anyone else's cloud,
-and your conversations stay on the device.
+Hearth is a native iPhone, iPad and Mac chat app for a server you run yourself. It talks to your own
+[Ollama](https://ollama.com) for chat, and optionally to your own [SearXNG](https://github.com/searxng/searxng) for
+web search, [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) for speech,
+[ComfyUI](https://github.com/comfyanonymous/ComfyUI) for pictures, and a Hearth Hub of your own to sync your devices
+and run scheduled tasks. Nothing goes through anyone else's service unless you pick a cloud model your server offers.
 
 <p align="center">
-  <img src="docs/chat.png" alt="A reply with folded thinking, a command in a code block, web sources and suggested follow-up questions" width="24%">
-  <img src="docs/picture.png" alt="A picture of a lighthouse at sunset, made from a description, with Save and Share" width="24%">
-  <img src="docs/picture-change.png" alt="The same lighthouse changed to a snowy winter night by a follow-up message" width="24%">
-  <img src="docs/drawer.png" alt="The drawer of conversations, with a pinned chat, a private chat and chats grouped by day" width="24%">
-</p>
-<p align="center">
-  <img src="docs/table.png" alt="A reply with a table and a formula, in the dark theme" width="24%">
-  <img src="docs/voice.png" alt="The hands-free voice conversation screen, listening" width="24%">
+  <img src="docs/screenshots/welcome.png" alt="An empty chat greeting Sam by name" width="24%">
+  <img src="docs/screenshots/chat.png" alt="A reply with headings, a list and two code blocks, answered by gemma4" width="24%">
+  <img src="docs/screenshots/research.png" alt="A deep research report with a table, citations and its numbered sources" width="24%">
+  <img src="docs/screenshots/sidebar.png" alt="The chat list with a project, a pinned chat, scheduled task answers and chats grouped by day" width="24%">
 </p>
 
 - **Platform**: iOS and iPadOS 17+, and the Mac through Mac Catalyst; SwiftUI, Swift 5.9+ with strict concurrency checking
-- **Dependencies**: none. SwiftUI, Speech, AVFoundation, PDFKit, LocalAuthentication and App Intents only
-- **Talks to**: Ollama for chat, [SearXNG](https://github.com/searxng/searxng) for web search,
-  [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) for speech and ComfyUI for pictures; the last three are optional
+- **Dependencies**: none. Only Apple's frameworks
+- **Your servers**: Ollama is required; search, speech, pictures and the hub are optional
 
 ## What it does
 
-### Chat
+### Chats
 
-- **Any model on the server**, chosen from a picker that groups local and cloud models
-- **Streamed Markdown**: headings, lists, quotes, tables and code blocks you can copy
-- **Maths** written in LaTeX shown as readable text, `x² ≤ a/b`, on one line rather than typeset
-- **Thinking** folded away under "Thought for N seconds", with a level of Off, Light, Medium or High for models that reason
-- **Web search when it is needed**: a model that can call tools searches SearXNG on its own, asks for news when the
-  question is about current events, reads the top pages it finds and cites its sources; for a model that cannot call
-  tools, a toggle searches before it replies
-- **Deep research**: choose it as the effort in the model sheet, after Light, Medium and High, and ask a question.
-  Hearth has the chat's own model plan a handful of searches, runs them on your SearXNG, reads a dozen of the pages
-  found, takes notes on each, looks once more for anything important that is missing, and writes a report that cites
-  its sources as `[1]`, `[2]`, with the numbered sources listed beneath it. The steps show while it works, Stop ends
-  it at once, and Try again researches again. The choice stays with its chat and is never saved, so a new chat is
-  never researched by accident
-- **Canvas**: a web page, a drawing in SVG, a Markdown document or a long block of code in a reply is folded into
-  a card, and the card opens it in a panel of its own: beside the chat on an iPad in landscape or a Mac, as a
-  full-height sheet on a phone. A page, a drawing or a document can be seen as it is meant to look or as it was
-  written, and copied or shared. Ask for a change and the panel follows the new version as it is written, with
-  arrows to step back to earlier ones. A page runs its own scripts but is shut off from the network
-- **Suggested follow-up questions** under each reply; tap one to ask it
-- **A composer that stays out of the way**: one row at rest, opening out while you write to show the options for
-  the reply: web search, how hard to think, and reading aloud
-- **Hold to talk**: press and hold the resting composer to dictate, with dots that follow your voice; let go and
-  the words are in the message, ready to read and send. The microphone button still dictates with a tap
-- **A greeting by name** on an empty chat, which varies from chat to chat and sometimes names the day
-- **Attachments**: photos from the library or camera for models that can see, PDFs and text files for any model
-- **Edit and resend** a message you already sent
-- **Reply versions**: asking again keeps the earlier reply, and arrows under the reply step between them
-- **Pictures**, made on your own [ComfyUI](https://github.com/comfyanonymous/ComfyUI): tap + and choose Make a picture, then
-  describe one. Attach a photo to have it changed as you ask, or enlarged; a follow-up such as "make it night" changes
-  the last picture. The menu at the top then offers the picture models the server has. The chat model is unloaded
-  before each picture and the picture server frees its memory after it
-- **Share to Hearth** from Safari, Photos or Files: the link, text, picture or file lands in the message being written
-- **A profile**: your full name, a nickname and a photo, kept on the device. An empty chat greets you by your
-  nickname, and the model is told what to call you
-- **Custom instructions**, on the profile page, given to the model at the start of every conversation
-- **Memory**: lasting facts you tell a model, or ask it to remember, are kept on the device and carried into every
-  conversation. A notice shows whenever something is remembered, and the list can be read, added to and cleared in Settings
-- **Private chat**: the eye-slash button at the top right of an empty chat makes it private, so it uses no memories
-  and adds none
+- **Any model on your server**, local or cloud, chosen from the composer, with an **effort** for models that think:
+  Off, Light, Medium or High
+- **Streamed Markdown**: headings, lists, quotes, tables, maths and code blocks with a copy button
+- **Web search** through your SearXNG. A model that can call tools searches when it needs to, reads the top pages
+  and cites them; the sources show under the reply
+- **Deep research**: choose it as the effort, ask a question, and the chat's model plans searches, reads a dozen
+  pages, takes notes and writes a report with numbered sources. The steps show while it works
+- **Canvas**: a web page, an SVG drawing, a Markdown document or a long piece of code in a reply opens in its own
+  panel, beside the chat on an iPad or a Mac, as a sheet on a phone. Pages run their own scripts but cannot reach
+  the network. Later versions of the same piece can be stepped through
+- **Follow-up questions** under each reply; tap one to ask it
+- **Message actions**: copy, share, read aloud, try again (earlier replies are kept as versions), and edit a message
+  you sent
+- **Documents and photos**: attach PDFs and text files for any model, and photos from the library or the camera for
+  models that see
+- **Pictures** made on your ComfyUI: + → Make a picture, then describe it, or attach a photo to change it
+- **Projects** group chats around one subject, with their own instructions and reference files
+- **Memory**: lasting facts the model is told to keep, or that you add in Settings, carried into every chat
+- **Private chats** use no memories, add none and are never synced
+- **Rename, pin, share or delete** a chat from a long press, or from its menu; search finds chats by title or text
 
 ### Voice
 
-- **Voice conversation**: speak, pause, hear the answer, speak again; tap the orb to interrupt
-- **Voice with the camera**: with a model that sees pictures, the camera button in a voice conversation shows what
-  the camera sees in a card above the orb. Each time you finish speaking, one still picture goes with your words, so
-  you can ask "what is this?" or "read that label". It is kept on your message in the chat like any attached photo.
-  Nothing is recorded, the camera starts off every time, and it goes off when the conversation closes or Hearth
-  leaves the screen
-- **Read aloud**: one reply at a time, or every reply with the speaker option in the composer, spoken sentence by
-  sentence while it is still being written
-- **Hear this voice**: Settings plays a short sample of the chosen voice before you keep it
-- **Dictation** into the message field, recognised on the device where the phone supports it
-- **Shortcut**: "Start Voice Conversation" from Siri, Shortcuts, Spotlight or the Action button
-- **Widgets** for the home screen and the lock screen that open a new chat or a voice conversation
+- **Voice conversation**: speak, hear the answer in your Kokoro voice, speak again; tap the orb to interrupt
+- **The camera in a voice conversation**: with a model that sees, each spoken turn can carry one still of what the
+  camera shows ("what is this?")
+- **Dictation** into the message, and **hold to talk**: press and hold the composer, speak, let go
+- **Read aloud** one reply, or every reply as it is written
+- **Siri and Shortcuts**: "Start Voice Conversation"; **widgets** that open a new chat or a voice conversation
 
-### Your conversations
+### Across your devices
 
-- **History** in a drawer, grouped by day, searchable and titled by the model
-- **Settings and New chat** float at the bottom of the chat list; a dot on the Settings button shows whether the
-  server can be reached
-- **Pin, rename, share as Markdown, delete** from a long press
-- **Projects** gather chats around one subject: every chat in a project is given the project's instructions,
-  on top of your own, and can draw on its reference files (PDFs and text). File a chat from a long press or from
-  its menu; deleting a project keeps its chats
-- **Lock** behind Face ID, Touch ID, Optic ID or the passcode (a Mac's password), each named as the device has it;
-  the lock covers the app switcher and every sheet
-- **Notifications** when a reply or a picture finishes while Hearth is not on screen, made on the device itself,
-  and, with their own switch, when the answer to a scheduled task arrives. Tapping one opens its chat; a private
-  chat's says only that a reply is ready
-- **Scheduled tasks** (Settings → Scheduled tasks, with sync on): write a question, pick a cloud model, choose every
-  day, every week on a given day, or once, and whether to search the web first. Your Hearth Hub asks it at that time
-  and files the answer as a new chat, marked "Scheduled task", which reaches every device through sync. The page
-  shows when each last ran, or that it failed, and a switch to pause it. "Schedule a task" in the composer's + menu
-  starts one asking what you were writing
-- **Erase all data on this device**, last on the Settings list: erases the chats, projects, memories, profile and
-  saved settings, leaving the app as it was when first opened. It wipes this device
-  only and turns sync off; nothing is deleted from the hub or your other devices
-- **On the device**: JSON files in the app's own folder, and synced only if you turn sync on
-- **Sync between your devices**, through your own [Hearth Hub](#sync-with-your-own-hub) (Settings → Sync, off by
-  default): ordinary chats with their messages, reply versions, pictures, research reports and sources, pins and
-  projects; projects with their instructions and files; and memories. Private chats, settings, server addresses, the
-  profile and its photo, and the hub's access key never leave the device. It syncs when Hearth opens, when it comes
-  back to the front, every minute while it stays there, a few seconds after a change, as soon as the hub's address,
-  its access key or the switch changes, now and then in the background (iPhone and iPad), and on "Sync now"; a reply
-  still being written is sent once it has finished. Scheduled tasks sync too
+- **Sync** through your own Hearth Hub (Settings → Sync): chats, projects, memories and scheduled tasks, item by item,
+  the later change winning. Each person on a hub has their own access key, kept in the device's Keychain. Private
+  chats, settings, server addresses and your profile never leave the device
+- **Scheduled tasks** (with sync on): a question the hub asks at a time you choose, every day, every week or once,
+  optionally searching the web first. Pick a cloud model, or Automatic to let the hub choose. Each answer arrives on
+  every device as a new chat, gathered under Scheduled tasks in the chat list. "Schedule a task" in the + menu starts
+  one from what you were typing
+- **Notifications** when a reply or a picture finishes while Hearth is in the background, and when a scheduled task's
+  answer arrives. They are made on the device
+- **Share to Hearth** from Safari, Photos or Files: the link, text, picture or file lands in the message
 
-### Look
+### Looks and privacy
 
-- **Theme**: follow the system, or keep to light or dark
-- **Vibration**: a light tap as a message is sent, a reply finishes or something is switched, with one switch in
-  Settings to silence them all (on iPhone; iPad and Mac have nothing to vibrate)
-- **Settings** keep every change as it is made, as the system's Settings app does; each row says how things stand
-  on the page it leads to ("Memory: On · 12 saved", "Servers: Connected · 14 models")
-- **iPad**: conversations stay beside the chat on a wide screen
-- **Mac**: the same app, built with Mac Catalyst
+- **Lock** behind Face ID, Touch ID, Optic ID or the passcode; the lock also hides Hearth in the app switcher
+- **Theme**: follow the system, or keep to light or dark; **vibration** can be turned off
+- **iPad**: the chat list stays beside the chat, and the canvas opens beside both. **Mac**: the same app through
+  Mac Catalyst
+- **Erase all data on this device** returns Hearth to how it was when first opened; the hub and other devices keep
+  their copies
 - Dynamic Type and VoiceOver labels throughout
 
+## Screenshots
+
+| | | |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/models.png" width="240" alt="The model sheet with gemma4 on your server and two cloud models"><br>Models on your server and in the cloud | <img src="docs/screenshots/plus-menu.png" width="240" alt="The + menu: choose file, take photo, photo library, make a picture, schedule a task"><br>The + menu | <img src="docs/screenshots/canvas.png" width="240" alt="A tip calculator page running in the canvas"><br>A page in the canvas |
+| <img src="docs/screenshots/voice.png" width="240" alt="A voice conversation, listening"><br>Voice conversation | <img src="docs/screenshots/project.png" width="240" alt="The chat list showing one project's chats"><br>A project's chats | <img src="docs/screenshots/project-editor.png" width="240" alt="A project's name, instructions and reference files"><br>A project's instructions |
+| <img src="docs/screenshots/settings.png" width="240" alt="Settings: profile, memory, follow-ups, web search, scheduled tasks, voice and pictures"><br>Settings | <img src="docs/screenshots/settings-bottom.png" width="240" alt="Settings: notifications, theme, vibration, the lock, servers, sync and erase"><br>More settings | <img src="docs/screenshots/memory.png" width="240" alt="The memory page with four saved memories"><br>Memory |
+| <img src="docs/screenshots/servers.png" width="240" alt="Server addresses with a successful connection test"><br>Servers | <img src="docs/screenshots/sync.png" width="240" alt="Sync with a hub address, a saved access key and sync on"><br>Sync with your hub | <img src="docs/screenshots/tasks.png" width="240" alt="Two scheduled tasks with their schedules and last runs"><br>Scheduled tasks |
+| <img src="docs/screenshots/task-editor.png" width="240" alt="Editing a daily task with the Automatic model and web search"><br>Editing a task | <img src="docs/screenshots/lock.png" width="240" alt="The lock screen with Unlock with Face ID"><br>Locked | <img src="docs/screenshots/dark.png" width="240" alt="A chat in the dark theme"><br>Dark theme |
+
 <p align="center">
-  <img src="docs/ipad.png" alt="Hearth on iPad, with the conversations beside a chat about Swift actors" width="78%">
+  <img src="docs/screenshots/ipad.png" alt="Hearth on iPad with the chat list beside a chat" width="48%">
+  <img src="docs/screenshots/ipad-canvas.png" alt="Hearth on iPad with a page open in the canvas beside the chat" width="48%">
 </p>
+
+The pictures use sample data (a made-up Sam, placeholder server addresses); see "Pictures for the README" in
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Setting up
 
-You need Xcode 16 or later and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
+You need Xcode 16 or later, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`), and an Ollama
+server Hearth can reach.
 
 ```sh
 cp Config/Local.example.xcconfig Config/Local.xcconfig   # then fill it in
@@ -141,39 +108,60 @@ xcodegen generate
 open Hearth.xcodeproj
 ```
 
-`Config/Local.xcconfig` holds your bundle identifier, signing team and the server addresses the app
-starts with. It is ignored by git, so none of them reach the repository. Leave the addresses empty
-and the app asks for them on first launch; they can be changed at any time in Settings → Servers.
+`Config/Local.xcconfig` is ignored by git. It holds:
 
-<p align="center">
-  <img src="docs/settings.png" alt="Settings: server addresses, voice, custom instructions and follow-up questions" width="30%">
-</p>
+| Key | What it is |
+|---|---|
+| `HEARTH_BUNDLE_ID` | Your bundle identifier |
+| `HEARTH_DEVELOPMENT_TEAM` | Your signing team |
+| `HEARTH_OLLAMA_ADDRESS` | The chat server the app starts with |
+| `HEARTH_SEARCH_ADDRESS` | SearXNG, for web search and deep research (optional) |
+| `HEARTH_SPEECH_ADDRESS` | Kokoro-FastAPI, for voice (optional) |
+| `HEARTH_IMAGE_ADDRESS` | ComfyUI, for pictures (optional) |
+| `HEARTH_HUB_ADDRESS` | Your Hearth Hub, offered on the Sync page (optional) |
+
+An xcconfig treats `//` as a comment, so write the slashes of a URL as `/$()/`, as the example file does. Leave an
+address empty and the app asks for it; every address can be changed later in Settings → Servers or Settings → Sync.
 
 ### Addresses and HTTPS
 
-iOS only allows plain `http://` to hosts on the local network and, in this app, to `*.ts.net` names
-(Tailscale already encrypts that traffic). Anything else must be `https://`. A bare IP address over
-plain HTTP is refused by the system, so address a tailnet machine by its MagicDNS name.
+iOS allows plain `http://` only to hosts on the local network and, in this app, to `*.ts.net` names (Tailscale
+already encrypts that traffic). Anything else must be `https://`. A bare IP address over plain HTTP is refused, so
+address a tailnet machine by its MagicDNS name.
 
 | Service | Example | On the server |
 |---|---|---|
 | Ollama | `https://my-server.example.ts.net` | `tailscale serve --bg http://localhost:11434` |
 | Search | `https://my-server.example.ts.net:8888` | SearXNG with `json` among its `search.formats` |
 | Speech | `http://my-server.example.ts.net:8880` | Kokoro-FastAPI listening on the tailnet |
+| Pictures | `http://my-server.example.ts.net:8188` | ComfyUI listening on the tailnet |
 
 ### Sync with your own hub
 
-Hearth Hub is a small server of your own, kept in a separate repository, that holds a copy of what each device
-syncs. In Settings → Sync, enter its address, an access key if it asks for one (kept in the Keychain, never in
-the settings or a file), and turn on "Sync this device". The same App Transport Security rules apply as for your
-other servers: plain `http://` only to a local-network name or a `*.ts.net` one, `https://` anywhere else. A copy
-changed on two devices is settled by the later change, item by item; a deletion travels as a tombstone. The exact
-format is the hub's `docs/WIRE_FORMAT.md`.
+Hearth Hub is a small server of your own, in a separate repository, that keeps a copy of what each device syncs and
+runs the scheduled tasks. In Settings → Sync, enter its address and your access key (each person on the hub has their
+own), then turn on "Sync this device". Test connection checks that the hub answers. Sync runs when Hearth opens, every minute while
+it is open, shortly after a change, in the background now and then, and on "Sync now". The wire format is the hub's
+`docs/WIRE_FORMAT.md`.
+
+## Building and testing
+
+```sh
+xcodebuild test -project Hearth.xcodeproj -scheme Hearth \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+xcodebuild build -project Hearth.xcodeproj -scheme Hearth \
+  -destination 'platform=macOS,variant=Mac Catalyst' -allowProvisioningUpdates
+swiftlint lint --strict
+python3 Tools/sync_strings.py   # rebuilds Localizable.xcstrings from the Strings*.swift files
+```
+
+The tests use Swift Testing and cover the domain (streaming, prompts, search, research, canvas, memory, sync, tasks)
+and the presenters. `Spec/` holds test vectors shared with the Android app and the hub. CI runs the tests, SwiftLint,
+a check that the string catalog matches the code, and a check that each layer imports only the layers below it.
 
 ## Architecture
 
-The app target is a thin shell around a local Swift package, `HearthKit`, split into four modules
-that only depend downwards:
+The app target is a thin shell around a local Swift package, `HearthKit`, in four layers that only depend downwards:
 
 ```
 HearthUI      Coordinator, Presenters, ViewModels, SwiftUI views       (@MainActor)
@@ -183,111 +171,33 @@ HearthData    Services and DTOs: Ollama, SearXNG, Kokoro, ComfyUI, web pages, th
 HearthCore    Tagged identifiers, logging
 ```
 
-- **MVVMP+C**: each screen has a View, an `@Observable` ViewModel and a Presenter that owns it.
-  Presenters ask the `AppCoordinator` for navigation through delegates.
-- **Dependencies are closures**: data providers are structs of `@Sendable` functions with a `.live`
-  implementation, so tests pass in their own.
-- **Errors** are thrown raw by the data layer, given meaning in the domain (`ChatError`) and caught
-  in the Presenter, which shows them in a banner.
-- **Untrusted text**: a model's reply, a search result and a web page are all treated as untrusted. Only `http` and
-  `https` links open when tapped. Pages are read only from public HTTPS addresses, never from a private, tailnet or
-  numeric one; a redirect is held to the same rule, and a page is discarded unless the connection is confirmed to
-  have reached a public address. Page text is reduced in a single pass that hostile markup cannot slow down. Each
-  result's title, snippet and page text are handed to the model inside a fence with a marker made up afresh for
-  every search, marked as material, not instructions.
-- **Generated pages**: a page or a drawing shown in the canvas was written by a model, so it is untrusted too. It is
-  loaded from a string with no address of its own into a web view that keeps nothing, may run its own scripts,
-  and can fetch nothing: every `http`, `https` and WebSocket request is blocked, every navigation away from the
-  page is cancelled, so a tapped link opens nothing, and it is given no window, camera, microphone or files, and no
-  peer connection in any frame.
-- **Design system**: colours, type, spacing, radii, sizes and shadows are tokens, and views draw on them. A view keeps
-  a measurement of its own, such as an avatar's diameter, as a named constant only where no token fits.
-- **Strings** live in `Localizable.xcstrings`, rebuilt from `Strings.swift` by `python3 Tools/sync_strings.py`.
+Each screen has a View, an observable ViewModel and a Presenter (MVVMP+C); dependencies are structs of closures with
+a `.live` version. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) explains the layers, how a screen is wired, sync,
+research, the canvas and scheduled tasks; [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) lists the tokens and
+components.
 
-More in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), which covers the layers, how a screen is wired and how to add
-one, and [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md), which lists the tokens, the components and the rules for
-using them.
+## Privacy
 
-## Tests and linting
-
-```sh
-xcodebuild test -project Hearth.xcodeproj -scheme Hearth \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max'
-xcodebuild build -project Hearth.xcodeproj -scheme Hearth \
-  -destination 'platform=macOS,variant=Mac Catalyst'
-swiftlint lint
-```
-
-Tests are written with Swift Testing: the stream decoding, prompt building, sentence chunking for
-speech and the feed that reads a reply aloud, Markdown, maths and web page parsing, memory and its limits, follow-up questions, export, the chat interactor, the
-conversation store, file storage, which addresses a page may be read from, the app lock, the drawer's grouping, the profile and
-the greeting, erasing everything, when a finished reply is announced and in what words, the camera of a voice
-conversation (when it runs, when it stops, and the picture sent with a spoken turn), the canvas (which parts of a
-reply are pieces, their kinds and titles, fences left open or nested, which pieces are versions of one another,
-what a generated page may load and where it may go, and how the columns share a wide screen), and deep research: reading
-a model's plan, choosing and spreading sources, tidying citations, the order of its steps, its bounds, stopping it and
-what it does when nothing can be read; and sync: every synced model to the wire and back (reply versions, pictures,
-research and fields from a newer app kept), which copy wins, tombstones both ways, private chats never sent, a
-streaming chat put off, a refused older copy replaced by the hub's, paging, the settings page, when syncs run, and
-that erasing sends nothing. The codebase holds a zero-warning SwiftLint bar.
-
-`Spec/` holds test vectors shared with the Android app and Hearth Hub: the system message, the date line, the
-search query, memory duplicates, titles, follow-up questions, maths, sync decisions and examples of the sync wire.
-The tests here read it in place; the Android repository copies it with its `tools/sync-spec.sh`. `Spec/README.md`
-says how to add a vector.
-
-The same checks run on every push and pull request through GitHub Actions (`.github/workflows/ci.yml`), together with
-a check that the string catalog matches `Strings.swift` and that each layer imports only the layers beneath it.
+- **Your data stays on your devices and your servers.** Chats, projects and memories are JSON files in the app's own
+  folder, and reach your hub only if you turn sync on. Choosing a cloud model sends that chat to the cloud host your
+  Ollama server forwards it to.
+- **Never synced**: private chats, settings, server addresses, your profile and photo, and the access key, which stays
+  in the Keychain.
+- **Web pages are read by the device.** The top results of a search are fetched by your phone, so those sites see its
+  address. Turn this off in Settings → Web search to send snippets only.
+- **Untrusted text is fenced.** Search results and pages are marked to the model as material, not instructions, and
+  a page in the canvas cannot load anything from the network or open links.
+- **Memory is cautious**: at most 50 short memories, and nothing is remembered in a chat that holds web results, a
+  file or a photo.
+- **Notifications are made on the device**; a private chat's says only that a reply is ready.
 
 ## Good to know
 
-- **Maths is an approximation.** Fractions are written on one line and constructs with no plain-text
-  form, such as matrices, stay close to how the model wrote them.
+- **Maths is shown as text**, `x² ≤ a/b`, on one line rather than typeset.
 - **Files are read as text.** PDFs need a text layer, and each file is cut at 60,000 characters.
-- **The voice conversation stops listening while a reply is spoken**, so it cannot hear itself.
-- **The camera sends stills, not video.** One picture is taken as you stop speaking, shrunk to at most 1,280 pixels
-  on its longer side like any attached photo, and sent with that turn; if none can be taken the words go alone. It
-  is asked for the first time you turn it on, and a model that cannot see leaves the button disabled. A picture in
-  a chat closes memory for the rest of it, as an attached photo does. Turned off by Hearth leaving the screen, it
-  stays off until you turn it on again. The simulator has no camera, so a debug build there shows a drawn test
-  card instead.
-- **A canvas piece is a fenced block.** A page or a drawing counts at any length, by its language tag or by how it
-  begins; a document or code counts from 15 lines. Shorter blocks stay in the reply as before. Nothing more is
-  saved: the pieces are read from the reply's text each time, and an open canvas closes with its chat.
-- **Versions are matched simply.** A later piece is a version of the open one when it is the same kind and either
-  has the same title or is the only piece in its reply. Two unrelated pages each alone in a reply are therefore
-  offered as versions of one another.
-- **A page in the canvas cannot reach the network**, so one that loads a script, a font or a picture from a web
-  address shows without it, and its links open nothing. Peer connections are taken away in the page and in every
-  frame it makes, and a frame cannot be given a `sandbox`: one that would be out of reach is removed. Measured on
-  the simulator, no frame leaks and DNS prefetching and preconnecting cause no lookups. The frame sealing is a
-  script rather than a rule the engine enforces, so a way to make a frame it does not know of could reopen it. Line numbers are left off code that holds characters the
-  monospaced face lacks, such as emoji, since they would drift out of step.
-- **Follow-up questions and chat titles each cost one short extra request** to the same model.
-  Follow-ups can be turned off in Settings.
-- **Memory is deliberately cautious.** At most 50 short memories and two changes a turn. Nothing can be remembered in
-  a conversation that has searched the web or carries a file or a photo, from that point on, so a page, a document
-  or the text in a picture cannot plant a memory. A model cannot change or forget a memory you wrote by hand. Models that cannot call tools read
-  memories but cannot add to them.
-- **Thinking levels are a request.** Ollama accepts them for every thinking model, but some models think
-  as much as they please whatever the level.
-- **A model may search the web up to three times in one turn**, after which it is told to answer from what it has.
-- **Reading pages is done by the device.** The top three results of a search are fetched directly and reduced to
-  text, so those sites see the device's address rather than the server's. It can be turned off in Settings, leaving
-  the model with snippets only. A page can still try to mislead the model; marking its text as untrusted lowers that
-  risk but cannot remove it.
-- **Deep research is bounded.** At most 5 planned searches and 3 more to fill a gap, 12 pages and then 4 more, no
-  more than 2 pages from one site, 4 pages fetched at once, 12 seconds for a page, 6,000 characters read from each
-  and 24,000 characters of notes handed to the writer. That is about 15 to 20 requests to the model, all to the one
-  the chat already uses; a run took about 40 seconds with a cloud model, and will take minutes with a large local one.
-  Pages are read by the device under the same rule as any search's pages. If no page can be read, or none says
-  anything about the question, it says so and writes nothing. It needs a search address; without one the choice is
-  listed but cannot be made
-- **Sync is last writer wins, per item.** Two devices changing the same chat before they sync keep the later
-  change and lose the earlier one, whole; messages are not merged. The comparison uses each device's clock, so a
-  device whose clock is badly wrong can win or lose unfairly (the hub refuses times more than a day ahead). A
-  conversation is sent whole, pictures included, each time it changes; one larger than 20 MB of JSON stays on the
-  device and the status line says so. A memory saved with the same words on two devices before they first sync is
-  kept twice
-- **A reply keeps streaming for a short while in the background**, as long as iOS allows, usually about half a minute.
+- **Deep research is bounded**: at most 8 searches and 16 pages, which is about 15 to 20 requests to the chat's
+  model. It takes under a minute with a cloud model and longer with a large local one.
+- **Sync is last writer wins, per item**, by each device's clock; messages are not merged. A chat larger than 20 MB
+  stays on the device.
+- **A reply keeps streaming briefly in the background**, as long as iOS allows.
 - The app icon is drawn by `python3 Tools/make_icon.py` (needs Pillow).

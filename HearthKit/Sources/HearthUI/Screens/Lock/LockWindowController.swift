@@ -28,19 +28,6 @@ final class LockWindowController {
             window.isHidden = false
             self.window = window
         }
-        window?.overrideUserInterfaceStyle = Self.interfaceStyle(for: colorScheme)
-    }
-
-    private static func interfaceStyle(for colorScheme: ColorScheme?) -> UIUserInterfaceStyle {
-        switch colorScheme {
-        case .light:
-            .light
-        case .dark:
-            .dark
-        case nil:
-            .unspecified
-        @unknown default:
-            .unspecified
-        }
+        window?.overrideUserInterfaceStyle = InterfaceStyle.style(for: colorScheme)
     }
 }

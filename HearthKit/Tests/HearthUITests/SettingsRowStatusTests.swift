@@ -97,6 +97,16 @@ struct SettingsRowStatusTests {
         #expect(subject.syncRowStatus.contains("2"))
     }
 
+    @Test(arguments: [0.0, 5])
+    func `a sync that has only just finished is said to be now, not in the future`(offset: TimeInterval) {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+
+        let when = SettingsPresenter.syncedWhen(now.addingTimeInterval(offset), now: now)
+
+        #expect(!when.hasPrefix("in "))
+        #expect(when.contains("now"))
+    }
+
     @Test func `VoiceOver reads a row's title and status as one, with the dots as pauses`() {
         let label = SettingsPresenter.accessibilityLabel(title: "Memory", status: "On · 12 saved")
 

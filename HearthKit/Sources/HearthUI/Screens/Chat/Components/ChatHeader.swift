@@ -23,7 +23,7 @@ struct ChatHeader: View {
 
     private func bar(isWide: Bool) -> some View {
         HStack(spacing: HearthSpacing.s8) {
-            IconButton(
+            GlassCircleButton(
                 systemImage: isWide ? "sidebar.left" : "line.3.horizontal",
                 label: isWide ? Strings.sidebarToggle : Strings.menuLabel,
                 action: {
@@ -48,7 +48,7 @@ struct ChatHeader: View {
             }
             .animation(.snappy, value: hasBegun)
         }
-        .padding(.horizontal, HearthSpacing.s8)
+        .padding(.horizontal, HearthSpacing.s16)
         .padding(.vertical, HearthSpacing.s4)
     }
 
@@ -61,17 +61,12 @@ struct ChatHeader: View {
     private var privateToggle: some View {
         let isPrivate = presenter.viewModel.conversation.isPrivate
         let canChange = presenter.isServerConfigured
-        return Button(action: presenter.togglePrivateAction) {
-            Image(systemName: isPrivate ? "eye.slash.fill" : "eye.slash")
-                .font(HearthFont.icon)
-                .foregroundStyle(isPrivate ? HearthColor.pine : HearthColor.ink)
-                .frame(width: HearthSize.iconButton, height: HearthSize.iconButton)
-                .background(isPrivate ? HearthColor.pineSoft : .clear, in: Circle())
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(Strings.privateChat)
-        .accessibilityAddTraits(isPrivate ? .isSelected : [])
+        return GlassCircleButton(
+            systemImage: isPrivate ? "eye.slash.fill" : "eye.slash",
+            label: Strings.privateChat,
+            isSelected: isPrivate,
+            action: presenter.togglePrivateAction
+        )
         .opacity(canChange ? 1 : 0)
         .allowsHitTesting(canChange)
         .accessibilityHidden(!canChange)
@@ -85,7 +80,7 @@ struct ChatHeader: View {
         return Image(systemName: "eye.slash.fill")
             .font(.hearth(.footnote))
             .foregroundStyle(HearthColor.pine)
-            .frame(width: HearthSize.iconButton, height: HearthSize.iconButton)
+            .frame(width: HearthSize.glassButton, height: HearthSize.glassButton)
             .background(HearthColor.pineSoft, in: Circle())
             .opacity(isShown ? 1 : 0)
             .accessibilityLabel(Strings.privateChat)
@@ -151,8 +146,8 @@ struct ChatHeader: View {
             .accessibilityLabel(Strings.chatOptions)
         }
         .padding(.horizontal, HearthSpacing.s4)
-        .capsuleSurface()
-        .hearthShadow(.floating)
+        .frame(height: HearthSize.glassButton)
+        .glassSurface(Capsule())
     }
 
     /// What can be done with a chat that has begun: pin it; share it, rename it or file it in a project; delete it.

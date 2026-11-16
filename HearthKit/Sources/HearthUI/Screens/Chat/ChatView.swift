@@ -66,8 +66,6 @@ struct ChatView: View {
         }
         .sheet(isPresented: Bindable(viewModel).isModelPickerPresented) {
             ModelPickerSheet(presenter: presenter)
-                // A sheet is a separate presentation, so it is given the chosen theme as the root is.
-                .preferredColorScheme(presenter.settings.appearance.colorScheme)
         }
         .task { await presenter.loadAction() }
     }
