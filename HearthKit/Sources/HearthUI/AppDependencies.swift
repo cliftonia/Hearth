@@ -1,5 +1,7 @@
 import Foundation
+import HearthCore
 import HearthDomain
+import os
 
 /// Everything the screens are built from: the interactors, the providers and the stores they share.
 @MainActor
@@ -19,6 +21,8 @@ public struct AppDependencies {
     let conversationStore: ConversationStore
     let memoryStore: MemoryStore
     let projectStore: ProjectStore
+    /// This device's copy of the scheduled tasks, which the hub runs.
+    let taskStore: TaskStore
     let projects: ProjectInteractor
     let profileStore: ProfileStore
     let eraser: EraseInteractor
@@ -31,22 +35,19 @@ public struct AppDependencies {
     /// The real thing, talking to the servers and the device. The defaults seed the settings on first launch.
     public static func live(defaults: AppDefaults) -> AppDependencies {
         let chatProvider = ChatDataProvider.live()
-        let settings = ServerSettings(
-            ollamaAddress: defaults.ollamaAddress,
-            searchAddress: defaults.searchAddress,
-            speechAddress: defaults.speechAddress,
-            imageAddress: defaults.imageAddress,
-            defaultModelID: defaults.modelName.isEmpty ? nil : ChatModel.ID(defaults.modelName)
-        )
+        let settings = startingSettings(defaults)
         let conversationStore = ConversationStore(provider: .live())
         let projectStore = ProjectStore(provider: .live())
         let memoryStore = MemoryStore(provider: .live())
+        let taskStore = TaskStore(provider: .live())
         let profileStore = ProfileStore(provider: .live())
         let settingsStore = SettingsStore.live(defaults: settings)
         let notifications = NotificationProvider.live()
         let syncStore = SyncStore(provider: .live(), defaultHubAddress: defaults.hubAddress)
         let syncHooks = SyncHooks()
-        let syncStores = SyncInteractor.Stores(conversations: conversationStore, projects: projectStore, memories: memoryStore, sync: syncStore)
+        let syncStores = SyncInteractor.Stores(
+            conversations: conversationStore, projects: projectStore, memories: memoryStore, tasks: taskStore, sync: syncStore
+        )
         let (sync, syncScheduler) = makeSync(stores: syncStores, hooks: syncHooks)
         let stores = EraseInteractor.Stores(
             conversations: conversationStore,
@@ -70,13 +71,28 @@ public struct AppDependencies {
             conversationStore: conversationStore,
             memoryStore: memoryStore,
             projectStore: projectStore,
+            taskStore: taskStore,
             projects: ProjectInteractor(projectStore: projectStore, conversationStore: conversationStore),
             profileStore: profileStore,
-            eraser: EraseInteractor(stores: stores, removeNotifications: notifications.removeAll) { await syncScheduler.stopAndReset() },
+            eraser: EraseInteractor(stores: stores, removeNotifications: notifications.removeAll) {
+                await syncScheduler.stopAndReset()
+                await forgetTasks(taskStore)
+            },
             syncStore: syncStore,
             sync: sync,
             syncScheduler: syncScheduler,
             syncHooks: syncHooks
+        )
+    }
+
+    /// The settings of a first launch, from the addresses the app was built with.
+    private static func startingSettings(_ defaults: AppDefaults) -> ServerSettings {
+        ServerSettings(
+            ollamaAddress: defaults.ollamaAddress,
+            searchAddress: defaults.searchAddress,
+            speechAddress: defaults.speechAddress,
+            imageAddress: defaults.imageAddress,
+            defaultModelID: defaults.modelName.isEmpty ? nil : ChatModel.ID(defaults.modelName)
         )
     }
 
@@ -87,7 +103,8 @@ public struct AppDependencies {
             stores: stores,
             provider: .live(),
             isBusy: { hooks.isBusy($0) },
-            didApplyRemote: { hooks.didApplyRemote($0) }
+            didApplyRemote: { hooks.didApplyRemote($0) },
+            didReceiveTaskResults: { hooks.didReceiveTaskResults($0) }
         )
         let scheduler = SyncScheduler(store: stores.sync, interactor: sync)
         let syncStore = stores.sync
@@ -98,7 +115,18 @@ public struct AppDependencies {
         stores.conversations.onLocalChange = record
         stores.projects.onLocalChange = record
         stores.memories.onLocalChange = record
+        stores.tasks.onLocalChange = record
         return (sync, scheduler)
+    }
+
+    /// Lets go of this device's copy of the tasks once sync has been forgotten, as erasing does. They live on the hub,
+    /// which keeps running them; a copy that cannot be removed is read again from the hub when sync is next set up.
+    private static func forgetTasks(_ store: TaskStore) async {
+        do {
+            try await store.deleteAll()
+        } catch {
+            Logger(for: AppDependencies.self).error("Removing the scheduled tasks failed: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     // MARK: Simulator stand-ins

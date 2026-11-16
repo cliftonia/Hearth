@@ -120,6 +120,7 @@ final class SyncDevice {
     let conversationFiles = Box<[Conversation.ID: Conversation]>([:])
     let projectFiles = Box<[Project.ID: Project]>([:])
     let memoryFile = Box<[Memory]>([])
+    let taskFiles = Box<[ScheduledTask.ID: ScheduledTask]>([:])
     let journalFile = Box<Data?>(nil)
     let token = Box<String?>(nil)
     /// The hub this device talks to; it can be swapped, as for a hub started afresh.
@@ -129,10 +130,13 @@ final class SyncDevice {
     var busy: Set<Conversation.ID> = []
     private(set) var appliedRemotely: [Set<SyncItemKey>] = []
     private(set) var reported: [SyncLocalChangeKind] = []
+    /// The chats each sync reported as new answers to scheduled tasks.
+    private(set) var taskResults: [[Conversation.ID]] = []
 
     let conversations: ConversationStore
     let projects: ProjectStore
     let memories: MemoryStore
+    let tasks: TaskStore
     let sync: SyncStore
     private(set) var interactor: SyncInteractor!
 
@@ -154,6 +158,7 @@ final class SyncDevice {
             delete: { id in projectFiles.update { $0[id] = nil } }
         ), clock: { clock() })
         memories = MemoryStore(provider: MemoryDataProvider(load: { memoryFile.value }, save: { memoryFile.value = $0 }), clock: { clock() })
+        tasks = TaskStore(provider: Self.provider(for: taskFiles), clock: { clock() })
         sync = SyncStore(provider: SyncStoreProvider(
             loadSettings: { settings.value },
             saveSettings: { settings.value = $0 },
@@ -163,7 +168,7 @@ final class SyncDevice {
             writeToken: { token.value = $0 }
         ), clock: { clock() })
         clock = { [unowned self] in self.tick() }
-        let stores = SyncInteractor.Stores(conversations: conversations, projects: projects, memories: memories, sync: sync)
+        let stores = SyncInteractor.Stores(conversations: conversations, projects: projects, memories: memories, tasks: tasks, sync: sync)
         interactor = SyncInteractor(
             stores: stores,
             provider: SyncDataProvider(
@@ -172,7 +177,8 @@ final class SyncDevice {
                 put: { [hub = self.hub] in try await hub.value.provider.put($0, $1, $2, $3) }
             ),
             isBusy: { [unowned self] in self.busy.contains($0) },
-            didApplyRemote: { [unowned self] in self.appliedRemotely.append($0) }
+            didApplyRemote: { [unowned self] in self.appliedRemotely.append($0) },
+            didReceiveTaskResults: { [unowned self] in self.taskResults.append($0) }
         )
         let record: @MainActor (SyncLocalChangeKind) -> Void = { [unowned self] change in
             self.reported.append(change)
@@ -181,6 +187,16 @@ final class SyncDevice {
         conversations.onLocalChange = record
         projects.onLocalChange = record
         memories.onLocalChange = record
+        tasks.onLocalChange = record
+    }
+
+    /// Tasks kept in memory, in the box given.
+    private static func provider(for files: Box<[ScheduledTask.ID: ScheduledTask]>) -> TaskDataProvider {
+        TaskDataProvider(
+            loadAll: { Array(files.value.values) },
+            save: { task in files.update { $0[task.id] = task } },
+            delete: { id in files.update { $0[id] = nil } }
+        )
     }
 
     /// The clock's time, then a millisecond later for the next caller, so every stamp is distinct.

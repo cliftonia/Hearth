@@ -23,6 +23,8 @@ struct RootView: View {
             coordinator.router.isSceneActive = scenePhase == .active
             if scenePhase == .active {
                 coordinator.sceneDidBecomeActive()
+            } else if scenePhase == .background {
+                coordinator.sceneDidBecomeInactive()
             }
             let shouldPrompt = coordinator.lockPresenter.sceneChanged(to: scenePhase)
             coordinator.showLockWindow(colorScheme: colorScheme)
@@ -39,7 +41,7 @@ struct RootView: View {
         .onChange(of: colorScheme) { coordinator.showLockWindow(colorScheme: colorScheme) }
         // Sheets are separate presentations, so each is given the chosen theme as well as the root.
         .sheet(isPresented: $router.isSettingsPresented) {
-            SettingsView(presenter: coordinator.settingsPresenter)
+            SettingsView(presenter: coordinator.settingsPresenter, tasksPresenter: coordinator.tasksPresenter)
                 .preferredColorScheme(colorScheme)
         }
         .sheet(item: $router.projectSheet) { sheet in

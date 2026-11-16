@@ -25,6 +25,20 @@ extension SettingsPresenter {
         await refreshNotificationPermissionAction()
     }
 
+    /// Keeps the Scheduled tasks switch as it now stands, asking for permission as the Replies switch does.
+    func taskNotificationsAction() async {
+        let isEnabled = viewModel.isTaskNotificationsEnabled
+        let settings = dependencies.settingsStore.settings
+        guard settings.isTaskNotificationsEnabled != isEnabled else {
+            return
+        }
+        keep(settings.updating(isTaskNotificationsEnabled: isEnabled))
+        if isEnabled, await dependencies.notifications.permission() == .notDetermined {
+            _ = await dependencies.notifications.requestPermission()
+        }
+        await refreshNotificationPermissionAction()
+    }
+
     /// Keeps the haptics switch as it now stands, so that the next tap already follows it.
     func hapticsAction() {
         let settings = dependencies.settingsStore.settings

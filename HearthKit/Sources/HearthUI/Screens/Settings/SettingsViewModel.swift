@@ -53,6 +53,8 @@ final class SettingsViewModel {
     var isHapticsEnabled = true
     /// Whether a reply that finishes off screen is announced. Takes effect as it is switched.
     var isReplyNotificationsEnabled = false
+    /// Whether the answer to a scheduled task that arrives off screen is announced. Takes effect as it is switched.
+    var isTaskNotificationsEnabled = false
 
     // MARK: Form state
 

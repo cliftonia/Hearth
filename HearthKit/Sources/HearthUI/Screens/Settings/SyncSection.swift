@@ -63,7 +63,7 @@ struct SyncPage: View {
                     .accessibilityLabel("\(Strings.syncStatus): \(presenter.syncStatusText)")
             }
         }
-        .onDisappear { presenter.syncAddressAction() }
+        .onDisappear { Task { await presenter.syncAddressAction() } }
     }
 
     /// The hub's address under a small caption, typed without autocorrection.
@@ -79,7 +79,7 @@ struct SyncPage: View {
                 .keyboardType(.URL)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .onSubmit { presenter.syncAddressAction() }
+                .onSubmit { Task { await presenter.syncAddressAction() } }
                 .accessibilityLabel(Strings.syncHubAddress)
         }
         .padding(.horizontal, HearthSpacing.s16)
@@ -98,10 +98,10 @@ struct SyncPage: View {
                 .foregroundStyle(HearthColor.ink)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .onSubmit { presenter.saveSyncTokenAction() }
+                .onSubmit { Task { await presenter.saveSyncTokenAction() } }
                 .accessibilityLabel(Strings.syncToken)
             HStack(spacing: HearthSpacing.s16) {
-                Button(Strings.syncSaveToken, action: presenter.saveSyncTokenAction)
+                Button(Strings.syncSaveToken) { Task { await presenter.saveSyncTokenAction() } }
                     .disabled(text.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     .accessibilityLabel(Strings.syncSaveToken)
                 Button(Strings.syncRemoveToken, role: .destructive, action: presenter.removeSyncTokenAction)

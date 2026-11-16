@@ -20,6 +20,10 @@ enum PresenterFixtures {
         MemoryStore(provider: MemoryDataProvider(load: { [] }, save: { _ in }))
     }
 
+    static func taskStore(_ stored: [ScheduledTask] = []) -> TaskStore {
+        TaskStore(provider: TaskDataProvider(loadAll: { stored }, save: { _ in }, delete: { _ in }))
+    }
+
     static func profileStore() -> ProfileStore {
         ProfileStore(provider: ProfilePhotoProvider(load: { nil }, save: { _ in }, delete: {}))
     }

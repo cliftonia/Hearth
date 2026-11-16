@@ -5,7 +5,8 @@ import SwiftUI
 ///
 /// The app has one coordinator. Each presenter reports to it through a delegate protocol, which it conforms to in
 /// the extensions below; it answers by changing the `AppRouter` or by asking another presenter to act. What it does
-/// for projects is in `AppCoordinator+Projects`, and for the canvas in `AppCoordinator+Canvas`.
+/// for projects is in `AppCoordinator+Projects`, for the canvas in `AppCoordinator+Canvas`, and for scheduled tasks
+/// and background refresh in `AppCoordinator+Tasks`.
 @MainActor
 public final class AppCoordinator {
     let router: AppRouter
@@ -19,8 +20,11 @@ public final class AppCoordinator {
     let voicePresenter: VoicePresenter
     let lockPresenter: LockPresenter
     let canvasPresenter: CanvasPresenter
+    let tasksPresenter: ScheduledTasksPresenter
     /// Decides when to sync with the hub.
     let syncScheduler: SyncScheduler
+    let taskStore: TaskStore
+    let notifications: NotificationProvider
     /// A voice conversation asked for while locked, begun once the owner is in.
     private var isVoicePending = false
     private let lockWindowController = LockWindowController()
@@ -74,7 +78,8 @@ public final class AppCoordinator {
             },
             stopTurn: { await chatPresenter.stopAction() }
         ))
-        self.syncScheduler = dependencies.syncScheduler
+        self.tasksPresenter = Self.makeTasksPresenter(dependencies: dependencies)
+        (syncScheduler, taskStore, notifications) = (dependencies.syncScheduler, dependencies.taskStore, dependencies.notifications)
         connect(dependencies)
     }
 
@@ -98,12 +103,27 @@ public final class AppCoordinator {
             }
             Task { await chatPresenter.conversationsChangedRemotely(ids) }
         }
-        chatPresenter.onStoresLoaded = { scheduler.appDidLoad() }
+        dependencies.syncHooks.didReceiveTaskResults = { [weak self] ids in
+            Task { await self?.announceTaskResults(ids) }
+        }
+        chatPresenter.onStoresLoaded = { [weak self] in
+            Task {
+                // Tasks are read before the first sync, so that what arrives is weighed against them.
+                await self?.loadTasks()
+                scheduler.appDidLoad()
+            }
+        }
     }
 
-    /// The app has come to the front: sync, if sync is on.
+    /// The app has come to the front: sync, if sync is on, and keep syncing while it stays.
     func sceneDidBecomeActive() {
         syncScheduler.appBecameActive()
+    }
+
+    /// The app has left the front: the regular syncs stop, and a background refresh is asked for.
+    func sceneDidBecomeInactive() {
+        syncScheduler.appBecameInactive()
+        BackgroundRefresh.schedule()
     }
 
     private static func makeSettingsPresenter(dependencies: AppDependencies, chatPresenter: ChatPresenter) -> SettingsPresenter {
@@ -127,7 +147,8 @@ public final class AppCoordinator {
             sync: SettingsPresenter.SyncControls(
                 store: dependencies.syncStore,
                 syncNow: { await dependencies.syncScheduler.syncNow() },
-                check: { url, token in await dependencies.sync.check(url, token: token) }
+                check: { url, token in await dependencies.sync.check(url, token: token) },
+                settingsChanged: { dependencies.syncScheduler.settingsChanged() }
             )
         ))
     }

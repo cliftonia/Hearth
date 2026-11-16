@@ -79,6 +79,12 @@ targets:
         HearthDefaultHubAddress: $(HEARTH_HUB_ADDRESS)
         HearthDefaultModel: $(HEARTH_DEFAULT_MODEL)
         HearthAppGroup: $(HEARTH_APP_GROUP)
+        # A background refresh runs one sync now and then, so that the answers to scheduled tasks arrive while the
+        # app is away (BackgroundRefresh in HearthUI). The identifier is the bundle identifier with `.sync` after it.
+        UIBackgroundModes:
+          - fetch
+        BGTaskSchedulerPermittedIdentifiers:
+          - $(HEARTH_BUNDLE_ID).sync
   # Home screen and lock screen shortcuts to a new chat and to a voice conversation.
   HearthWidgets:
     type: app-extension

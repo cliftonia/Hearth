@@ -8,7 +8,10 @@ public typealias ConversationDataProvider = SavedItemDataProvider<Conversation>
 /// How the domain reads and writes saved projects.
 public typealias ProjectDataProvider = SavedItemDataProvider<Project>
 
-/// How the domain reads and writes one kind of thing kept on the device: conversations or projects.
+/// How the domain reads and writes saved scheduled tasks.
+public typealias TaskDataProvider = SavedItemDataProvider<ScheduledTask>
+
+/// How the domain reads and writes one kind of thing kept on the device: conversations, projects or tasks.
 public struct SavedItemDataProvider<Item: Identifiable & Codable & Sendable>: Sendable where Item.ID: Sendable {
     public let loadAll: @Sendable () async throws -> [Item]
     public let save: @Sendable (Item) async throws -> Void
@@ -39,6 +42,13 @@ public extension SavedItemDataProvider where Item == Conversation {
 public extension SavedItemDataProvider where Item == Project {
     /// Projects kept as one JSON file each, in a folder of their own, on the device only.
     static func live(service: FileStoreService = FileStoreService(directoryName: "Projects")) -> ProjectDataProvider {
+        files(in: service)
+    }
+}
+
+public extension SavedItemDataProvider where Item == ScheduledTask {
+    /// Scheduled tasks kept as one JSON file each, in a folder of their own: this device's copy of what the hub holds.
+    static func live(service: FileStoreService = FileStoreService(directoryName: "Tasks")) -> TaskDataProvider {
         files(in: service)
     }
 }

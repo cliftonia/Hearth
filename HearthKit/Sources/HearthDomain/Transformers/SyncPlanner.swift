@@ -102,7 +102,7 @@ public struct SyncPlanner: Sendable {
 
     /// Everything to upload: each local item whose version is not the one the hub is known to hold, and each
     /// deletion not yet taken, leaving out anything being written. Projects go before chats, chats before
-    /// memories, and deletions last, a project's after the chats it let go.
+    /// memories, memories before tasks, and deletions last, a project's after the chats it let go.
     ///
     /// - Parameter local: When each local item last changed. Private chats must not be among them.
     public func pushes(local: [SyncItemKey: Date], journal: SyncJournal, busy: Set<SyncItemKey>) -> [PushEntry] {
@@ -119,7 +119,7 @@ public struct SyncPlanner: Sendable {
         return changed.sorted(by: Self.order) + deletions.sorted(by: Self.deletionOrder)
     }
 
-    /// Uploads in order: projects, then chats, then memories.
+    /// Uploads in order: projects, then chats, then memories, then tasks.
     private static func rank(_ kind: SyncItemKind) -> Int {
         switch kind {
         case .project:
@@ -128,18 +128,22 @@ public struct SyncPlanner: Sendable {
             1
         case .memory:
             2
+        case .task:
+            3
         }
     }
 
-    /// Deletions in order: chats, then memories, then projects, so a project goes after the chats it let go.
+    /// Deletions in order: chats, then memories, then tasks, then projects, so a project goes after the chats it let go.
     private static func deletionRank(_ kind: SyncItemKind) -> Int {
         switch kind {
         case .conversation:
             0
         case .memory:
             1
-        case .project:
+        case .task:
             2
+        case .project:
+            3
         }
     }
 

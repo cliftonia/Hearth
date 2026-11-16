@@ -69,6 +69,7 @@ final class SettingsPresenter {
         viewModel.nickname = settings.nickname
         viewModel.isHapticsEnabled = settings.isHapticsEnabled
         viewModel.isReplyNotificationsEnabled = settings.isReplyNotificationsEnabled
+        viewModel.isTaskNotificationsEnabled = settings.isTaskNotificationsEnabled
         viewModel.profileError = nil
         viewModel.voice = settings.voice
         viewModel.appearance = settings.appearance
@@ -246,7 +247,8 @@ final class SettingsPresenter {
             isPageReadingEnabled: viewModel.isPageReadingEnabled,
             isMemoryEnabled: viewModel.isMemoryEnabled,
             isHapticsEnabled: viewModel.isHapticsEnabled,
-            isReplyNotificationsEnabled: viewModel.isReplyNotificationsEnabled
+            isReplyNotificationsEnabled: viewModel.isReplyNotificationsEnabled,
+            isTaskNotificationsEnabled: viewModel.isTaskNotificationsEnabled
         )
     }
 }

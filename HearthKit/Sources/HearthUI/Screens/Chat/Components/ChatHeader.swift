@@ -2,7 +2,8 @@ import HearthDomain
 import SwiftUI
 
 /// The bar above the chat: the chat list at one end; at the other, the private switch until the chat begins, and
-/// from then on a new chat and the chat's own menu. Beneath it, for a chat in a project, the project's name.
+/// from then on a new chat and the chat's own menu. Beneath it, for a chat in a project, the project's name, and for
+/// a chat a scheduled task filed, a line saying so.
 ///
 /// The model is chosen from the composer, where the message it will answer is written.
 struct ChatHeader: View {
@@ -16,6 +17,7 @@ struct ChatHeader: View {
         VStack(spacing: 0) {
             bar(isWide: isWide)
             projectMark
+            taskMark
         }
     }
 
@@ -112,6 +114,23 @@ struct ChatHeader: View {
         .accessibilityLabel(Strings.chatInProject(name ?? ""))
         .accessibilityHidden(name == nil)
         .animation(.snappy, value: name)
+    }
+
+    /// Says that the hub filed this chat as the answer to a scheduled task. It takes no room for any other chat.
+    private var taskMark: some View {
+        let isShown = presenter.viewModel.conversation.taskID != nil
+        return Label(isShown ? Strings.scheduledTaskMark : "", systemImage: "clock")
+            .font(.hearth(.caption))
+            .foregroundStyle(HearthColor.mute)
+            .lineLimit(1)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, HearthSpacing.s16)
+            .padding(.bottom, isShown ? HearthSpacing.s4 : 0)
+            .opacity(isShown ? 1 : 0)
+            .frame(height: isShown ? nil : 0)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Strings.scheduledTaskMark)
+            .accessibilityHidden(!isShown)
     }
 
     /// A new chat, and the menu of what can be done with this one, side by side in one pill.

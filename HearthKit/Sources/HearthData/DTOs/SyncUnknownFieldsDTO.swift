@@ -116,6 +116,10 @@ public enum SyncWire {
     public static let conversationFields = Set(ConversationBodyDTO.CodingKeys.allCases.map(\.rawValue))
     public static let projectFields = Set(ProjectBodyDTO.CodingKeys.allCases.map(\.rawValue))
     public static let memoryFields = Set(MemoryBodyDTO.CodingKeys.allCases.map(\.rawValue))
+    public static let taskFields = Set(TaskBodyDTO.CodingKeys.allCases.map(\.rawValue))
+    /// The field a conversation filed by a scheduled task names its task by. Schema 1 does not define it, so it is
+    /// kept with the unknown fields as well as read.
+    public static let taskReferenceField = "taskId"
     static let messageFields = Set(MessageDTO.CodingKeys.allCases.map(\.rawValue))
     static let documentFields = Set(DocumentDTO.CodingKeys.allCases.map(\.rawValue))
 

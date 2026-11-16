@@ -27,6 +27,15 @@ struct SpecWireTests {
         var documentNames: [String]?
         var text: String?
         var isFromUser: Bool?
+        var model: String?
+        var scheduleKind: String?
+        var time: String?
+        var weekday: Int?
+        var timeZone: String?
+        var isEnabled: Bool?
+        var usesWebSearch: Bool?
+        var lastRunAt: Double?
+        var lastRunFailed: Bool?
         var unknownBodyFields: [String]?
         var unknownMessageFields: [String]?
         var unknownDocumentFields: [String]?
@@ -48,7 +57,8 @@ struct SpecWireTests {
 
     @Test func `every example is read as the hub hands it over`() throws {
         let files = try Self.files()
-        #expect(files.count >= 8)
+        #expect(files.count >= 10)
+        #expect(files.contains { $0.name == "task.json" } && files.contains { $0.name == "task-weekly-run.json" })
         for (name, file) in files {
             let change = try SyncWire.decode(SyncPutDTO.self, from: file.put)
             #expect(change.deleted == file.expect.deleted, "\(name)")
@@ -70,6 +80,8 @@ struct SpecWireTests {
                 #expect(memory.text == file.expect.text, "\(name)")
                 #expect(memory.isFromUser ?? false == file.expect.isFromUser, "\(name)")
                 checkUnknown(body, known: SyncWire.memoryFields, file.expect, name: name)
+            case "task":
+                try checkTask(body, file.expect, name: name)
             default:
                 Issue.record("\(name) is of a kind this app does not sync")
             }
@@ -86,6 +98,32 @@ struct SpecWireTests {
         #expect(conversation.projectId?.lowercased() == expect.projectId, "\(name)")
         #expect((conversation.messages ?? []).map { $0.id.lowercased() } == expect.messageIds, "\(name)")
         checkUnknown(body, known: SyncWire.conversationFields, expect, name: name)
+    }
+
+    private func checkTask(_ body: JSONValue, _ expect: Expectation, name: String) throws {
+        let task = try SyncWire.decode(TaskBodyDTO.self, from: body)
+        #expect(task.title ?? "" == expect.title, "\(name)")
+        #expect(task.model == expect.model, "\(name)")
+        #expect(task.schedule.kind == expect.scheduleKind, "\(name)")
+        #expect(task.schedule.time == expect.time, "\(name)")
+        #expect(task.schedule.weekday == expect.weekday, "\(name)")
+        #expect(task.schedule.timeZone == expect.timeZone, "\(name)")
+        #expect(task.isEnabled ?? true == expect.isEnabled, "\(name)")
+        #expect(task.usesWebSearch ?? false == expect.usesWebSearch, "\(name)")
+        #expect(task.lastRunAt == expect.lastRunAt, "\(name)")
+        #expect(task.lastRunFailed ?? false == expect.lastRunFailed, "\(name)")
+        checkUnknown(body, known: SyncWire.taskFields, expect, name: name)
+    }
+
+    @Test func `a task is written back with every field the hub reads, its last run as null before the first`() throws {
+        let files = Dictionary(uniqueKeysWithValues: try Self.files().map { ($0.name, $0.file) })
+        let body = try #require(files["task.json"]?.put.objectValue?["body"])
+        let task = try SyncWire.decode(TaskBodyDTO.self, from: body)
+
+        let written = try #require(try SyncWire.json(from: task).objectValue)
+
+        #expect(written == body.objectValue)
+        #expect(written["lastRunAt"] == .null)
     }
 
     private func checkUnknown(_ body: JSONValue, known: Set<String>, _ expect: Expectation, name: String) {

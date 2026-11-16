@@ -9,6 +9,8 @@ struct SidebarRowViewConfiguration: Hashable, Identifiable {
     let isPrivate: Bool
     /// Whether the chat belongs to a project that still exists.
     let isInProject: Bool
+    /// Whether the hub filed the chat as the answer to a scheduled task.
+    let isFromTask: Bool
 }
 
 /// One project, as a row: in the list above the chats, as the heading while its chats alone are shown, and in

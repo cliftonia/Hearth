@@ -3,40 +3,50 @@ import HearthCore
 import HearthDomain
 import os
 
-/// Decides when to sync: once the app has read its data, each time it comes back to the front, a few seconds after
-/// a change made here, and when the user asks. One sync runs at a time; asking during one runs one more after it.
+/// Decides when to sync: once the app has read its data, each time it comes back to the front, every minute while it
+/// stays there, a few seconds after a change made here, as soon as the hub's address, its token or the switch
+/// changes, during a background refresh, and when the user asks. One sync runs at a time; asking during one runs one
+/// more after it, except for the minute's pass, which is let go while another runs.
 ///
 /// A failure is only recorded in the `SyncStore` for the status line, never shown as an alert.
 @MainActor
 final class SyncScheduler {
+    /// How long the scheduler waits, and how it waits; tests pass waits they control.
+    struct Timing {
+        /// How long after a change made here the sync waits, so a burst of changes is sent together.
+        var debounce: Duration = .seconds(3)
+        /// How often a quiet pass runs while the app is in front, so another device's changes appear on their own.
+        var pollInterval: Duration = .seconds(60)
+        /// Waits out the debounce.
+        var sleep: @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
+        /// Waits until the next quiet pass is due.
+        var waitForPoll: @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
+    }
+
     private let store: SyncStore
     private let interactor: SyncInteractor
-    private let debounce: Duration
-    private let sleep: @Sendable (Duration) async throws -> Void
+    private let timing: Timing
     private let logger = Logger(for: SyncScheduler.self)
     private var runTask: Task<Void, Never>?
     private var debounceTask: Task<Void, Never>?
+    private var pollTask: Task<Void, Never>?
     private var wantsAnotherPass = false
+    /// Whether the app is in front of the user, which is when the quiet passes run.
+    private var isActive = false
     /// Whether the app has read its chats, projects and memories. Nothing is synced before, so that what arrives
     /// is never weighed against an empty list.
     private(set) var isReady = false
 
-    /// - Parameters:
-    ///   - debounce: How long after a change made here the sync waits, so a burst of changes is sent together.
-    ///   - sleep: Waits; tests pass one that returns at once.
-    init(
-        store: SyncStore,
-        interactor: SyncInteractor,
-        debounce: Duration = .seconds(3),
-        sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
-    ) {
+    init(store: SyncStore, interactor: SyncInteractor, timing: Timing = Timing()) {
         self.store = store
         self.interactor = interactor
-        self.debounce = debounce
-        self.sleep = sleep
+        self.timing = timing
     }
 
     private var isEnabled: Bool { store.settings.isEnabled && store.settings.hubURL != nil }
+
+    /// Whether the quiet passes are running, for tests.
+    var isPolling: Bool { pollTask != nil }
 
     /// The app has read its data: sync for the first time, if sync is on.
     func appDidLoad() {
@@ -44,12 +54,33 @@ final class SyncScheduler {
         appBecameActive()
     }
 
-    /// The app is back in front of the user.
+    /// The app is back in front of the user: sync now, then every minute while it stays.
     func appBecameActive() {
+        isActive = true
         guard isEnabled, isReady else {
             return
         }
         Task { await syncNow() }
+        startPolling()
+    }
+
+    /// The app has left the front: the quiet passes stop until it comes back. A sync under way is left to finish.
+    func appBecameInactive() {
+        isActive = false
+        stopPolling()
+    }
+
+    /// The hub's address, its token or the switch has changed: sync at once if sync is on, and start or stop the
+    /// quiet passes to match.
+    func settingsChanged() {
+        guard isEnabled, isReady else {
+            stopPolling()
+            return
+        }
+        Task { await syncNow() }
+        if isActive {
+            startPolling()
+        }
     }
 
     /// Something changed on this device. A sync follows a few seconds later, unless another change comes first.
@@ -58,11 +89,10 @@ final class SyncScheduler {
             return
         }
         debounceTask?.cancel()
-        let sleep = sleep
-        let debounce = debounce
+        let timing = timing
         debounceTask = Task { [weak self] in
             do {
-                try await sleep(debounce)
+                try await timing.sleep(timing.debounce)
             } catch {
                 return
             }
@@ -77,10 +107,25 @@ final class SyncScheduler {
         await run()
     }
 
+    /// One sync for a background refresh, which may come before the app has read anything: the data is read first
+    /// with `loadStores`, then one sync runs, and the journal is written before this returns.
+    func backgroundSync(loadStores: @MainActor () async -> Void) async {
+        guard isEnabled else {
+            return
+        }
+        if !isReady {
+            await loadStores()
+            isReady = true
+        }
+        await syncNow()
+        await store.flush()
+    }
+
     /// Stops any sync under way and any waiting to start, and waits for it to end.
     func stop() async {
         debounceTask?.cancel()
         debounceTask = nil
+        stopPolling()
         wantsAnotherPass = false
         runTask?.cancel()
         await runTask?.value
@@ -91,6 +136,38 @@ final class SyncScheduler {
         await stop()
         await store.reset()
     }
+
+    // MARK: Quiet passes
+
+    private func startPolling() {
+        guard pollTask == nil else {
+            return
+        }
+        let timing = timing
+        pollTask = Task { [weak self] in
+            while !Task.isCancelled {
+                do {
+                    try await timing.waitForPoll(timing.pollInterval)
+                } catch {
+                    return
+                }
+                guard let self, !Task.isCancelled, self.isActive, self.isEnabled else {
+                    return
+                }
+                // A pass already running brings in the same changes, so this one is let go rather than queued.
+                if self.runTask == nil {
+                    await self.run()
+                }
+            }
+        }
+    }
+
+    private func stopPolling() {
+        pollTask?.cancel()
+        pollTask = nil
+    }
+
+    // MARK: Running
 
     private func run() async {
         guard isEnabled, isReady else {

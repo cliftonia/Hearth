@@ -1,12 +1,13 @@
 import Foundation
 import HearthData
 
-/// The kinds of item that are kept in step between devices. Scheduled tasks are synced by the hub but not yet
-/// read by this app; private chats, settings and the profile are never synced.
+/// The kinds of item that are kept in step between devices. Private chats, settings and the profile are never synced.
 public enum SyncItemKind: String, Codable, Sendable, CaseIterable {
     case conversation
     case project
     case memory
+    /// A scheduled task, which the hub runs and writes back to.
+    case task
 }
 
 /// Names one synced item: its kind and its lowercase UUID.
@@ -29,6 +30,10 @@ public struct SyncItemKey: Hashable, Codable, Sendable {
 
     public static func memory(_ syncID: UUID) -> SyncItemKey {
         SyncItemKey(kind: .memory, id: syncID.uuidString)
+    }
+
+    public static func task(_ id: ScheduledTask.ID) -> SyncItemKey {
+        SyncItemKey(kind: .task, id: id.rawValue.uuidString)
     }
 
     /// The identifier as a UUID; `nil` if it is not one.

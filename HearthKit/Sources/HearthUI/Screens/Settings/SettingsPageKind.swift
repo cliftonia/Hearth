@@ -10,6 +10,7 @@ enum SettingsPageKind: Hashable {
     case memories
     case notifications
     case sync
+    case tasks
 }
 
 /// A row in the settings that opens a page: its own content, and a chevron at the end.

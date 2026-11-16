@@ -118,11 +118,20 @@ struct SidebarView: View {
         let hasProjectMark = row.isInProject && presenter.selectedProject == nil
         return Button(action: { presenter.selectAction(row.id) }, label: {
             HStack(spacing: HearthSpacing.s6) {
-                Text(row.title)
-                    .font(.hearth(.subheadline))
-                    .foregroundStyle(HearthColor.ink)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading, spacing: HearthSpacing.s2) {
+                    Text(row.title)
+                        .font(.hearth(.subheadline))
+                        .foregroundStyle(HearthColor.ink)
+                        .lineLimit(1)
+                    Label(row.isFromTask ? Strings.scheduledTaskMark : "", systemImage: "clock")
+                        .font(.hearth(.caption2))
+                        .foregroundStyle(HearthColor.mute)
+                        .lineLimit(1)
+                        .opacity(row.isFromTask ? 1 : 0)
+                        .frame(height: row.isFromTask ? nil : 0)
+                        .accessibilityHidden(true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 Image(systemName: "folder")
                     .font(.hearth(.caption2))
                     .foregroundStyle(HearthColor.mute)
@@ -184,9 +193,13 @@ struct SidebarView: View {
         })
     }
 
-    /// What VoiceOver adds after a chat's title: whether it is pinned, private, in a project, or several of these.
+    /// What VoiceOver adds after a chat's title: whether it is pinned, private, in a project, filed by a scheduled
+    /// task, or several of these.
     private static func spokenMarks(for row: SidebarRowViewConfiguration) -> String {
-        [row.isPinned ? Strings.pinned : "", row.isPrivate ? Strings.privateChat : "", row.isInProject ? Strings.inProject : ""]
+        [
+            row.isPinned ? Strings.pinned : "", row.isPrivate ? Strings.privateChat : "", row.isInProject ? Strings.inProject : "",
+            row.isFromTask ? Strings.scheduledTaskMark : ""
+        ]
             .filter { !$0.isEmpty }
             .joined(separator: ", ")
     }

@@ -8,6 +8,10 @@ public enum SyncMappingError: Error, Sendable, Equatable {
     case invalidIdentifier
     /// A message's role is not one this app knows.
     case unknownRole
+    /// A task's schedule is of a kind this app does not know, or is missing what its kind needs.
+    case invalidSchedule
+    /// A task names no model to run with.
+    case missingModel
 }
 
 // MARK: - From the wire
@@ -18,7 +22,8 @@ public extension Conversation {
     /// - Parameters:
     ///   - id: The item's identifier, from its envelope.
     ///   - modifiedAt: The envelope's `updatedAt`.
-    init(from dto: ConversationBodyDTO, id: Conversation.ID, modifiedAt: Date) throws {
+    ///   - taskID: The task the hub filed it for, read from the body's `taskId`, which schema 1 does not define.
+    init(from dto: ConversationBodyDTO, id: Conversation.ID, modifiedAt: Date, taskID: ScheduledTask.ID? = nil) throws {
         self.init(
             id: id,
             title: dto.title ?? "",
@@ -27,6 +32,7 @@ public extension Conversation {
             isPinned: dto.isPinned ?? false,
             isPrivate: false,
             projectID: dto.projectId.flatMap { UUID(uuidString: $0) }.map { Project.ID($0) },
+            taskID: taskID,
             createdAt: dto.createdAt,
             updatedAt: dto.lastActivityAt ?? dto.createdAt,
             modifiedAt: modifiedAt
@@ -89,7 +95,31 @@ public extension AttachedDocument {
     }
 }
 
+public extension ScheduledTask.ID {
+    /// The task a received conversation body names in its `taskId`; `nil` when it names none, or one that is not a
+    /// UUID, which no app makes.
+    init?(referencedBy body: JSONValue) {
+        guard let text = body.objectValue?[SyncWire.taskReferenceField]?.stringValue, let uuid = UUID(uuidString: text) else {
+            return nil
+        }
+        self.init(uuid)
+    }
+}
+
 // MARK: - To the wire
+
+public extension Conversation {
+    /// The body to sync, with the task it was filed for written back as `taskId`, so that it is not lost even when
+    /// the fields kept from the hub's copy have been forgotten.
+    func syncBody() throws -> JSONValue {
+        let written = try SyncWire.json(from: ConversationBodyDTO(from: self))
+        guard let taskID, var members = written.objectValue else {
+            return written
+        }
+        members[SyncWire.taskReferenceField] = .string(taskID.rawValue.uuidString.lowercased())
+        return .object(members)
+    }
+}
 
 public extension ConversationBodyDTO {
     init(from conversation: Conversation) {

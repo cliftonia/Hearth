@@ -11,6 +11,9 @@ extension SettingsPresenter {
         let syncNow: @MainActor () async -> Void
         /// Checks the hub at an address, with a token or none.
         let check: @MainActor (URL, String?) async -> SyncHubCheckKind
+        /// Tells whatever runs the syncs that the address, the token or the switch changed, so that it starts or
+        /// stops its regular passes to match.
+        let settingsChanged: @MainActor () -> Void
     }
 
     var syncStore: SyncStore { dependencies.sync.store }
@@ -26,38 +29,29 @@ extension SettingsPresenter {
         viewModel.syncCheck = .idle
     }
 
-    /// Keeps the address as typed. With no usable address, sync is turned off.
-    func syncAddressAction() {
-        let address = viewModel.syncAddress.trimmingCharacters(in: .whitespaces)
-        let isEnabled = viewModel.isSyncEnabled && SyncSettings(hubAddress: address).hubURL != nil
-        viewModel.isSyncEnabled = isEnabled
-        let settings = SyncSettings(hubAddress: address, isEnabled: isEnabled)
-        guard settings != syncStore.settings else {
-            return
+    /// Keeps the address as typed. A new address, or none, is synced with at once while sync is on.
+    func syncAddressAction() async {
+        if keepSyncSettings() {
+            await syncSettingsDidChange()
         }
-        syncStore.update(settings)
-        viewModel.syncCheck = .idle
     }
 
     /// Keeps the switch as it now stands, and syncs at once when it is turned on.
     func syncEnabledAction() async {
-        let wasEnabled = syncStore.settings.isEnabled
         // Keeping the address keeps the switch with it, or turns it back off when there is no address.
-        syncAddressAction()
-        if syncStore.settings.isEnabled, !wasEnabled {
-            await dependencies.sync.syncNow()
+        if keepSyncSettings() {
+            await syncSettingsDidChange()
         }
     }
 
-    /// Saves the typed token in the Keychain and empties the field. The typed address is kept first, so that the
-    /// token is saved for the hub it was typed for, and is not forgotten when that address is kept later.
-    func saveSyncTokenAction() {
-        let token = viewModel.syncTokenDraft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !token.isEmpty else {
-            return
+    /// Saves the typed token in the Keychain, empties the field, and syncs with it at once while sync is on. The typed
+    /// address is kept first, so that the token is saved for the hub it was typed for, and is not forgotten when that
+    /// address is kept later.
+    func saveSyncTokenAction() async {
+        keepSyncSettings()
+        if keepTypedToken() {
+            await syncSettingsDidChange()
         }
-        syncAddressAction()
-        keepToken(token)
     }
 
     /// Forgets the saved token.
@@ -66,15 +60,16 @@ extension SettingsPresenter {
     }
 
     func syncNowAction() async {
-        syncAddressAction()
-        saveSyncTokenAction()
+        keepSyncSettings()
+        keepTypedToken()
+        dependencies.sync.settingsChanged()
         await dependencies.sync.syncNow()
     }
 
     /// Checks that the hub at the typed address answers and lets this device in.
     func checkHubAction() async {
-        syncAddressAction()
-        saveSyncTokenAction()
+        keepSyncSettings()
+        keepTypedToken()
         guard let url = syncStore.settings.hubURL else {
             viewModel.syncCheck = .failed(message: Strings.syncFailedNotConfigured)
             return
@@ -123,13 +118,50 @@ extension SettingsPresenter {
         }
     }
 
-    private func keepToken(_ token: String?) {
+    /// Keeps the address and the switch as they stand in the form; with no usable address, sync is turned off.
+    /// Returns whether anything changed.
+    @discardableResult
+    private func keepSyncSettings() -> Bool {
+        let address = viewModel.syncAddress.trimmingCharacters(in: .whitespaces)
+        let isEnabled = viewModel.isSyncEnabled && SyncSettings(hubAddress: address).hubURL != nil
+        viewModel.isSyncEnabled = isEnabled
+        let settings = SyncSettings(hubAddress: address, isEnabled: isEnabled)
+        guard settings != syncStore.settings else {
+            return false
+        }
+        syncStore.update(settings)
+        viewModel.syncCheck = .idle
+        return true
+    }
+
+    /// Keeps the token typed in the form, if one was. Returns whether one was kept.
+    @discardableResult
+    private func keepTypedToken() -> Bool {
+        let token = viewModel.syncTokenDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !token.isEmpty else {
+            return false
+        }
+        return keepToken(token)
+    }
+
+    /// Starts or stops the regular passes to match the new settings, and syncs at once if sync is on.
+    private func syncSettingsDidChange() async {
+        dependencies.sync.settingsChanged()
+        if syncStore.settings.isEnabled {
+            await dependencies.sync.syncNow()
+        }
+    }
+
+    @discardableResult
+    private func keepToken(_ token: String?) -> Bool {
         do {
             try syncStore.setToken(token)
             viewModel.syncTokenDraft = ""
             viewModel.syncCheck = .idle
+            return true
         } catch {
             logger.error("Keeping the hub token failed")
+            return false
         }
     }
 }

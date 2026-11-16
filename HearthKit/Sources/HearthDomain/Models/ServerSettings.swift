@@ -55,6 +55,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
     public let isHapticsEnabled: Bool
     /// Whether a notification is posted when a reply or a picture finishes while the app is not on screen.
     public let isReplyNotificationsEnabled: Bool
+    /// Whether a notification is posted when sync brings in the answer to a scheduled task while the app is not on screen.
+    public let isTaskNotificationsEnabled: Bool
 
     public init(
         ollamaAddress: String = "",
@@ -75,7 +77,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         isPageReadingEnabled: Bool = true,
         isMemoryEnabled: Bool = true,
         isHapticsEnabled: Bool = true,
-        isReplyNotificationsEnabled: Bool = false
+        isReplyNotificationsEnabled: Bool = false,
+        isTaskNotificationsEnabled: Bool = false
     ) {
         self.ollamaAddress = ollamaAddress
         self.searchAddress = searchAddress
@@ -96,6 +99,7 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         self.isMemoryEnabled = isMemoryEnabled
         self.isHapticsEnabled = isHapticsEnabled
         self.isReplyNotificationsEnabled = isReplyNotificationsEnabled
+        self.isTaskNotificationsEnabled = isTaskNotificationsEnabled
     }
 
     /// Settings saved before a field existed are read with that field's default, so nothing saved is lost.
@@ -124,7 +128,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             isPageReadingEnabled: try container.decodeIfPresent(Bool.self, forKey: .isPageReadingEnabled) ?? true,
             isMemoryEnabled: try container.decodeIfPresent(Bool.self, forKey: .isMemoryEnabled) ?? true,
             isHapticsEnabled: try container.decodeIfPresent(Bool.self, forKey: .isHapticsEnabled) ?? true,
-            isReplyNotificationsEnabled: try container.decodeIfPresent(Bool.self, forKey: .isReplyNotificationsEnabled) ?? false
+            isReplyNotificationsEnabled: try container.decodeIfPresent(Bool.self, forKey: .isReplyNotificationsEnabled) ?? false,
+            isTaskNotificationsEnabled: try container.decodeIfPresent(Bool.self, forKey: .isTaskNotificationsEnabled) ?? false
         )
     }
 
@@ -150,7 +155,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
         thinkingLevel: ThinkingLevelKind? = nil,
         imageAddress: String? = nil,
         isHapticsEnabled: Bool? = nil,
-        isReplyNotificationsEnabled: Bool? = nil
+        isReplyNotificationsEnabled: Bool? = nil,
+        isTaskNotificationsEnabled: Bool? = nil
     ) -> ServerSettings {
         ServerSettings(
             ollamaAddress: ollamaAddress,
@@ -171,7 +177,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             isPageReadingEnabled: isPageReadingEnabled,
             isMemoryEnabled: isMemoryEnabled,
             isHapticsEnabled: isHapticsEnabled ?? self.isHapticsEnabled,
-            isReplyNotificationsEnabled: isReplyNotificationsEnabled ?? self.isReplyNotificationsEnabled
+            isReplyNotificationsEnabled: isReplyNotificationsEnabled ?? self.isReplyNotificationsEnabled,
+            isTaskNotificationsEnabled: isTaskNotificationsEnabled ?? self.isTaskNotificationsEnabled
         )
     }
 
@@ -196,7 +203,8 @@ public struct ServerSettings: Hashable, Codable, Sendable {
             isPageReadingEnabled: isPageReadingEnabled,
             isMemoryEnabled: isMemoryEnabled,
             isHapticsEnabled: isHapticsEnabled,
-            isReplyNotificationsEnabled: isReplyNotificationsEnabled
+            isReplyNotificationsEnabled: isReplyNotificationsEnabled,
+            isTaskNotificationsEnabled: isTaskNotificationsEnabled
         )
     }
 

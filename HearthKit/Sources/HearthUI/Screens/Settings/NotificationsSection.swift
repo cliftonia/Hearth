@@ -9,7 +9,7 @@ struct NotificationsSection: View {
     let openAction: (SettingsPageKind) -> Void
 
     var body: some View {
-        let isOn = presenter.viewModel.isReplyNotificationsEnabled
+        let isOn = presenter.viewModel.isReplyNotificationsEnabled || presenter.viewModel.isTaskNotificationsEnabled
         Section {
             SettingsLinkRow(action: { openAction(.notifications) }, label: {
                 HStack(spacing: HearthSpacing.s8) {
@@ -33,14 +33,17 @@ struct NotificationsPage: View {
     var body: some View {
         @Bindable var viewModel = presenter.viewModel
         // The system's refusal only matters while a switch is on.
-        let isDenied = viewModel.notificationPermission == .denied && viewModel.isReplyNotificationsEnabled
+        let isDenied = viewModel.notificationPermission == .denied && (viewModel.isReplyNotificationsEnabled || viewModel.isTaskNotificationsEnabled)
         SettingsPage(title: Strings.notifications) {
             SettingsCard(footer: Strings.notificationsFooter) {
                 SettingsSwitchRow(title: Strings.notifyReplies, detail: Strings.notifyRepliesDetail, isOn: $viewModel.isReplyNotificationsEnabled)
                     .onChange(of: viewModel.isReplyNotificationsEnabled) { Task { await presenter.replyNotificationsAction() } }
+                Hairline()
+                    .padding(.leading, HearthSpacing.s16)
+                SettingsSwitchRow(title: Strings.notifyTasks, detail: Strings.notifyTasksDetail, isOn: $viewModel.isTaskNotificationsEnabled)
+                    .onChange(of: viewModel.isTaskNotificationsEnabled) { Task { await presenter.taskNotificationsAction() } }
                 // A switch for each kind of notification still to come goes here, as a row of this card beneath a
-                // `Hairline`: scheduled tasks and finished research, once Hearth can do them. None is shown until
-                // it does something.
+                // `Hairline`: finished research, once Hearth can do it. None is shown until it does something.
             }
             deniedNotice
                 .opacity(isDenied ? 1 : 0)

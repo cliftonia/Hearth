@@ -24,6 +24,12 @@ struct HearthApp: App {
                     }
                 }
         }
+        #if !targetEnvironment(macCatalyst)
+        // Now and then the system wakes the app for one sync, which brings in what scheduled tasks have filed.
+        .backgroundTask(.appRefresh(BackgroundRefresh.identifier)) {
+            await Self.coordinator.backgroundRefreshAction()
+        }
+        #endif
     }
 
     @MainActor

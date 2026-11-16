@@ -15,6 +15,8 @@ struct SettingsPresenterTests {
         let syncStore = PresenterFixtures.syncStore()
         let notifications: NotificationsFixture
         private(set) var syncNowCount = 0
+        /// How often the scheduler was told that the sync settings changed.
+        private(set) var settingsChangedCount = 0
         /// What a hub check answers.
         var checkAnswer: SyncHubCheckKind = .reachable
         private(set) var didQuietChat = false
@@ -49,7 +51,8 @@ struct SettingsPresenterTests {
                 sync: SettingsPresenter.SyncControls(
                     store: syncStore,
                     syncNow: { self.syncNowCount += 1 },
-                    check: { _, _ in self.checkAnswer }
+                    check: { _, _ in self.checkAnswer },
+                    settingsChanged: { self.settingsChangedCount += 1 }
                 )
             ))
             subject.delegate = self
@@ -171,6 +174,19 @@ struct SettingsPresenterTests {
         await subject.removePhotoAction()
         #expect(subject.photoJPEG == nil)
         #expect(subject.viewModel.profileError == nil)
+    }
+
+    @Test func `the scheduled tasks switch is kept at once and asks for permission the first time`() async {
+        let fixture = Fixture()
+        let subject = fixture.makeTestSubject()
+        await subject.loadAction()
+
+        subject.viewModel.isTaskNotificationsEnabled = true
+        await subject.taskNotificationsAction()
+
+        #expect(fixture.settingsStore.settings.isTaskNotificationsEnabled)
+        #expect(!fixture.settingsStore.settings.isReplyNotificationsEnabled)
+        #expect(fixture.notifications.requestCount == 1)
     }
 }
 

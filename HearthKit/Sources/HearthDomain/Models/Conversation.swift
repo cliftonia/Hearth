@@ -223,6 +223,8 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
     public let isPrivate: Bool
     /// The project the conversation belongs to; `nil` when it is in none.
     public let projectID: Project.ID?
+    /// The scheduled task whose answer this is, for a chat the hub filed; `nil` for every other chat.
+    public let taskID: ScheduledTask.ID?
     public let createdAt: Date
     /// When the conversation was last active; the list is ordered by it.
     public let updatedAt: Date
@@ -238,6 +240,7 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
         isPinned: Bool = false,
         isPrivate: Bool = false,
         projectID: Project.ID? = nil,
+        taskID: ScheduledTask.ID? = nil,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
         modifiedAt: Date? = nil
@@ -249,6 +252,7 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
         self.isPinned = isPinned
         self.isPrivate = isPrivate
         self.projectID = projectID
+        self.taskID = taskID
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.modifiedAt = modifiedAt ?? SyncClock.flooredToMillisecond(max(updatedAt, createdAt))
@@ -267,6 +271,7 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
             isPinned: try container.decodeIfPresent(Bool.self, forKey: .isPinned) ?? false,
             isPrivate: try container.decodeIfPresent(Bool.self, forKey: .isPrivate) ?? false,
             projectID: try container.decodeIfPresent(Project.ID.self, forKey: .projectID),
+            taskID: try container.decodeIfPresent(ScheduledTask.ID.self, forKey: .taskID),
             createdAt: try container.decode(Date.self, forKey: .createdAt),
             updatedAt: try container.decode(Date.self, forKey: .updatedAt),
             modifiedAt: try container.decodeIfPresent(Date.self, forKey: .modifiedAt)
@@ -296,6 +301,7 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
             isPinned: isPinned ?? self.isPinned,
             isPrivate: isPrivate ?? self.isPrivate,
             projectID: projectID,
+            taskID: taskID,
             createdAt: createdAt,
             updatedAt: updatedAt ?? self.updatedAt,
             modifiedAt: modifiedAt
@@ -312,6 +318,7 @@ public struct Conversation: Identifiable, Hashable, Codable, Sendable {
             isPinned: isPinned,
             isPrivate: isPrivate,
             projectID: projectID,
+            taskID: taskID,
             createdAt: createdAt,
             updatedAt: updatedAt,
             modifiedAt: date

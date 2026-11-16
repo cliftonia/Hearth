@@ -64,7 +64,7 @@ struct SyncSettingsTests {
         await subject.loadAction()
 
         subject.viewModel.syncAddress = ""
-        subject.syncAddressAction()
+        await subject.syncAddressAction()
 
         #expect(fixture.syncStore.settings == SyncSettings())
     }
@@ -75,7 +75,7 @@ struct SyncSettingsTests {
         await subject.loadAction()
 
         subject.viewModel.syncTokenDraft = "  throwaway-value  "
-        subject.saveSyncTokenAction()
+        await subject.saveSyncTokenAction()
         #expect(fixture.syncStore.token() == "throwaway-value")
         #expect(fixture.syncStore.hasToken)
         #expect(subject.viewModel.syncTokenDraft.isEmpty)
@@ -94,14 +94,14 @@ struct SyncSettingsTests {
         await subject.loadAction()
 
         subject.viewModel.syncAddress = "http://other.local:8765"
-        subject.syncAddressAction()
+        await subject.syncAddressAction()
         #expect(fixture.syncStore.token() == nil)
         #expect(!fixture.syncStore.hasToken)
 
         subject.viewModel.syncAddress = "http://third.local:8765"
         subject.viewModel.syncTokenDraft = "for-the-third-hub"
-        subject.saveSyncTokenAction()
-        subject.syncAddressAction()
+        await subject.saveSyncTokenAction()
+        await subject.syncAddressAction()
         #expect(fixture.syncStore.settings.hubAddress == "http://third.local:8765")
         #expect(fixture.syncStore.token() == "for-the-third-hub")
         #expect(fixture.syncStore.hasToken)
@@ -134,5 +134,39 @@ struct SyncSettingsTests {
 
         fixture.syncStore.syncDidEnd(failure: .tooLarge(count: 2), finished: true)
         #expect(subject.syncStatusText == Strings.syncTooLarge(number: 2))
+    }
+
+    @Test func `a new address or a saved token is synced with at once while sync is on`() async {
+        let fixture = SettingsPresenterTests.Fixture()
+        fixture.syncStore.update(SyncSettings(hubAddress: "http://hub.local:8765", isEnabled: true))
+        let subject = fixture.makeTestSubject()
+        await subject.loadAction()
+
+        subject.viewModel.syncAddress = "http://other.local:8765"
+        await subject.syncAddressAction()
+        #expect(fixture.syncNowCount == 1)
+        #expect(fixture.settingsChangedCount == 1)
+
+        subject.viewModel.syncTokenDraft = "new-key"
+        await subject.saveSyncTokenAction()
+        #expect(fixture.syncNowCount == 2)
+
+        // Keeping what is already kept changes nothing and syncs nothing.
+        await subject.syncAddressAction()
+        #expect(fixture.syncNowCount == 2)
+    }
+
+    @Test func `turning sync off tells the scheduler, which stops its regular passes, and does not sync`() async {
+        let fixture = SettingsPresenterTests.Fixture()
+        fixture.syncStore.update(SyncSettings(hubAddress: "http://hub.local:8765", isEnabled: true))
+        let subject = fixture.makeTestSubject()
+        await subject.loadAction()
+
+        subject.viewModel.isSyncEnabled = false
+        await subject.syncEnabledAction()
+
+        #expect(!fixture.syncStore.settings.isEnabled)
+        #expect(fixture.settingsChangedCount == 1)
+        #expect(fixture.syncNowCount == 0)
     }
 }

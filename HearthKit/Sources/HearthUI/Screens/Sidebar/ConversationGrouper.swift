@@ -40,7 +40,8 @@ struct ConversationGrouper {
                     title: conversation.title.isEmpty ? Strings.newChat : conversation.title,
                     isPinned: conversation.isPinned,
                     isPrivate: conversation.isPrivate,
-                    isInProject: conversation.projectID.map(known.contains) ?? false
+                    isInProject: conversation.projectID.map(known.contains) ?? false,
+                    isFromTask: conversation.taskID != nil
                 )
             }
             return SidebarGroupViewConfiguration(id: kind, title: title(for: kind), rows: rows)

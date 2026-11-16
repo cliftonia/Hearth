@@ -56,6 +56,9 @@ extension SyncInteractor {
         for memory in stores.memories.memories {
             items[.memory(memory.syncID)] = memory.updatedAt
         }
+        for task in stores.tasks.tasks {
+            items[.task(task.id)] = task.updatedAt
+        }
         return items
     }
 
@@ -75,11 +78,13 @@ extension SyncInteractor {
             guard let conversation, !conversation.isPrivate else {
                 return nil
             }
-            written = try await Task.detached { try SyncWire.json(from: ConversationBodyDTO(from: conversation)) }.value
+            written = try await Task.detached { try conversation.syncBody() }.value
         case .project:
             written = try (uuid.flatMap { stores.projects.project(for: Project.ID($0)) }).map { try SyncWire.json(from: ProjectBodyDTO(from: $0)) }
         case .memory:
             written = try (stores.memories.memories.first { $0.syncID == uuid }).map { try SyncWire.json(from: MemoryBodyDTO(from: $0)) }
+        case .task:
+            written = try (uuid.flatMap { stores.tasks.task(for: ScheduledTask.ID($0)) }).map { try SyncWire.json(from: TaskBodyDTO(from: $0)) }
         }
         guard let written else {
             return nil
@@ -113,6 +118,8 @@ extension SyncInteractor {
             modifiedAt = stores.projects.project(for: Project.ID(uuid))?.updatedAt
         case .memory:
             modifiedAt = stores.memories.memories.first { $0.syncID == uuid }?.updatedAt
+        case .task:
+            modifiedAt = stores.tasks.task(for: ScheduledTask.ID(uuid))?.updatedAt
         }
         let stamp = modifiedAt.map { planner.localStamp(modifiedAt: $0, seen: journal.seen[key], installID: journal.installID) }
         return SyncPlanner.LocalState(stamp: stamp, tombstone: journal.tombstones[key], isBusy: isBusy)
@@ -164,6 +171,8 @@ extension SyncInteractor {
             try await stores.projects.deleteRemote(Project.ID(uuid))
         case .memory:
             try await stores.memories.deleteRemote(uuid)
+        case .task:
+            try await stores.tasks.deleteRemote(ScheduledTask.ID(uuid))
         }
     }
 
@@ -186,6 +195,8 @@ extension SyncInteractor {
             try await stores.projects.applyRemote(project)
         case .memory(let memory):
             try await stores.memories.applyRemote(memory)
+        case .task(let task):
+            try await stores.tasks.applyRemote(task)
         }
         let unknown = SyncUnknownFieldsDTO(from: body, known: ReceivedItem.knownFields(of: key.kind))
         stores.sync.updateJournal { journal in
@@ -202,18 +213,22 @@ private enum ReceivedItem: Sendable {
     case conversation(Conversation)
     case project(Project)
     case memory(Memory)
+    case task(ScheduledTask)
 
     init(kind: SyncItemKind, uuid: UUID, body: JSONValue, updatedAt: Date) throws {
         switch kind {
         case .conversation:
             let dto = try SyncWire.decode(ConversationBodyDTO.self, from: body)
-            self = .conversation(try Conversation(from: dto, id: Conversation.ID(uuid), modifiedAt: updatedAt))
+            let taskID = ScheduledTask.ID(referencedBy: body)
+            self = .conversation(try Conversation(from: dto, id: Conversation.ID(uuid), modifiedAt: updatedAt, taskID: taskID))
         case .project:
             self = .project(Project(from: try SyncWire.decode(ProjectBodyDTO.self, from: body), id: Project.ID(uuid), updatedAt: updatedAt))
         case .memory:
             // The handle is the store's to give; this one is a stand-in.
             let dto = try SyncWire.decode(MemoryBodyDTO.self, from: body)
             self = .memory(Memory(from: dto, handle: Memory.ID(""), syncID: uuid, updatedAt: updatedAt))
+        case .task:
+            self = .task(try ScheduledTask(from: try SyncWire.decode(TaskBodyDTO.self, from: body), id: ScheduledTask.ID(uuid), updatedAt: updatedAt))
         }
     }
 
@@ -225,6 +240,8 @@ private enum ReceivedItem: Sendable {
             SyncWire.projectFields
         case .memory:
             SyncWire.memoryFields
+        case .task:
+            SyncWire.taskFields
         }
     }
 }

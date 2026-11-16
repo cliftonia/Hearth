@@ -34,7 +34,7 @@ The pattern is MVVMP+C: Model, View, ViewModel, Presenter and Coordinator.
 | **ViewConfiguration** | An immutable `Hashable` struct of display-ready values for one component. | `ErrorViewConfiguration`, `SidebarRowViewConfiguration` |
 | **Presenter** | A `@MainActor` class that owns the ViewModel, handles the View's actions, catches errors, and asks the coordinator for navigation through a weak delegate. | `ChatPresenter` |
 | **Coordinator** | `AppCoordinator`. Builds every Presenter, conforms to their delegate protocols in extensions, and changes the `AppRouter`. | `AppCoordinator` |
-| **Store** | An `@Observable`, `@MainActor` class of state shared by more than one screen, with `private(set)` properties and methods that change them. | `SettingsStore`, `ConversationStore`, `ProjectStore`, `MemoryStore`, `ProfileStore`, `ModelStore` |
+| **Store** | An `@Observable`, `@MainActor` class of state shared by more than one screen, with `private(set)` properties and methods that change them. | `SettingsStore`, `ConversationStore`, `ProjectStore`, `MemoryStore`, `TaskStore`, `ProfileStore`, `ModelStore` |
 | **Interactor** | A concrete `Sendable` class that carries out a piece of business logic through the providers it is given. | `ChatInteractor`, `ResearchInteractor`, `SpeechInteractor`, `ProjectInteractor`, `EraseInteractor` |
 | **DataProvider** | A struct of `@Sendable` closures, a "protocol witness", with a `.live()` version that calls the services. Tests pass their own closures. Conversations and projects share one generic `SavedItemDataProvider`, named for each by a typealias. | `ChatDataProvider`, `ProjectDataProvider`, `DictationProvider`, `CameraProvider`, `NotificationProvider` |
 | **Transformer** | Pure logic from one value to another, with no state beyond what it is fed. | `MarkdownTransformer`, `PromptBuilder`, `SentenceChunker`, `ReplyNotificationPlanner`, `ResearchSourceSelector`, `CanvasExtractor` |
@@ -100,6 +100,8 @@ HearthKit/Sources/HearthUI/
     Settings/                   SettingsView, SettingsPresenter (+Profile, +Notifications, +Sync), SettingsViewModel,
                                 SettingsPageKind (the pushed pages), and its sections and pages: ProfileSection, MemorySection,
                                 NotificationsSection, PictureSettingsSection, SyncSection, SettingsCard
+    Tasks/                      ScheduledTasksView (the row in the settings and the page), ScheduledTaskEditorView,
+                                ScheduledTasksPresenter, ScheduledTasksViewModel, TaskScheduleFormatter
     Voice/                      VoiceView, VoicePresenter (+Camera), VoiceViewModel, VoiceOrb, VoiceControls, and the
                                 camera's card: VoiceCameraCard, CameraPreviewSurface, VoiceCameraLayout
     Canvas/                     CanvasView, CanvasPresenter, CanvasViewModel, CanvasCodeSection, CanvasWebPreview (the
@@ -113,8 +115,9 @@ HearthKit/Sources/HearthUI/
   Extensions/                   How domain values are named and shown: AppearanceKind, CanvasKind, EffortChoiceKind,
                                 ImageModelKind, ThinkingLevelKind
   Localization/                 Every user-facing string: Strings.swift and its Strings+Topic.swift extensions
-  Platform/                     Thin wrappers over the system: the keyboard, background time, and SharedInbox (what the
-                                share extension left in the app group)
+  Platform/                     Thin wrappers over the system: the keyboard, background time, BackgroundRefresh (asking
+                                the system to wake the app for a sync), and SharedInbox (what the share extension left in
+                                the app group)
   Resources/                    Localizable.xcstrings
 
 HearthKit/Sources/HearthDomain/
@@ -301,7 +304,7 @@ sent to the model; a piece is read out of the saved text of its reply each time 
 
 ## Sync
 
-Sync keeps ordinary chats, projects and memories in step between devices through Hearth Hub, a small server of the
+Sync keeps ordinary chats, projects, memories and scheduled tasks in step between devices through Hearth Hub, a small server of the
 user's own in a separate repository. The format on the wire, the conflict rule and what a client must do are
 written down in the hub's `docs/WIRE_FORMAT.md`; this section says how this app does it.
 
@@ -345,13 +348,63 @@ written down in the hub's `docs/WIRE_FORMAT.md`; this section says how this app 
   such a chat is neither replaced nor sent, and the cursor stays before its change so the next sync weighs it again.
   The reply's save at the end is a change like any other and triggers a sync. When another device changes the open
   chat, `conversationsChangedRemotely` shows the new copy, or a new chat if it was deleted.
-- **When.** `SyncScheduler` syncs only once the chat has read the stores (`ChatPresenter.onStoresLoaded`), then each
-  time the app comes to the front, a few seconds after a change, and on "Sync now"; one at a time, a request during
-  a sync running one more after it. A failure only sets `SyncStore.failure` for the status line.
+- **When.** `SyncScheduler` syncs only once the chat has read the stores (`ChatPresenter.onStoresLoaded`, after which
+  the coordinator reads the tasks), then each time the app comes to the front, a few seconds after a change, and on
+  "Sync now"; one at a time, a request during a sync running one more after it. While the app stays in front it runs
+  a quiet pass every 60 seconds, so another device's changes appear without reopening it; the passes stop when the
+  app goes to the background (`RootView` tells the coordinator) or sync is turned off, and a pass that falls due
+  while another runs is let go rather than queued. Saving a token, turning sync on or changing the address syncs at
+  once (`SettingsPresenter+Sync`, through `SyncControls.settingsChanged`, which also starts or stops the passes).
+  The waits are `SyncScheduler.Timing`, which the tests replace. A failure only sets `SyncStore.failure` for the
+  status line.
+- **In the background** (iPhone and iPad), `BackgroundRefresh` asks for a `BGAppRefreshTask` whenever the app goes to
+  the background and at the end of each refresh, no sooner than 15 minutes on. Its identifier is the bundle
+  identifier with `.sync` after it, listed under `BGTaskSchedulerPermittedIdentifiers` in `project.yml` with the
+  `fetch` background mode; `HearthApp` runs it with SwiftUI's `.backgroundTask(.appRefresh)`.
+  `AppCoordinator.backgroundRefreshAction` reads the stores if the app has not yet (never asking the chat server for
+  its models) and runs one sync through `SyncScheduler.backgroundSync`, which writes the journal before returning.
+  The Mac keeps the app running anyway, so on Mac Catalyst none of this is built.
 - **Never synced:** private chats, not even as a tombstone; the settings; any address; the profile and its photo;
   the token. The logs hold counts and kinds of failure, never a title, a message, an address or the token.
 - **Erasing** stops any sync, turns sync off and forgets the address, the token and the journal
   (`SyncScheduler.stopAndReset`) before anything is deleted, and deletes nothing on the hub.
+
+## Scheduled tasks
+
+A task is a question the hub puts to a cloud model on a schedule; the hub files each answer as a new chat in the
+user's account, which reaches every device through sync. The app only makes, changes and deletes tasks and shows what
+they filed. The body is the hub's (`WIRE_FORMAT.md`, section 7; `Spec/wire/task*.json`).
+
+- **The model.** `ScheduledTask` (a `Tagged` UUID, title, prompt, model, `TaskSchedule`, on or off, web search, and
+  what the hub writes: `lastRunAt` and `lastRunFailed`). `TaskSchedule` is `.daily(time, timeZone:)`,
+  `.weekly(time, weekday:, timeZone:)` with 1 for Monday, or `.once(Date)`; a time is a `TaskTimeOfDay`, `HH:MM` on
+  the wire. A schedule is saved in the device's current time zone. `ScheduledTask+DTO` maps it to `TaskBodyDTO`, whose
+  `lastRunAt` is written as `null` before the first run; a schedule of a kind this app does not know fails the
+  mapping, so the item is passed over like any unreadable body.
+- **Cloud only, or Automatic.** The first choice, and the one a new task starts with, is Automatic, written as the
+  model `auto` (`ScheduledTask.automaticModelID`): the hub asks Kimi in the cloud, then a model of its own
+  if the graphics card is free. After it, `ScheduledTask.cloudModels` keeps the server's models whose name ends in
+  `:cloud` or `-cloud`, in any case; the editor says when there are no others, and keeps an existing task's model
+  even if the server no longer lists it. The list and the editor show `auto` as "Automatic".
+- **Kept and synced** like projects: `TaskStore` through `TaskDataProvider` (a `SavedItemDataProvider`, one file each
+  in a `Tasks` folder), stamped with `SyncClock`, reporting `onLocalChange`, with `applyRemote` and `deleteRemote` for
+  the hub's changes. Sync kind `task`, pushed after memories. The hub's runner writes back with `updatedBy: "hub"`
+  and a later stamp, so its run is taken by the ordinary stamp rule; a change here after it keeps `lastRunAt`, and
+  unknown fields are given back as for every kind. Erasing the device lets the local copy go after sync is forgotten;
+  the hub keeps running the tasks.
+- **Needs sync.** `ScheduledTasksPresenter.isSyncOn`: without it the page explains that tasks run on the hub, leads to
+  the sync page through the settings' own navigation, and Add is disabled.
+- **On screen.** Settings → Scheduled tasks lists each task with `TaskScheduleFormatter`'s words ("Every day at 7:30",
+  "Every Friday at 18:00", "Once, 20 Nov at 9:00"; 12-hour where the language uses it) and its last run ("Ran today
+  at 7:30", "Last run failed", "Not run yet"), with a switch; a tap opens `ScheduledTaskEditorView` as a sheet.
+- **What they file.** A chat the hub filed carries `taskId`, which schema 1 does not define: it stays among the
+  unknown fields (and so in the shared vectors) and is also read into `Conversation.taskID` and written back by
+  `Conversation.syncBody()`. The chat list row and the chat header show "Scheduled task".
+- **Announcing an answer.** `SyncInteractor` reports, through `didReceiveTaskResults`, the chats with a `taskID` that
+  a pull brought in new to this device, except during a pull from the start (a first sync, or a hub started afresh),
+  which would bring in every answer ever filed. `TaskResultNotificationPlanner` posts at most three, only with the
+  Scheduled tasks switch on and the app not in front: the chat's title and the first 100 characters of the answer.
+  A tap opens the chat as a reply notification does.
 
 ## Settings, the profile and erasing
 
@@ -434,6 +487,7 @@ them and reports taps, and the domain reaches it through `NotificationProvider`,
 - **Permission** is asked for the first time the switch is turned on. If the system refuses, the switch stays
   on and the page says where to allow it.
 - **A tap** opens the chat: the coordinator listens to `NotificationProvider.taps` for as long as the app runs.
+- **Scheduled tasks** have their own switch, for answers the hub filed that sync brings in (see "Scheduled tasks").
 - **A new kind of notification** gets a switch only once it does something. Its row goes in the card on
   `NotificationsPage`, where a comment marks the place.
 

@@ -7,6 +7,8 @@ import SwiftUI
 /// kept by Done; `SettingsPresenter` says which switches take effect at once.
 struct SettingsView: View {
     let presenter: SettingsPresenter
+    /// The scheduled tasks page, a screen of its own pushed from here.
+    let tasksPresenter: ScheduledTasksPresenter
 
     /// The pages pushed on from the settings, the last on top.
     @State private var path: [SettingsPageKind] = []
@@ -51,6 +53,7 @@ struct SettingsView: View {
                 MemorySection(presenter: presenter, openAction: openAction)
                 NotificationsSection(presenter: presenter, openAction: openAction)
                 SyncSection(presenter: presenter, openAction: openAction)
+                TasksSection(presenter: tasksPresenter, openAction: openAction)
                 Section {
                     Toggle(Strings.requireUnlock, isOn: $viewModel.isLockEnabled)
                         .onChange(of: viewModel.isLockEnabled) { Task { await presenter.lockAction() } }
@@ -118,6 +121,8 @@ struct SettingsView: View {
             NotificationsPage(presenter: presenter)
         case .sync:
             SyncPage(presenter: presenter)
+        case .tasks:
+            ScheduledTasksPage(presenter: tasksPresenter, openAction: openAction)
         }
     }
 

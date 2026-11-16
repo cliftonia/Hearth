@@ -95,8 +95,13 @@ and your conversations stay on the device.
   on top of your own, and can draw on its reference files (PDFs and text). File a chat from a long press or from
   its menu; deleting a project keeps its chats
 - **Lock** behind Face ID, Touch ID or the passcode; the lock covers the app switcher and every sheet
-- **Notifications** when a reply or a picture finishes while Hearth is not on screen, made on the device itself.
-  Tapping one opens its chat; a private chat's says only that a reply is ready
+- **Notifications** when a reply or a picture finishes while Hearth is not on screen, made on the device itself,
+  and, with their own switch, when the answer to a scheduled task arrives. Tapping one opens its chat; a private
+  chat's says only that a reply is ready
+- **Scheduled tasks** (Settings → Scheduled tasks, with sync on): write a question, pick a cloud model, choose every
+  day, every week on a given day, or once, and whether to search the web first. Your Hearth Hub asks it at that time
+  and files the answer as a new chat, marked "Scheduled task", which reaches every device through sync. The page
+  shows when each last ran, or that it failed, and a switch to pause it
 - **Erase all data on this device**: there are no accounts, so the profile page offers to erase the chats, projects,
   memories, profile and saved settings instead, leaving the app as it was when first opened. It wipes this device
   only and turns sync off; nothing is deleted from the hub or your other devices
@@ -105,8 +110,9 @@ and your conversations stay on the device.
   default): ordinary chats with their messages, reply versions, pictures, research reports and sources, pins and
   projects; projects with their instructions and files; and memories. Private chats, settings, server addresses, the
   profile and its photo, and the hub's access token never leave the device. It syncs when Hearth opens, when it comes
-  back to the front, a few seconds after a change, and on "Sync now"; a reply still being written is sent once it
-  has finished
+  back to the front, every minute while it stays there, a few seconds after a change, as soon as the hub's address,
+  its token or the switch changes, now and then in the background (iPhone and iPad), and on "Sync now"; a reply
+  still being written is sent once it has finished. Scheduled tasks sync too
 
 ### Look
 
