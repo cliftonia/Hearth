@@ -13,21 +13,17 @@ extension SidebarView {
         }
     }
 
-    /// The projects under their own heading, and the row that makes a new one. While searching, only the projects
-    /// whose names match are listed, and the heading and the new project row give way to the results.
+    /// The projects under their own heading, which is left out while there are none to list. While searching, only
+    /// the projects whose names match are listed. New projects are made from the composer's plus menu.
     @ViewBuilder private var projectList: some View {
         let projects = presenter.projects
-        let isSearching = presenter.isSearching
-        if !isSearching || !projects.isEmpty {
+        if !projects.isEmpty {
             heading(Strings.projects)
         }
         ForEach(projects) { project in
             projectRow(title: project.name, systemImage: "folder", tint: HearthColor.ink, symbolTint: HearthColor.mute) {
                 presenter.selectProjectAction(project.id)
             }
-        }
-        if !isSearching {
-            projectRow(title: Strings.newProject, systemImage: "plus", tint: HearthColor.mute, symbolTint: HearthColor.mute, action: presenter.newProjectAction)
         }
     }
 

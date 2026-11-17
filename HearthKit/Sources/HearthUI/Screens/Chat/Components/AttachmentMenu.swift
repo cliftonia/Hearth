@@ -3,7 +3,8 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 /// The plus button: photos from the library or the camera for models that can see, files for any model,
-/// the switch that makes the next message ask for a picture, and a scheduled task asking what is being written.
+/// the switch that makes the next message ask for a picture, a scheduled task asking what is being written, and a
+/// new project.
 struct AttachmentMenu: View {
     private static let maximumPhotoCount = 4
 
@@ -43,6 +44,10 @@ struct AttachmentMenu: View {
                 Label(Strings.scheduleTask, systemImage: "calendar.badge.clock")
             }
             .accessibilityLabel(Strings.scheduleTask)
+            Button(action: presenter.newProjectAction) {
+                Label(Strings.newProject, systemImage: "folder.badge.plus")
+            }
+            .accessibilityLabel(Strings.newProject)
         } label: {
             Image(systemName: "plus")
                 .font(.hearth(.footnote).weight(.semibold))
@@ -51,7 +56,7 @@ struct AttachmentMenu: View {
                 .capsuleOutline()
         }
         .accessibilityLabel(Strings.attach)
-        // Read top to bottom as written, with Schedule a task last, rather than turned around when the menu opens upwards.
+        // Read top to bottom as written, with New project last, rather than turned around when the menu opens upwards.
         .menuOrder(.fixed)
         .photosPicker(isPresented: $isPhotoPickerPresented, selection: $pickedItems, maxSelectionCount: Self.maximumPhotoCount, matching: .images)
         .onChange(of: pickedItems) {

@@ -18,7 +18,10 @@ public enum DictationError: Error, Sendable {
 /// Live speech-to-text from the microphone, using the phone's own recogniser.
 @MainActor
 public final class DictationService {
-    private var engine = AVAudioEngine()
+    /// Made at the first listen, once leave is given and the session records, then kept. On a Mac an engine whose
+    /// microphone was looked at before then offers no audio at all, and throwing an engine away can stall on the
+    /// system's audio server for long enough that the app is stopped, so one engine is made late and kept.
+    private var engine: AVAudioEngine?
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?
     private var continuation: AsyncStream<DictationUpdateDTO>.Continuation?
@@ -45,9 +48,8 @@ public final class DictationService {
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetoothHFP])
         try session.setActive(true, options: .notifyOthersOnDeactivation)
-        // A fresh engine each time, made once the session is recording: on a Mac, an engine whose microphone was
-        // looked at before then offers no audio at all.
-        engine = AVAudioEngine()
+        let engine = self.engine ?? AVAudioEngine()
+        self.engine = engine
 
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.shouldReportPartialResults = true
@@ -89,8 +91,10 @@ public final class DictationService {
             NotificationCenter.default.removeObserver(routeObserver)
         }
         routeObserver = nil
-        engine.stop()
-        engine.inputNode.removeTap(onBus: 0)
+        if let engine {
+            engine.stop()
+            engine.inputNode.removeTap(onBus: 0)
+        }
         request?.endAudio()
         task?.cancel()
         continuation?.finish()
@@ -116,7 +120,7 @@ public final class DictationService {
     /// The engine stops itself when the microphone changes. Listening carries on with the new one, feeding the same
     /// recognition, so what was already said is kept. If the new microphone cannot be used, listening ends.
     private func resumeAfterRouteChange() {
-        guard let request, let levelContinuation else {
+        guard let engine, let request, let levelContinuation else {
             return
         }
         engine.stop()

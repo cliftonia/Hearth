@@ -28,6 +28,11 @@ extension ChatPresenter {
         delegate?.chatPresenter(self, didRequestTaskWith: viewModel.draft)
     }
 
+    /// Asks for a new project, from the plus menu.
+    func newProjectAction() {
+        delegate?.chatPresenterDidRequestNewProject(self)
+    }
+
     /// Opens the rename alert with the chat's present title in its field.
     func renameChatAction() {
         viewModel.chatTitleDraft = viewModel.conversation.title

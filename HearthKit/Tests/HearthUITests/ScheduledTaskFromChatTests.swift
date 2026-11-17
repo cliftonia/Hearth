@@ -93,6 +93,7 @@ struct ChatScheduleTaskTests {
         func chatPresenterDidRequestSettings(_ presenter: ChatPresenter) {}
         func chatPresenter(_ presenter: ChatPresenter, didRequestProjectFor id: Conversation.ID) {}
         func chatPresenter(_ presenter: ChatPresenter, didRequestCanvasFor reference: CanvasReference) {}
+        func chatPresenterDidRequestNewProject(_ presenter: ChatPresenter) {}
 
         func chatPresenter(_ presenter: ChatPresenter, didRequestTaskWith prompt: String) {
             prompts.append(prompt)

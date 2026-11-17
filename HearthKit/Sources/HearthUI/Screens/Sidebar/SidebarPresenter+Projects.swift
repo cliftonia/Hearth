@@ -29,10 +29,6 @@ extension SidebarPresenter {
         viewModel.selectedProjectID = nil
     }
 
-    func newProjectAction() {
-        delegate?.sidebarPresenterDidRequestNewProject(self)
-    }
-
     /// Opens the settings of the project being looked at.
     func projectSettingsAction() {
         guard let id = selectedProject?.id else {

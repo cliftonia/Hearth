@@ -12,7 +12,6 @@ protocol SidebarPresenterDelegate: AnyObject {
     /// A new chat is wanted: in the given project, or in none.
     func sidebarPresenter(_ presenter: SidebarPresenter, didRequestNewChatIn projectID: Project.ID?)
     func sidebarPresenterDidRequestSettings(_ presenter: SidebarPresenter)
-    func sidebarPresenterDidRequestNewProject(_ presenter: SidebarPresenter)
     func sidebarPresenter(_ presenter: SidebarPresenter, didRequestEditing projectID: Project.ID)
     /// A project is to be chosen for the chat.
     func sidebarPresenter(_ presenter: SidebarPresenter, didRequestProjectFor id: Conversation.ID)

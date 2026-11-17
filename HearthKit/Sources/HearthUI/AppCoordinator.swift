@@ -245,6 +245,11 @@ public final class AppCoordinator {
 // MARK: - ChatPresenterDelegate
 
 extension AppCoordinator: ChatPresenterDelegate {
+    func chatPresenterDidRequestNewProject(_ presenter: ChatPresenter) {
+        projectPresenter.begin()
+        router.projectSheet = .editor
+    }
+
     /// A narrow screen opens the drawer; a wide one shows the chats beside the chat or puts them away.
     func chatPresenterDidRequestSidebar(_ presenter: ChatPresenter) {
         if router.isWide {
@@ -301,11 +306,6 @@ extension AppCoordinator: SidebarPresenterDelegate {
     func sidebarPresenter(_ presenter: SidebarPresenter, didRequestNewChatIn projectID: Project.ID?) {
         router.isSidebarOpen = false
         Task { await chatPresenter.newChatAction(in: projectID) }
-    }
-
-    func sidebarPresenterDidRequestNewProject(_ presenter: SidebarPresenter) {
-        projectPresenter.begin()
-        router.projectSheet = .editor
     }
 
     func sidebarPresenter(_ presenter: SidebarPresenter, didRequestEditing projectID: Project.ID) {

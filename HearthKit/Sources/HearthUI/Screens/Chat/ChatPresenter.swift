@@ -15,6 +15,8 @@ protocol ChatPresenterDelegate: AnyObject {
     func chatPresenter(_ presenter: ChatPresenter, didRequestCanvasFor reference: CanvasReference)
     /// A scheduled task is to be made, asking what is being written in the composer.
     func chatPresenter(_ presenter: ChatPresenter, didRequestTaskWith prompt: String)
+    /// A new project is to be made.
+    func chatPresenterDidRequestNewProject(_ presenter: ChatPresenter)
 }
 
 /// Runs the chat screen: sends messages, streams replies, and keeps the open conversation saved.
