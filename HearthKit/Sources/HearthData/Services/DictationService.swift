@@ -50,6 +50,8 @@ public final class DictationService {
         try session.setActive(true, options: .notifyOthersOnDeactivation)
         let engine = self.engine ?? AVAudioEngine()
         self.engine = engine
+        // After the microphone has changed, a reset makes the engine read the new one's format afresh.
+        engine.reset()
 
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.shouldReportPartialResults = true
@@ -124,6 +126,8 @@ public final class DictationService {
             return
         }
         engine.stop()
+        engine.inputNode.removeTap(onBus: 0)
+        engine.reset()
         guard Self.installTap(on: engine.inputNode, feeding: request, levels: levelContinuation) else {
             stop()
             return
@@ -148,14 +152,16 @@ private extension DictationService {
     }
 
     /// Feeds the microphone's audio to the recogniser, and reports how loud each piece of it is.
-    /// False when the microphone has no usable format.
+    /// False when the microphone has no usable format, or when the engine still holds the format of a microphone that
+    /// has gone: installing a tap then raises an Objective-C exception, which Swift cannot catch and which ends the app.
     nonisolated static func installTap(
         on node: AVAudioInputNode,
         feeding request: SFSpeechAudioBufferRecognitionRequest,
         levels: AsyncStream<Double>.Continuation
     ) -> Bool {
         let format = node.outputFormat(forBus: 0)
-        guard format.sampleRate > 0, format.channelCount > 0 else {
+        let hardware = node.inputFormat(forBus: 0)
+        guard format.sampleRate > 0, format.channelCount > 0, format.sampleRate == hardware.sampleRate else {
             return false
         }
         node.removeTap(onBus: 0)
