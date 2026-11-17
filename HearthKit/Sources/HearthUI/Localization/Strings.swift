@@ -278,7 +278,6 @@ extension Strings {
     static let newProjectEllipsis = String(localized: "project.newEllipsis", defaultValue: "New project…", bundle: .module)
     static let editProject = String(localized: "project.edit", defaultValue: "Edit project", bundle: .module)
     static let allChats = String(localized: "project.allChats", defaultValue: "All chats", bundle: .module)
-    static let newChatInProject = String(localized: "project.newChat", defaultValue: "New chat in project", bundle: .module)
     static let projectSettings = String(localized: "project.settings", defaultValue: "Project settings", bundle: .module)
     static let noProjectChats = String(localized: "project.noChats", defaultValue: "No chats in this project yet", bundle: .module)
     static let inProject = String(localized: "project.inProject", defaultValue: "In a project", bundle: .module)

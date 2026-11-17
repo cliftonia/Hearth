@@ -93,7 +93,7 @@ struct ChatResearchTests {
                 isLocked: { false },
                 isOnScreen: { true },
                 announce: { _ in },
-                isVoiceOverRunning: { false }
+                isVoiceOverRunning: { false }, isSyncOn: { false }
             ))
             subject.viewModel.selectedModel = Self.model
             return subject

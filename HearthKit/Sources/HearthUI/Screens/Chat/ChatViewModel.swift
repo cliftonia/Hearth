@@ -37,6 +37,8 @@ final class ChatViewModel {
     /// Whether the alert for renaming the open chat is showing, and the title being typed into it.
     var isRenamingChat = false
     var chatTitleDraft = ""
+    /// Whether the question that confirms deleting the open chat is showing.
+    var isConfirmingDeleteChat = false
     /// Whether what is sent asks for a picture, not for a reply from the chat model.
     var isPictureMode = false
     /// Whether deep research is chosen as the effort for this chat, so that what is sent is researched on the web.

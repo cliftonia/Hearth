@@ -16,6 +16,34 @@ extension CanvasKind {
         }
     }
 
+    /// What the canvas's Copy button is called for VoiceOver, so it is not mistaken for a reply's.
+    var copyLabel: String {
+        switch self {
+        case .html:
+            Strings.canvasCopyPage
+        case .svg:
+            Strings.canvasCopyDrawing
+        case .markdown:
+            Strings.canvasCopyDocument
+        case .code:
+            Strings.canvasCopyCode
+        }
+    }
+
+    /// What the canvas's Share button is called for VoiceOver.
+    var shareLabel: String {
+        switch self {
+        case .html:
+            Strings.canvasSharePage
+        case .svg:
+            Strings.canvasShareDrawing
+        case .markdown:
+            Strings.canvasShareDocument
+        case .code:
+            Strings.canvasShareCode
+        }
+    }
+
     var systemImage: String {
         switch self {
         case .html:

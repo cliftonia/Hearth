@@ -1,6 +1,17 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "share.added": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added to Hearth. It will be in the composer next time you open Hearth."
+          }
+        }
+      }
+    },
     "share.failed": {
       "extractionState": "manual",
       "localizations": {
@@ -8,17 +19,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hearth could not take that."
-          }
-        }
-      }
-    },
-    "share.saved": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Added. Open Hearth to carry on."
           }
         }
       }

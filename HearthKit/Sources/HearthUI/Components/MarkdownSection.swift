@@ -2,7 +2,7 @@ import HearthDomain
 import SwiftUI
 import UIKit
 
-/// A reply laid out from Markdown: headings, paragraphs, lists, quotes and code.
+/// A reply laid out from Markdown: headings, paragraphs, lists, quotes and code, its text open to selection.
 struct MarkdownSection: View {
     private static let quoteBarWidth: CGFloat = 3
     static let paragraphLineSpacing: CGFloat = 3
@@ -16,6 +16,8 @@ struct MarkdownSection: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        // Its words can be selected and copied, not only the whole reply at once. A link is still opened by a tap.
+        .textSelection(.enabled)
         // A reply is untrusted text: only links to web pages are opened when tapped.
         .environment(\.openURL, OpenURLAction { url in
             SearchSource.isWebLink(url) ? .systemAction : .discarded
@@ -71,8 +73,12 @@ struct MarkdownSection: View {
     }
 }
 
-/// A table that scrolls sideways when it is wider than the chat.
+/// A table that scrolls sideways when it is wider than the chat. Then its scroll bar shows, flashing as it appears,
+/// and its trailing edge fades, so that it is plain there is more to see.
 private struct TableSection: View {
+    /// How wide the fade is at the edge of a table that runs on past it.
+    private static let edgeFadeWidth: CGFloat = 28
+
     /// A cell and its column, so that `ForEach` can tell equal texts apart.
     private struct Cell: Identifiable {
         let id: Int
@@ -88,8 +94,12 @@ private struct TableSection: View {
     let header: [String]
     let rows: [[String]]
 
+    @State private var tableWidth: CGFloat = 0
+    @State private var visibleWidth: CGFloat = 0
+
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        let runsOn = tableWidth > visibleWidth + 1
+        ScrollView(.horizontal) {
             Grid(alignment: .leading, horizontalSpacing: HearthSpacing.s18, verticalSpacing: HearthSpacing.s8) {
                 GridRow {
                     ForEach(Self.cells(header)) { cell in
@@ -111,6 +121,17 @@ private struct TableSection: View {
                 }
             }
             .padding(HearthSpacing.s12)
+            .onGeometryChange(for: CGFloat.self, of: \.size.width) { tableWidth = $0 }
+        }
+        .scrollIndicators(runsOn ? .visible : .hidden)
+        .scrollIndicatorsFlash(trigger: runsOn)
+        .onGeometryChange(for: CGFloat.self, of: \.size.width) { visibleWidth = $0 }
+        .mask {
+            HStack(spacing: 0) {
+                Rectangle()
+                LinearGradient(colors: [HearthColor.ink, HearthColor.ink.opacity(0)], startPoint: .leading, endPoint: .trailing)
+                    .frame(width: runsOn ? Self.edgeFadeWidth : 0)
+            }
         }
         .cardSurface()
     }

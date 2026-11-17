@@ -1,69 +1,83 @@
 import HearthDomain
 import SwiftUI
 
-/// The sheet that makes or edits a scheduled task: its title and question, the cloud model, when it runs, whether
-/// the web is searched first, and, for one that exists, a way to delete it.
+/// The editor of a task begun from the chat, as a sheet of its own. From the settings the same form is pushed onto
+/// their own navigation instead.
 struct ScheduledTaskEditorView: View {
     let presenter: ScheduledTasksPresenter
 
     var body: some View {
-        @Bindable var viewModel = presenter.viewModel
         NavigationStack {
-            Form {
-                Section(Strings.taskTitle) {
-                    TextField(Strings.taskTitlePlaceholder, text: $viewModel.title)
-                        .font(.hearth(.body))
-                        .accessibilityLabel(Strings.taskTitle)
-                }
-                Section(Strings.taskPrompt) {
-                    TextField(Strings.taskPromptPlaceholder, text: $viewModel.prompt, axis: .vertical)
-                        .font(.hearth(.body))
-                        .lineLimit(3...10)
-                        .accessibilityLabel(Strings.taskPrompt)
-                }
-                modelSection(models: presenter.modelChoices, selection: $viewModel.modelID)
-                scheduleSection(viewModel: $viewModel)
-                Section {
-                    Toggle(isOn: $viewModel.usesWebSearch) {
-                        VStack(alignment: .leading, spacing: HearthSpacing.s2) {
-                            Text(Strings.taskWebSearch)
-                                .font(.hearth(.body))
-                            Text(Strings.taskWebSearchDetail)
-                                .font(.hearth(.footnote))
-                                .foregroundStyle(HearthColor.mute)
-                        }
-                    }
-                    .tint(HearthColor.pine)
-                    .accessibilityLabel(Strings.taskWebSearch)
-                }
-                // Only a task that exists can be deleted, so a new one has no such section at all.
-                if viewModel.isExisting {
-                    Section {
-                        Button(Strings.deleteTask, role: .destructive) { viewModel.isConfirmingDelete = true }
-                            .accessibilityLabel(Strings.deleteTask)
-                    }
-                }
+            ScheduledTaskEditorForm(presenter: presenter)
+        }
+        .tint(HearthColor.pine)
+    }
+}
+
+/// Makes or edits a scheduled task: its title and question, the cloud model, when it runs, whether the web is
+/// searched first, and, for one that exists, a way to delete it. Cancel and Done stand in the bar, so it is shown
+/// without a back button when pushed.
+struct ScheduledTaskEditorForm: View {
+    let presenter: ScheduledTasksPresenter
+
+    var body: some View {
+        @Bindable var viewModel = presenter.viewModel
+        Form {
+            Section(Strings.taskTitle) {
+                TextField(Strings.taskTitlePlaceholder, text: $viewModel.title)
+                    .font(.hearth(.body))
+                    .accessibilityLabel(Strings.taskTitle)
             }
-            .scrollContentBackground(.hidden)
-            .background(HearthColor.paper)
-            .navigationTitle(viewModel.isExisting ? Strings.editTask : Strings.newTask)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(Strings.cancel, action: presenter.cancelAction)
-                        .foregroundStyle(HearthColor.mute)
-                        .accessibilityLabel(Strings.cancel)
+            Section(Strings.taskPrompt) {
+                TextField(Strings.taskPromptPlaceholder, text: $viewModel.prompt, axis: .vertical)
+                    .font(.hearth(.body))
+                    .lineLimit(3...10)
+                    .accessibilityLabel(Strings.taskPrompt)
+            }
+            modelSection(models: presenter.modelChoices, selection: $viewModel.modelID)
+            scheduleSection(viewModel: $viewModel)
+            Section {
+                Toggle(isOn: $viewModel.usesWebSearch) {
+                    VStack(alignment: .leading, spacing: HearthSpacing.s2) {
+                        Text(Strings.taskWebSearch)
+                            .font(.hearth(.body))
+                        Text(Strings.taskWebSearchDetail)
+                            .font(.hearth(.footnote))
+                            .foregroundStyle(HearthColor.mute)
+                    }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(Strings.done) { Task { await presenter.saveAction() } }
-                        .fontWeight(.semibold)
-                        .foregroundStyle(viewModel.canSave ? HearthColor.pine : HearthColor.mute)
-                        .disabled(!viewModel.canSave)
-                        .accessibilityLabel(Strings.done)
+                .tint(HearthColor.pine)
+                .accessibilityLabel(Strings.taskWebSearch)
+            }
+            // Only a task that exists can be deleted, so a new one has no such section at all.
+            if viewModel.isExisting {
+                Section {
+                    Button(Strings.deleteTask, role: .destructive) { viewModel.isConfirmingDelete = true }
+                        .accessibilityLabel(Strings.deleteTask)
                 }
             }
         }
-        .tint(HearthColor.pine)
+        .scrollContentBackground(.hidden)
+        .background(HearthColor.paper)
+        .navigationTitle(viewModel.isExisting ? Strings.editTask : Strings.newTask)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(Strings.cancel, action: presenter.cancelAction)
+                    .foregroundStyle(HearthColor.mute)
+                    .accessibilityLabel(Strings.cancel)
+            }
+            ToolbarItem(placement: .confirmationAction) {
+                Button(Strings.done) { Task { await presenter.saveAction() } }
+                    .fontWeight(.semibold)
+                    .foregroundStyle(viewModel.canSave ? HearthColor.pine : HearthColor.mute)
+                    .disabled(!viewModel.canSave)
+                    .accessibilityLabel(Strings.done)
+            }
+        }
+        // Changes cannot be swiped away; Cancel asks before letting them go.
+        .interactiveDismissDisabled(presenter.hasEditorChanges)
+        .discardChangesDialog(isPresented: $viewModel.isConfirmingDiscard, discardAction: presenter.discardChangesAction)
         .confirmationDialog(Strings.deleteTaskQuestion, isPresented: $viewModel.isConfirmingDelete, titleVisibility: .visible) {
             Button(Strings.deleteTask, role: .destructive) {
                 Haptics.play(.warning)

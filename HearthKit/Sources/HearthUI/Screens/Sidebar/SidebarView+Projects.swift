@@ -27,7 +27,8 @@ extension SidebarView {
         }
     }
 
-    /// The way back to every chat, then the project's name beside the button for its settings, then a new chat in it.
+    /// The way back to every chat, then the project's name beside the button for its settings. A new chat in the
+    /// project is begun from the floating button, which names it.
     @ViewBuilder
     private func projectHeader(_ project: ProjectRowViewConfiguration) -> some View {
         projectRow(title: Strings.allChats, systemImage: "chevron.left", tint: HearthColor.mute, symbolTint: HearthColor.mute, action: presenter.allChatsAction)
@@ -40,20 +41,13 @@ extension SidebarView {
             Text(project.name)
                 .font(.hearth(.headline))
                 .foregroundStyle(HearthColor.ink)
-                .lineLimit(2)
+                .lineLimit(titleLineLimit + 1)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityAddTraits(.isHeader)
             IconButton(systemImage: "slider.horizontal.3", label: Strings.projectSettings, action: presenter.projectSettingsAction)
         }
         .padding(.leading, HearthSpacing.s18)
         .padding(.trailing, HearthSpacing.s8)
-        projectRow(
-            title: Strings.newChatInProject,
-            systemImage: "square.and.pencil",
-            tint: HearthColor.pine,
-            symbolTint: HearthColor.pine,
-            action: presenter.newChatAction
-        )
     }
 
     /// A row the height of a chat's, with a symbol before its words, each in its own colour.
@@ -63,17 +57,18 @@ extension SidebarView {
                 Image(systemName: systemImage)
                     .font(.hearth(.footnote))
                     .foregroundStyle(symbolTint)
-                    .frame(width: HearthSpacing.s20)
+                    .frame(width: rowSymbolWidth)
                     .accessibilityHidden(true)
                 Text(title)
                     .font(.hearth(.subheadline))
                     .foregroundStyle(tint)
-                    .lineLimit(1)
+                    .lineLimit(titleLineLimit)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.horizontal, HearthSpacing.s10)
             .padding(.vertical, Self.rowVerticalPadding)
             .contentShape(Rectangle())
+            .hoverHighlight(RoundedRectangle(cornerRadius: HearthRadius.row, style: .continuous))
         }
         .buttonStyle(.plain)
         .padding(.horizontal, HearthSpacing.s8)

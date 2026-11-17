@@ -2,6 +2,9 @@ import SwiftUI
 import UIKit
 
 /// The app's palette. Every colour follows the light or dark appearance, and views take their colours from here alone.
+///
+/// The colours that carry meaning in a quiet tone, the secondary text, the lines, pine, danger and the online dot, are
+/// drawn stronger when Increase Contrast is on.
 enum HearthColor {
     // MARK: Surfaces
 
@@ -12,7 +15,7 @@ enum HearthColor {
     /// The user's message bubble, and the selected chat in the list.
     static let bubble = Color(lightHex: 0xE6EBE5, darkHex: 0x232C29)
     /// Borders and dividers.
-    static let line = Color(lightHex: 0xDDE2DC, darkHex: 0x2A3330)
+    static let line = Color(lightHex: 0xDDE2DC, darkHex: 0x2A3330, highContrast: (light: 0x7A847D, dark: 0x6A7570))
     /// The veil drawn over the chat while the drawer is open; its opacity follows the drawer.
     static let scrim = Color.black
 
@@ -21,12 +24,12 @@ enum HearthColor {
     /// Body text and primary symbols.
     static let ink = Color(lightHex: 0x18211E, darkHex: 0xE9EEEA)
     /// Secondary text, placeholders and quiet symbols.
-    static let mute = Color(lightHex: 0x5F6A65, darkHex: 0x8B9691)
+    static let mute = Color(lightHex: 0x5F6A65, darkHex: 0x8B9691, highContrast: (light: 0x46504B, dark: 0xB4BEB9))
 
     // MARK: Accent
 
     /// The brand colour: the tint, primary buttons and anything switched on.
-    static let pine = Color(lightHex: 0x2C6B5A, darkHex: 0x6FC2A8)
+    static let pine = Color(lightHex: 0x2C6B5A, darkHex: 0x6FC2A8, highContrast: (light: 0x1E5446, dark: 0x95DCC5))
     /// The fill behind something switched on.
     static let pineSoft = Color(lightHex: 0xDCEAE4, darkHex: 0x1F3A32)
     /// Text and symbols drawn on pine.
@@ -35,14 +38,14 @@ enum HearthColor {
     // MARK: Status
 
     /// Errors, recording, and buttons that end or destroy something, drawn as text or a symbol on a surface.
-    static let danger = Color(lightHex: 0xB0472F, darkHex: 0xE0705A)
+    static let danger = Color(lightHex: 0xB0472F, darkHex: 0xE0705A, highContrast: (light: 0x8F3520, dark: 0xF29A87))
     /// The fill of a button that ends something, such as a voice conversation. Deeper than `danger` in the dark, so
     /// that `onDanger` reads on it.
-    static let dangerFill = Color(lightHex: 0xB0472F, darkHex: 0xB54E3A)
+    static let dangerFill = Color(lightHex: 0xB0472F, darkHex: 0xB54E3A, highContrast: (light: 0x8F3520, dark: 0x9A3F2D))
     /// Symbols drawn on `dangerFill`.
     static let onDanger = Color.white
     /// The dot that says the server can be reached. Not for text: words of success are drawn in `pine`.
-    static let online = Color(lightHex: 0x3FA66B, darkHex: 0x57C283)
+    static let online = Color(lightHex: 0x3FA66B, darkHex: 0x57C283, highContrast: (light: 0x22784A, dark: 0x86E0AA))
 
     // MARK: Voice orb
 
@@ -55,11 +58,23 @@ enum HearthColor {
 }
 
 extension Color {
-    /// A colour that follows the light or dark appearance.
-    init(lightHex: UInt32, darkHex: UInt32) {
+    /// A colour that follows the light or dark appearance, and Increase Contrast when given colours for it.
+    ///
+    /// - Parameter highContrast: The light and dark colours drawn while Increase Contrast is on; without them the
+    ///   ordinary ones are drawn then too.
+    init(lightHex: UInt32, darkHex: UInt32, highContrast: (light: UInt32, dark: UInt32)? = nil) {
         self.init(uiColor: UIColor { traits in
-            UIColor(hex: traits.userInterfaceStyle == .dark ? darkHex : lightHex)
+            UIColor(hex: Self.hex(for: traits, lightHex: lightHex, darkHex: darkHex, highContrast: highContrast))
         })
+    }
+
+    /// Which of the colours the given traits call for.
+    static func hex(for traits: UITraitCollection, lightHex: UInt32, darkHex: UInt32, highContrast: (light: UInt32, dark: UInt32)?) -> UInt32 {
+        let isDark = traits.userInterfaceStyle == .dark
+        if traits.accessibilityContrast == .high, let highContrast {
+            return isDark ? highContrast.dark : highContrast.light
+        }
+        return isDark ? darkHex : lightHex
     }
 }
 

@@ -48,6 +48,8 @@ final class ChatPresenter {
         let announce: @MainActor (String) -> Void
         /// Whether VoiceOver is running, in which case a finished reply is announced.
         let isVoiceOverRunning: @MainActor () -> Bool
+        /// Whether chats are being synced, in which case deleting one removes it from every device.
+        let isSyncOn: @MainActor () -> Bool
     }
 
     let viewModel = ChatViewModel()
@@ -64,6 +66,8 @@ final class ChatPresenter {
     var turnTask: Task<Void, Never>?
     /// Told once the saved chats, projects and memories have been read, which is when sync may begin.
     var onStoresLoaded: (@MainActor () -> Void)?
+    /// What was being written in each chat that was left, kept until it is opened again. Held only while the app runs.
+    var composerDrafts: [Conversation.ID: ComposerDraft] = [:]
 
     init(dependencies: Dependencies) {
         self.dependencies = dependencies
@@ -260,15 +264,19 @@ final class ChatPresenter {
     }
 
     /// Stops whatever is under way, clears what belonged to the conversation on screen, and shows the given one.
+    ///
+    /// What was being written stays with the chat it was written in, and comes back when that chat is opened again.
     private func show(_ conversation: Conversation) async {
         await stopAction()
         await stopSpeaking()
+        keepDraftOfOpenChat()
         cancelEditAction()
         viewModel.followUps = []
         viewModel.memoryNotice = nil
         viewModel.isResearchMode = false
         viewModel.conversation = conversation
         viewModel.error = nil
+        restoreDraft(of: conversation.id)
     }
 
     // MARK: Composer

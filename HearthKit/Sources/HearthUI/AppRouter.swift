@@ -36,11 +36,18 @@ final class AppRouter {
         didSet { defaults.set(!isSidebarPinned, forKey: Self.sidebarHiddenKey) }
     }
 
+    /// Whether the settings open in a window of their own, as on a Mac, rather than as a sheet over the chat.
+    let usesSettingsWindow: Bool
+    /// Whether the settings window is open. Its scene keeps this current, so that asking for the settings again
+    /// brings it forward rather than opening another.
+    var isSettingsWindowShown = false
+
     private let defaults: UserDefaults
     private static let sidebarHiddenKey = "isSidebarHidden"
 
-    init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = .standard, usesSettingsWindow: Bool = false) {
         self.defaults = defaults
+        self.usesSettingsWindow = usesSettingsWindow
         isSidebarPinned = !defaults.bool(forKey: Self.sidebarHiddenKey)
     }
 
@@ -52,6 +59,7 @@ final class AppRouter {
         }
     }
 
+    /// Whether the settings are showing: as a sheet over the chat, or in their own window where `usesSettingsWindow`.
     var isSettingsPresented = false
     /// Whether the app is in front of the user. The root view keeps this current; a reply that finishes while it
     /// is `false` may be announced with a notification.

@@ -37,11 +37,17 @@ struct ShortcutWidgetView: View {
 
     private var homeScreen: some View {
         VStack(alignment: .leading, spacing: Self.spacing) {
+            // On a tinted home screen the round mark takes the accent, while its symbol and the words keep the
+            // primary colour, so the symbol still stands out from the circle behind it.
             Image(systemName: shortcut.systemImage)
                 .font(.headline.weight(.bold))
                 .foregroundStyle(WidgetColor.onPine)
                 .frame(width: Self.markSide, height: Self.markSide)
-                .background(WidgetColor.pine, in: Circle())
+                .background {
+                    Circle()
+                        .fill(WidgetColor.pine)
+                        .widgetAccentable()
+                }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             Text(shortcut.title)
                 .font(.headline)
@@ -58,6 +64,7 @@ struct ShortcutWidgetView: View {
             AccessoryWidgetBackground()
             Image(systemName: shortcut.systemImage)
                 .font(.title3.weight(.semibold))
+                .widgetAccentable()
         }
         .containerBackground(.clear, for: .widget)
     }
@@ -68,7 +75,7 @@ struct ShortcutWidgetView: View {
 enum WidgetColor {
     static let paper = adaptive(light: 0xF3F5F1, dark: 0x121715)
     static let ink = adaptive(light: 0x18211E, dark: 0xE9EEEA)
-    static let mute = adaptive(light: 0x6C7772, dark: 0x8B9691)
+    static let mute = adaptive(light: 0x5F6A65, dark: 0x8B9691)
     static let pine = adaptive(light: 0x2C6B5A, dark: 0x6FC2A8)
     static let onPine = adaptive(light: 0xFFFFFF, dark: 0x0E1211)
 

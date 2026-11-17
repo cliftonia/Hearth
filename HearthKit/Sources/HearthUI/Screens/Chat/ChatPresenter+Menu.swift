@@ -74,6 +74,20 @@ extension ChatPresenter {
         delegate?.chatPresenter(self, didRequestProjectFor: viewModel.conversation.id)
     }
 
+    /// Takes the open chat out of its project, from the chat's menu, as the chat list's menu does.
+    func removeFromProjectAction() async {
+        let id = viewModel.conversation.id
+        do {
+            if dependencies.conversationStore.conversation(for: id) != nil {
+                try await dependencies.conversationStore.setProject(nil, for: id)
+            }
+            conversationWasMoved(id, to: nil)
+        } catch {
+            logger.error("Removing the chat from its project failed: \(error.localizedDescription, privacy: .public)")
+            showError(ErrorViewConfiguration(message: Strings.errorChangeFailed, retryActionLabel: nil))
+        }
+    }
+
     /// Keeps the open copy in step when the chat was filed elsewhere: by the picker or by a new project made for it.
     /// A chat not yet saved carries the choice here until its first save.
     func conversationWasMoved(_ id: Conversation.ID, to projectID: Project.ID?) {
@@ -83,13 +97,36 @@ extension ChatPresenter {
         viewModel.conversation = viewModel.conversation.updating(project: ProjectMembership(projectID))
     }
 
-    /// Deletes the open chat and starts a new one in its place.
+    // MARK: Deleting
+
+    /// Whether the open chat can be deleted: it has begun, and so is saved.
+    var canDeleteChat: Bool {
+        !viewModel.conversation.messages.isEmpty
+    }
+
+    /// What the delete confirmation says beneath its question: that the chat goes from every device when it is synced,
+    /// which a private chat never is.
+    var deleteChatDetail: String {
+        dependencies.isSyncOn() && !viewModel.conversation.isPrivate ? Strings.deleteChatSyncedDetail : Strings.deleteChatDetail
+    }
+
+    /// Asks whether to delete the open chat, from its menu or the keyboard. Nothing is deleted until the answer.
+    func requestDeleteChatAction() {
+        guard canDeleteChat else {
+            return
+        }
+        viewModel.isConfirmingDeleteChat = true
+    }
+
+    /// Deletes the open chat and starts a new one in its place, once the user has confirmed.
     func deleteChatAction() async {
+        viewModel.isConfirmingDeleteChat = false
         let id = viewModel.conversation.id
         await stopAction()
         do {
             try await dependencies.conversationStore.delete(id)
             await newChatAction()
+            composerDrafts[id] = nil
         } catch {
             logger.error("Deleting the chat failed: \(error.localizedDescription, privacy: .public)")
             showError(ErrorViewConfiguration(message: Strings.errorChangeFailed, retryActionLabel: nil))

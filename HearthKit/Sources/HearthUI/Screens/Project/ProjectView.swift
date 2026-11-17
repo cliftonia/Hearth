@@ -52,6 +52,9 @@ struct ProjectView: View {
             }
         }
         .tint(HearthColor.pine)
+        // Changes cannot be swiped away; Cancel asks before letting them go.
+        .interactiveDismissDisabled(viewModel.hasChanges)
+        .discardChangesDialog(isPresented: $viewModel.isConfirmingDiscard, discardAction: presenter.discardChangesAction)
         .confirmationDialog(Strings.deleteProjectQuestion, isPresented: $viewModel.isConfirmingDelete, titleVisibility: .visible) {
             Button(Strings.deleteProject, role: .destructive) {
                 Haptics.play(.warning)

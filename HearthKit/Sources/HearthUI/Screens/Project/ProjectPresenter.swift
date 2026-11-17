@@ -53,6 +53,8 @@ final class ProjectPresenter {
         viewModel.isConfirmingDelete = false
         viewModel.isShowingUnreadableFiles = false
         viewModel.isShowingSaveFailure = false
+        viewModel.isConfirmingDiscard = false
+        viewModel.original = viewModel.current
         adoptingID = project == nil ? conversationID : nil
     }
 
@@ -70,7 +72,18 @@ final class ProjectPresenter {
 
     // MARK: Closing
 
+    /// Closes the sheet, asking first if anything has been changed, so that typing is never lost to a stray tap.
     func cancelAction() {
+        guard !viewModel.hasChanges else {
+            viewModel.isConfirmingDiscard = true
+            return
+        }
+        delegate?.projectPresenter(self, didFinishWith: .cancelled)
+    }
+
+    /// Lets the changes go and closes the sheet, once the user has said to.
+    func discardChangesAction() {
+        viewModel.isConfirmingDiscard = false
         delegate?.projectPresenter(self, didFinishWith: .cancelled)
     }
 

@@ -3,7 +3,8 @@ import SwiftUI
 /// Arranges the composer's field, its leading controls and its trailing controls.
 ///
 /// At rest the three sit in one row. While a message is being written the field takes a row of its own above the
-/// controls. The field is the same view in both, so it keeps the keyboard as the arrangement changes.
+/// controls, and the trailing controls keep to the bottom row when the leading ones need two. The field is the same
+/// view in both, so it keeps the keyboard as the arrangement changes.
 struct ComposerLayout: Layout {
     let isCompact: Bool
     let spacing: CGFloat
@@ -27,10 +28,14 @@ struct ComposerLayout: Layout {
             parts.leadingView.place(at: CGPoint(x: bounds.minX, y: bounds.midY), anchor: .leading, proposal: leading)
             parts.trailingView.place(at: CGPoint(x: bounds.maxX, y: bounds.midY), anchor: .trailing, proposal: trailing)
         } else {
-            let controlsMidY = bounds.maxY - max(parts.leading.height, parts.trailing.height) / 2
+            // The trailing controls line up with the last row of the leading ones, which may be two rows high at
+            // the largest text sizes, and the shorter of the two rows is centred on the taller.
+            let rowHeight = min(parts.leading.height, parts.trailing.height)
+            let leadingBottom = bounds.maxY - max(0, parts.trailing.height - rowHeight) / 2
+            let trailingMidY = bounds.maxY - max(rowHeight, parts.trailing.height) / 2
             parts.field.place(at: CGPoint(x: bounds.minX, y: bounds.minY), anchor: .topLeading, proposal: fieldProposal)
-            parts.leadingView.place(at: CGPoint(x: bounds.minX, y: controlsMidY), anchor: .leading, proposal: leading)
-            parts.trailingView.place(at: CGPoint(x: bounds.maxX, y: controlsMidY), anchor: .trailing, proposal: trailing)
+            parts.leadingView.place(at: CGPoint(x: bounds.minX, y: leadingBottom), anchor: .bottomLeading, proposal: leading)
+            parts.trailingView.place(at: CGPoint(x: bounds.maxX, y: trailingMidY), anchor: .trailing, proposal: trailing)
         }
     }
 

@@ -7,27 +7,32 @@ import UIKit
 /// from the app switcher or from someone holding a locked phone.
 @MainActor
 final class LockWindowController {
-    private var window: UIWindow?
+    /// One lock window for each of the app's windows: the chat's, and on a Mac the settings' as well.
+    private var windows: [UIWindow] = []
 
-    /// Raises the lock window, or removes it. The colour scheme is the chosen theme, which a new window would not inherit.
+    /// Raises the lock windows, or removes them. The colour scheme is the chosen theme, which a new window would not
+    /// inherit.
     func setCovered(_ isCovered: Bool, presenter: LockPresenter, colorScheme: ColorScheme?) {
         guard isCovered else {
-            window?.isHidden = true
-            window = nil
+            windows.forEach { $0.isHidden = true }
+            windows = []
             return
         }
-        if window == nil {
-            guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else {
-                return
-            }
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let covered = Set(windows.compactMap { $0.windowScene.map(ObjectIdentifier.init) })
+        let uncovered = scenes.filter { !covered.contains(ObjectIdentifier($0)) }
+        if !uncovered.isEmpty {
             // Put the keyboard away, so that nothing half-typed stays on show beneath it.
             Keyboard.dismiss()
+        }
+        for scene in uncovered {
             let window = UIWindow(windowScene: scene)
             window.windowLevel = .alert + 1
             window.rootViewController = UIHostingController(rootView: LockView(presenter: presenter))
             window.isHidden = false
-            self.window = window
+            windows.append(window)
         }
-        window?.overrideUserInterfaceStyle = InterfaceStyle.style(for: colorScheme)
+        let style = InterfaceStyle.style(for: colorScheme)
+        windows.forEach { $0.overrideUserInterfaceStyle = style }
     }
 }

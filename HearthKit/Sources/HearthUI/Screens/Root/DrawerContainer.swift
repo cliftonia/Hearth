@@ -5,8 +5,11 @@ import SwiftUI
 struct DrawerContainer<Drawer: View, Content: View>: View {
     /// The share of the screen's width the drawer covers, up to `HearthSize.drawerMaximumWidth`.
     private static var widthFraction: CGFloat { 0.84 }
-    /// How dark the content behind a fully open drawer becomes.
-    private static var scrimOpacity: Double { 0.32 }
+    /// How dark the content behind a fully open drawer becomes. Dark content needs a deeper veil to fall back
+    /// from a drawer of nearly the same colour.
+    private static func scrimOpacity(for colorScheme: ColorScheme) -> Double {
+        colorScheme == .dark ? 0.55 : 0.32
+    }
 
     @Binding var isOpen: Bool
     @ViewBuilder let drawer: Drawer
@@ -14,6 +17,7 @@ struct DrawerContainer<Drawer: View, Content: View>: View {
 
     @GestureState private var dragTranslationX: CGFloat = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         GeometryReader { proxy in
@@ -24,7 +28,7 @@ struct DrawerContainer<Drawer: View, Content: View>: View {
                 content
                     .accessibilityHidden(isOpen)
                 HearthColor.scrim
-                    .opacity(Self.scrimOpacity * progress)
+                    .opacity(Self.scrimOpacity(for: colorScheme) * progress)
                     .ignoresSafeArea()
                     .allowsHitTesting(isOpen)
                     .onTapGesture {
@@ -34,6 +38,13 @@ struct DrawerContainer<Drawer: View, Content: View>: View {
                     .accessibilityHidden(true)
                 drawer
                     .frame(width: width)
+                    // A hairline down its open edge keeps the drawer apart from the chat, above all in the dark.
+                    .overlay(alignment: .trailing) {
+                        Hairline(axis: .vertical)
+                            .ignoresSafeArea()
+                            .opacity(progress > 0 ? 1 : 0)
+                            .accessibilityHidden(true)
+                    }
                     .offset(x: (progress - 1) * width)
                     .accessibilityHidden(!isOpen)
                     // While open, VoiceOver keeps to the drawer, and the two-finger scrub closes it.

@@ -16,6 +16,7 @@ struct HoldToTalkRow: View {
             Button(action: stopAction) {
                 Image(systemName: "stop.fill")
                     .font(.hearth(.footnote).weight(.bold))
+                    .iconGlyphSize()
                     .foregroundStyle(HearthColor.onPine)
                     .frame(width: HearthSize.sendButton, height: HearthSize.sendButton)
                     .background(HearthColor.pine, in: Circle())
@@ -23,6 +24,7 @@ struct HoldToTalkRow: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Strings.stopDictation)
+            .largeContentLabel(Strings.stopDictation, systemImage: "stop.fill")
             Text(Strings.releaseToStop)
                 .font(.hearth(.body))
                 .foregroundStyle(HearthColor.ink)
@@ -31,6 +33,7 @@ struct HoldToTalkRow: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             Image(systemName: "arrow.up")
                 .font(.hearth(.footnote).weight(.bold))
+                .iconGlyphSize()
                 .foregroundStyle(HearthColor.onPine)
                 .frame(width: HearthSize.sendButton, height: HearthSize.sendButton)
                 .background(HearthColor.pine, in: Circle())

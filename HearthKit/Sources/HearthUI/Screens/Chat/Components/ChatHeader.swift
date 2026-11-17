@@ -79,6 +79,7 @@ struct ChatHeader: View {
         let isShown = hasBegun && presenter.viewModel.conversation.isPrivate
         return Image(systemName: "eye.slash.fill")
             .font(.hearth(.footnote))
+            .iconGlyphSize()
             .foregroundStyle(HearthColor.pine)
             .frame(width: HearthSize.glassButton, height: HearthSize.glassButton)
             .background(HearthColor.pineSoft, in: Circle())
@@ -130,23 +131,30 @@ struct ChatHeader: View {
             IconButton(systemImage: "square.and.pencil", label: Strings.newChat) {
                 Task { await presenter.newChatAction() }
             }
+            // The label carries its own name, so the menu is one element to VoiceOver, sized to its symbol.
             Menu {
                 chatMenu
             } label: {
-                Image(systemName: "ellipsis")
+                Label(Strings.chatOptions, systemImage: "ellipsis")
+                    .labelStyle(.iconOnly)
                     .font(HearthFont.icon)
+                    .iconGlyphSize()
                     .foregroundStyle(HearthColor.ink)
                     .frame(width: HearthSize.iconButton, height: HearthSize.iconButton)
                     .minimumHitTarget()
+                    .hoverHighlight(Circle())
             }
+            .fixedSize()
             .accessibilityLabel(Strings.chatOptions)
+            .largeContentLabel(Strings.chatOptions, systemImage: "ellipsis")
         }
         .padding(.horizontal, HearthSpacing.s4)
         .frame(height: HearthSize.glassButton)
         .glassSurface(Capsule())
     }
 
-    /// What can be done with a chat that has begun: pin it; share it, rename it or file it in a project; delete it.
+    /// What can be done with a chat that has begun, in the same order and words as the chat list's menu: pin it;
+    /// rename it, file it in a project or take it out of one, share it; delete it.
     @ViewBuilder private var chatMenu: some View {
         Section {
             Button(action: {
@@ -157,23 +165,27 @@ struct ChatHeader: View {
             })
         }
         Section {
+            Button(action: presenter.renameChatAction) {
+                Label(Strings.renameEllipsis, systemImage: "pencil")
+            }
+            let isInProject = presenter.chatProject != nil
+            Button(action: presenter.projectAction) {
+                Label(isInProject ? Strings.moveToProjectEllipsis : Strings.addToProjectEllipsis, systemImage: isInProject ? "folder" : "folder.badge.plus")
+            }
+            if isInProject {
+                Button(action: { Task { await presenter.removeFromProjectAction() } }, label: {
+                    Label(Strings.removeFromProject, systemImage: "folder.badge.minus")
+                })
+            }
             ShareLink(item: presenter.chatExportText) {
                 Label(Strings.share, systemImage: "square.and.arrow.up")
             }
-            Button(action: presenter.renameChatAction) {
-                Label(Strings.rename, systemImage: "pencil")
-            }
-            Button(action: presenter.projectAction) {
-                Label(presenter.chatProject == nil ? Strings.addToProject : Strings.moveToProject, systemImage: "folder")
-            }
         }
         Section {
-            Button(role: .destructive, action: {
-                Haptics.play(.warning)
-                Task { await presenter.deleteChatAction() }
-            }, label: {
+            // Deleting is asked about first, since it cannot be undone and reaches every synced device.
+            Button(role: .destructive, action: presenter.requestDeleteChatAction) {
                 Label(Strings.delete, systemImage: "trash")
-            })
+            }
         }
     }
 }

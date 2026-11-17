@@ -10,9 +10,11 @@ struct OptionChip: View {
     var body: some View {
         Image(systemName: systemImage)
             .font(.hearth(.footnote).weight(.medium))
+            .iconGlyphSize()
             .foregroundStyle(isOn ? HearthColor.pine : HearthColor.mute)
             .frame(size: HearthSize.optionChip)
             .surface(Capsule(), fill: isOn ? HearthColor.pineSoft : .clear, border: isOn ? .clear : HearthColor.line)
             .minimumHitTarget()
+            .hoverHighlight(Capsule())
     }
 }

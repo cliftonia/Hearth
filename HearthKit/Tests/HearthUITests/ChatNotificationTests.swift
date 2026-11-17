@@ -39,7 +39,8 @@ struct ChatNotificationTests {
                 isLocked: { false },
                 isOnScreen: { self.isOnScreen },
                 announce: { self.announcements.append($0) },
-                isVoiceOverRunning: { self.isVoiceOverRunning }
+                isVoiceOverRunning: { self.isVoiceOverRunning },
+                isSyncOn: { false }
             ))
         }
     }

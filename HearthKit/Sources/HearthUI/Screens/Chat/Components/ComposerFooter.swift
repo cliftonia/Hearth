@@ -7,6 +7,8 @@ import SwiftUI
 struct ComposerFooter: View {
     private static let pendingPhotoSide: CGFloat = 64
     private static let cancelEditSize = CGSize(width: 28, height: 24)
+    /// Rounds the model chip into a capsule while it is one line high.
+    private static let chipRadius = HearthSize.optionChip.height / 2
     /// How much larger the composer stands while a finger rests on it.
     private static let heldScale: CGFloat = 1.06
     /// The gap beneath the composer.
@@ -24,6 +26,7 @@ struct ComposerFooter: View {
     @FocusState private var isFocused: Bool
     @AccessibilityFocusState private var isVoiceOverFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         @Bindable var viewModel = presenter.viewModel
@@ -48,21 +51,15 @@ struct ComposerFooter: View {
                         .focused($isFocused)
                         .accessibilityFocused($isVoiceOverFocused)
                         .padding(.horizontal, HearthSpacing.s4)
+                        // A hardware keyboard's Return sends, and Shift-Return starts a new line. The on-screen
+                        // keyboard sends no key presses, so on it Return still starts a new line.
+                        .onKeyPress(.return, phases: .down) { press in
+                            returnKeyAction(modifiers: press.modifiers)
+                        }
                         .concealed(isHeld)
                         .overlay { holdToTalkTouchLayer }
-                    HStack(spacing: HearthSpacing.s8) {
-                        AttachmentMenu(presenter: presenter)
-                        if viewModel.isPictureMode {
-                            pictureModeChip
-                        }
-                        if isExpanded {
-                            modelChip
-                        }
-                        if isExpanded, !viewModel.isPictureMode {
-                            optionChips
-                        }
-                    }
-                    .concealed(isHeld)
+                    leadingControls
+                        .concealed(isHeld)
                     HStack(spacing: HearthSpacing.s8) {
                         dictationButton
                         primaryButton
@@ -124,7 +121,7 @@ struct ComposerFooter: View {
     }
 
     /// The switches that shape a reply: web search and reading aloud. How hard to think is chosen with the model.
-    @ViewBuilder private var optionChips: some View {
+    @ViewBuilder var optionChips: some View {
         if presenter.isSearchToggleVisible {
             searchToggle
         }
@@ -135,14 +132,17 @@ struct ComposerFooter: View {
 
     /// The model the message goes to and the effort chosen for it, or the picture model while pictures are being made.
     /// Tapping it opens the sheet where both are chosen.
-    private var modelChip: some View {
+    var modelChip: some View {
         let viewModel = presenter.viewModel
         let name = viewModel.isPictureMode
             ? presenter.selectedPictureModel?.name ?? Strings.pictures
             : viewModel.selectedModel?.displayName ?? Strings.noModel
         let effort = viewModel.isPictureMode ? "" : presenter.effortChipTitle
+        // At the accessibility sizes the chip has a row to itself, and the name and the effort a line each.
+        let isLarge = dynamicTypeSize.isAccessibilitySize
+        let layout = isLarge ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(spacing: HearthSpacing.s6))
         return Button(action: { viewModel.isModelPickerPresented = true }, label: {
-            HStack(spacing: HearthSpacing.s6) {
+            layout {
                 Text(name)
                     .font(.hearth(.footnote).weight(.medium))
                     .foregroundStyle(HearthColor.ink)
@@ -154,14 +154,17 @@ struct ComposerFooter: View {
                     .foregroundStyle(presenter.isResearchChosen ? HearthColor.pine : HearthColor.mute)
                     .lineLimit(1)
                     // Research is never shortened; where room is tight the model's name gives way to it.
-                    .fixedSize(horizontal: presenter.isResearchChosen, vertical: false)
+                    .fixedSize(horizontal: presenter.isResearchChosen && !isLarge, vertical: false)
                     .layoutPriority(1)
-                    .frame(width: effort.isEmpty ? 0 : nil)
+                    .frame(width: effort.isEmpty && !isLarge ? 0 : nil)
+                    .folded(effort.isEmpty && isLarge)
             }
             .padding(.horizontal, HearthSpacing.s12)
-            .frame(height: HearthSize.optionChip.height)
-            .background(HearthColor.bubble, in: Capsule())
+            .padding(.vertical, isLarge ? HearthSpacing.s6 : 0)
+            .frame(minHeight: HearthSize.optionChip.height)
+            .background(HearthColor.bubble, in: RoundedRectangle(cornerRadius: isLarge ? HearthRadius.card : Self.chipRadius, style: .continuous))
             .minimumHitTarget()
+            .hoverHighlight(RoundedRectangle(cornerRadius: isLarge ? HearthRadius.card : Self.chipRadius, style: .continuous))
         })
         .buttonStyle(.plain)
         .accessibilityLabel(viewModel.isPictureMode ? Strings.pictureModelPickerLabel : Strings.modelPickerLabel)
@@ -169,13 +172,14 @@ struct ComposerFooter: View {
     }
 
     /// Shows that the next message asks for a picture; tapping it goes back to chatting.
-    private var pictureModeChip: some View {
+    var pictureModeChip: some View {
         Button(action: presenter.togglePictureModeAction) {
             OptionChip(systemImage: "paintbrush.fill", isOn: true)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Strings.pictureMode)
         .accessibilityAddTraits(.isSelected)
+        .largeContentLabel(Strings.pictureMode, systemImage: "paintbrush.fill")
     }
 
     private var placeholder: String {
@@ -191,7 +195,8 @@ struct ComposerFooter: View {
         if presenter.isResearchChosen {
             return Strings.researchPlaceholder
         }
-        // At rest the composer says what can be done with it; once opened it says who is being written to.
+        // At rest the composer says what can be done with it; once opened it says who is being written to, beside the
+        // chip that changes it.
         if !isExpanded {
             return Strings.composerRestingPlaceholder
         }
@@ -214,12 +219,14 @@ struct ComposerFooter: View {
             Button(action: presenter.cancelEditAction) {
                 Image(systemName: "xmark")
                     .font(.hearth(.footnote).weight(.semibold))
+                    .iconGlyphSize()
                     .foregroundStyle(HearthColor.mute)
                     .frame(size: Self.cancelEditSize)
                     .minimumHitTarget()
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Strings.cancelEdit)
+            .largeContentLabel(Strings.cancelEdit, systemImage: "xmark")
         }
         .padding(.horizontal, HearthSpacing.s4)
     }
@@ -235,6 +242,7 @@ struct ComposerFooter: View {
         .buttonStyle(.plain)
         .accessibilityLabel(Strings.searchLabel)
         .accessibilityAddTraits(isOn ? .isSelected : [])
+        .largeContentLabel(Strings.searchLabel, systemImage: "globe")
     }
 
     /// When on, every reply is read aloud as soon as it is finished.
@@ -246,6 +254,7 @@ struct ComposerFooter: View {
         .buttonStyle(.plain)
         .accessibilityLabel(Strings.readRepliesAloud)
         .accessibilityAddTraits(isOn ? .isSelected : [])
+        .largeContentLabel(Strings.readRepliesAloud, systemImage: "speaker.wave.2")
     }
 
 }
@@ -281,13 +290,16 @@ private extension ComposerFooter {
         return Button(action: { Task { await presenter.dictationAction() } }, label: {
             Image(systemName: isDictating ? "mic.fill" : "mic")
                 .font(.hearth(.footnote).weight(.medium))
+                .iconGlyphSize()
                 .foregroundStyle(isDictating ? HearthColor.danger : HearthColor.mute)
                 .frame(size: HearthSize.composerControl)
                 .capsuleOutline(isDictating ? HearthColor.danger : HearthColor.line)
                 .minimumHitTarget()
+                .hoverHighlight(Capsule())
         })
         .buttonStyle(.plain)
         .accessibilityLabel(isDictating ? Strings.stopDictation : Strings.dictate)
+        .largeContentLabel(isDictating ? Strings.stopDictation : Strings.dictate, systemImage: "mic")
     }
 
     /// Stops a reply that is streaming, sends a message that is written, and otherwise starts a voice conversation.
@@ -303,14 +315,17 @@ private extension ComposerFooter {
         return Button(action: primaryAction) {
             Image(systemName: symbol)
                 .font(.hearth(.footnote).weight(.bold))
+                .iconGlyphSize()
                 .foregroundStyle(HearthColor.onPine)
                 .frame(width: HearthSize.sendButton, height: HearthSize.sendButton)
                 .background(HearthColor.pine, in: Circle())
                 .contentTransition(.symbolEffect(.replace))
                 .minimumHitTarget()
+                .hoverHighlight(Circle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
+        .largeContentLabel(label, systemImage: symbol)
     }
 
     func primaryAction() {
@@ -320,5 +335,46 @@ private extension ComposerFooter {
             isFocused = false
         }
         Task { await presenter.primaryAction() }
+    }
+
+    /// Return from a hardware keyboard: sends what is written, keeping the keyboard, unless Shift is held, when the
+    /// field starts a new line as usual. A reply on its way is not stopped by it.
+    func returnKeyAction(modifiers: EventModifiers) -> KeyPress.Result {
+        switch ComposerReturnKey.outcome(modifiers: modifiers, canSend: presenter.viewModel.canSend, isStreaming: presenter.viewModel.isStreaming) {
+        case .newLine:
+            return .ignored
+        case .send:
+            sendCount += 1
+            Task { await presenter.primaryAction() }
+            return .handled
+        case .nothing:
+            return .handled
+        }
+    }
+
+    // MARK: Arrangement at large sizes
+
+    /// Attach and the reply's options, beside the field at rest and beneath it while writing. At the accessibility
+    /// text sizes the model chip takes a row of its own above the rest, so that it is not squeezed to nothing.
+    var leadingControls: some View {
+        let viewModel = presenter.viewModel
+        let isChipOnOwnRow = dynamicTypeSize.isAccessibilitySize && isExpanded
+        return VStack(alignment: .leading, spacing: HearthSpacing.s8) {
+            if isChipOnOwnRow {
+                modelChip
+            }
+            HStack(spacing: HearthSpacing.s8) {
+                AttachmentMenu(presenter: presenter)
+                if viewModel.isPictureMode {
+                    pictureModeChip
+                }
+                if isExpanded, !isChipOnOwnRow {
+                    modelChip
+                }
+                if isExpanded, !viewModel.isPictureMode {
+                    optionChips
+                }
+            }
+        }
     }
 }

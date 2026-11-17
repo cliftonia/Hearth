@@ -42,6 +42,7 @@ struct SettingsActionRow: View {
                 .padding(.horizontal, HearthSpacing.s16)
                 .padding(.vertical, HearthSpacing.s14)
                 .contentShape(Rectangle())
+                .hoverHighlight(Rectangle())
         })
         .buttonStyle(.plain)
         .accessibilityLabel(title)

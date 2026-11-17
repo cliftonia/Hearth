@@ -38,7 +38,8 @@ struct ChatLoadingTests {
             isLocked: { false },
             isOnScreen: { true },
             announce: { _ in },
-            isVoiceOverRunning: { false }
+            isVoiceOverRunning: { false },
+            isSyncOn: { false }
         ))
     }
 

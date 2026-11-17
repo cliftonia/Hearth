@@ -1,7 +1,7 @@
 import HearthUI
 import SwiftUI
 
-/// The app itself: one window, whose contents the coordinator supplies.
+/// The app itself: one window, whose contents the coordinator supplies, and on a Mac a second for the settings.
 @main
 struct HearthApp: App {
     /// Shared with the app's shortcuts, which may run before any window exists.
@@ -24,10 +24,21 @@ struct HearthApp: App {
                     }
                 }
         }
+        // New Chat, Settings, Search Chats, the chat list and Delete Chat, in the Mac's menu bar and on a keyboard.
+        .commands {
+            HearthCommands(coordinator: Self.coordinator)
+        }
         #if !targetEnvironment(macCatalyst)
         // Now and then the system wakes the app for one sync, which brings in what scheduled tasks have filed.
         .backgroundTask(.appRefresh(BackgroundRefresh.identifier)) {
             await Self.coordinator.backgroundRefreshAction()
+        }
+        #endif
+        #if targetEnvironment(macCatalyst)
+        // Settings… and ⌘, open the settings in a window of their own, as a Mac app keeps them, showing the same
+        // presenters as the chat's window.
+        WindowGroup(id: SettingsWindow.id) {
+            Self.coordinator.settingsWindow()
         }
         #endif
     }

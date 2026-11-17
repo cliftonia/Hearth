@@ -15,4 +15,17 @@ final class SidebarViewModel {
     var renamingID: Conversation.ID?
     /// Whether to say that a change to a chat could not be saved.
     var isShowingSaveFailure = false
+    /// The chat whose deletion is being asked about; the question shows while it is set.
+    var deletingID: Conversation.ID?
+    /// Whether the question that confirms deleting a chat is showing. Bound to the dialog, which clears it on any answer.
+    var isConfirmingDelete: Bool {
+        get { deletingID != nil }
+        set {
+            if !newValue {
+                deletingID = nil
+            }
+        }
+    }
+    /// Counts the requests to put the cursor in the search field, as the keyboard's Find makes.
+    var searchFocusRequestCount = 0
 }

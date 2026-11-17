@@ -144,13 +144,46 @@
         }
       }
     },
-    "canvas.copy": {
+    "canvas.copyCode": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy"
+            "value": "Copy code"
+          }
+        }
+      }
+    },
+    "canvas.copyDocument": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy document"
+          }
+        }
+      }
+    },
+    "canvas.copyDrawing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy drawing"
+          }
+        }
+      }
+    },
+    "canvas.copyPage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy page"
           }
         }
       }
@@ -298,13 +331,46 @@
         }
       }
     },
-    "canvas.share": {
+    "canvas.shareCode": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Share"
+            "value": "Share code"
+          }
+        }
+      }
+    },
+    "canvas.shareDocument": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share document"
+          }
+        }
+      }
+    },
+    "canvas.shareDrawing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share drawing"
+          }
+        }
+      }
+    },
+    "canvas.sharePage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share page"
           }
         }
       }
@@ -393,6 +459,50 @@
           "stringUnit": {
             "state": "translated",
             "value": "Connect to your server"
+          }
+        }
+      }
+    },
+    "chat.deleteChat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Chat"
+          }
+        }
+      }
+    },
+    "chat.deleteDetail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This cannot be undone."
+          }
+        }
+      }
+    },
+    "chat.deleteQuestion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this chat?"
+          }
+        }
+      }
+    },
+    "chat.deleteSyncedDetail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It will be removed from all your devices that sync. This cannot be undone."
           }
         }
       }
@@ -540,6 +650,72 @@
         }
       }
     },
+    "command.deleteChat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Chat…"
+          }
+        }
+      }
+    },
+    "command.hideChatList": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Chat List"
+          }
+        }
+      }
+    },
+    "command.newChat": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Chat"
+          }
+        }
+      }
+    },
+    "command.searchChats": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search Chats"
+          }
+        }
+      }
+    },
+    "command.settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings…"
+          }
+        }
+      }
+    },
+    "command.showChatList": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Chat List"
+          }
+        }
+      }
+    },
     "common.close": {
       "extractionState": "manual",
       "localizations": {
@@ -580,6 +756,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "OK"
+          }
+        }
+      }
+    },
+    "composer.add": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
           }
         }
       }
@@ -844,6 +1031,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Start voice conversation"
+          }
+        }
+      }
+    },
+    "editor.discard": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard Changes"
+          }
+        }
+      }
+    },
+    "editor.discardQuestion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard your changes?"
+          }
+        }
+      }
+    },
+    "editor.keepEditing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep Editing"
           }
         }
       }
@@ -2828,6 +3048,17 @@
         }
       }
     },
+    "project.moveEllipsis": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to project…"
+          }
+        }
+      }
+    },
     "project.name": {
       "extractionState": "manual",
       "localizations": {
@@ -2861,13 +3092,13 @@
         }
       }
     },
-    "project.newChat": {
+    "project.newChatIn": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "New chat in project"
+            "value": "New chat in %@"
           }
         }
       }
@@ -3783,6 +4014,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rename chat"
+          }
+        }
+      }
+    },
+    "sidebar.renameEllipsis": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename…"
           }
         }
       }

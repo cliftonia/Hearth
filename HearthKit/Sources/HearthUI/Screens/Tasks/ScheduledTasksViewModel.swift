@@ -58,6 +58,10 @@ final class ScheduledTasksViewModel {
     var earliestOnceDate = Date()
     var usesWebSearch = false
     var isConfirmingDelete = false
+    /// Whether to ask before letting go of changes, as when Cancel is tapped after editing.
+    var isConfirmingDiscard = false
+    /// The task as the editor opened with it, to tell whether anything has been changed since.
+    var originalDraft: TaskDraft?
 
     // MARK: Page
 
@@ -72,4 +76,13 @@ final class ScheduledTasksViewModel {
             && !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && modelID != nil
     }
+}
+
+/// What the task editor edits, compared to tell whether it has been changed.
+struct TaskDraft: Equatable {
+    let title: String
+    let prompt: String
+    let modelID: ChatModel.ID?
+    let schedule: TaskSchedule
+    let usesWebSearch: Bool
 }

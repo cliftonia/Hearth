@@ -14,8 +14,10 @@ the values and `Components/` holds the few pieces built from them that are used 
    that says what it is: an orb's diameter, a row's vertical padding tuned by eye. It becomes a token
    when a second view needs it.
 5. **Interface text uses the system text styles through `Font.hearth(_:)`** (`.hearth(.body)`,
-   `.hearth(.footnote)`), so it follows Dynamic Type on iPhone and iPad and is set a little larger on a Mac,
-   which ignores Dynamic Type. `HearthFont` is for the serif and monospaced faces only. Never set a fixed
+   `.hearth(.footnote)`), so it follows Dynamic Type on iPhone and iPad. On a Mac it is set a tenth larger than
+   the style's standard size, grown or shrunk in proportion to the system's preferred size for the style
+   (`Font.macPointSize`), so it follows the text size chosen for the app in the Mac's settings wherever the system
+   passes it on. `HearthFont` is for the serif and monospaced faces only. Never set a fixed
    point size.
 6. **Reach for a component before drawing a pattern again.** If the same shape appears a second time,
    it moves into `DesignSystem/Components`.
@@ -29,7 +31,8 @@ the values and `Components/` holds the few pieces built from them that are used 
 
 ### Colour: `HearthColor`
 
-Each colour has a light and a dark value and follows the appearance by itself.
+Each colour has a light and a dark value and follows the appearance by itself. The colours that carry meaning in a
+quiet tone also have stronger values that are drawn while Increase Contrast is on (see the table below).
 
 | Token | Light | Dark | For |
 |---|---|---|---|
@@ -49,7 +52,22 @@ Each colour has a light and a dark value and follows the appearance by itself.
 | `online` | `#3FA66B` | `#57C283` | The dot that says the server can be reached; never text, where success is `pine` |
 | `orb` | `#9FE0CB`, `#2C6B5A`, `#1B4A3D` | `#9FE0CB`, `#3E8A75`, `#1B4A3D` | The voice orb's gradient |
 
-A new colour is made with `Color(lightHex:darkHex:)`, and only inside `HearthColor`.
+A new colour is made with `Color(lightHex:darkHex:)`, or `Color(lightHex:darkHex:highContrast:)` when it needs a
+stronger value under Increase Contrast, and only inside `HearthColor`.
+
+#### Increase Contrast
+
+The dynamic colour reads `traitCollection.accessibilityContrast`; at `.high` these values replace the ordinary ones.
+Every other token keeps its own value.
+
+| Token | Light | Dark | Measured |
+|---|---|---|---|
+| `mute` | `#46504B` | `#B4BEB9` | light 7.63:1 on `paper`, 6.93:1 on `bubble`; dark 9.50:1 on `paper`, 7.52:1 on `bubble` |
+| `line` (and every hairline) | `#7A847D` | `#6A7570` | light 3.53:1 on `paper`, 3.20:1 on `bubble`; dark 3.79:1 on `paper`, 3.00:1 on `bubble` (non-text, 3:1) |
+| `pine` | `#1E5446` | `#95DCC5` | light 7.94:1 on `paper`, white on it 8.71:1; dark 11.49:1 on `paper` |
+| `danger` | `#8F3520` | `#F29A87` | light 7.09:1 on `paper`, 6.44:1 on `bubble`; dark 8.41:1 on `paper`, 6.66:1 on `bubble` |
+| `dangerFill` | `#8F3520` | `#9A3F2D` | white on it: light 7.78:1, dark 6.72:1 |
+| `online` | `#22784A` | `#86E0AA` | light 4.97:1 on `paper` (from 2.78:1); dark 11.44:1 on `paper` |
 
 Text colours reach at least 4.5:1 against the surfaces they are drawn on (WCAG AA). In light, `mute` is 5.12:1 on
 `paper` and 4.65:1 on `bubble`; `danger` is 5.05:1 on `paper` and 4.59:1 on `bubble`; white on `dangerFill` is 5.54:1.
@@ -66,6 +84,12 @@ In dark, `danger` is 5.72:1 on `paper` and white on `dangerFill` is 5.10:1. Chec
 | `heading(level:)` | Serif, title 2 / title 3 / headline | Markdown headings |
 | `code` | Monospaced, footnote | Code blocks |
 | `icon` | System, body, medium | The symbol in an `IconButton` |
+
+Symbols in controls drawn in a fixed frame (the glass buttons, `IconButton`, the composer's controls, the reply's
+actions, `OptionChip`, the sheet's close button) follow Dynamic Type only up to the largest standard size, through
+`.iconGlyphSize()`, so they never outgrow their frames at the accessibility sizes. Each such control also offers the
+large content viewer through `.largeContentLabel(_:systemImage:)`. Text beside them grows in full: names wrap to more
+lines, and buttons with words grow taller.
 
 ### Spacing: `HearthSpacing`
 
@@ -102,7 +126,7 @@ Rounded rectangles are always drawn with `style: .continuous`. Pills and round b
 | `floatingButton` | 48 | Settings and New chat over the chat list |
 | `voiceButton` | 60 | The camera, mute and end in a voice conversation |
 | `minimumHitTarget` | 44 | The least a control may be touched across, through `.minimumHitTarget()` |
-| `statusDot` | 10 | The connection dot; the writing indicator |
+| `statusDot` | 10 | The connection dot (filled when the server can be reached, an empty ring when not); the writing indicator |
 | `readingWidth` | 780 | The widest a line of chat grows |
 | `sidebarWidth` | 320 | The chat list beside the chat |
 | `drawerMaximumWidth` | 340 | The widest the drawer opens |
@@ -130,7 +154,7 @@ Apply one with `.hearthShadow(.composer)`.
 | `Hairline(axis:)` | A one-point line in the line colour | Dividers, horizontal by default |
 | `Avatar(photoJPEG:initials:diameter:)` | A round picture of a person: a photo, else initials, else a person symbol | The profile row and the profile page |
 | `PermissionNotice(systemImage:message:actionTitle:action:)` | A card saying the system is holding something back, with a button to where that is changed | Notifications refused; the camera refused |
-| `SheetHeader(title:closeAction:)` | A sheet's title, centred, with a round close button at the leading edge | The top of the model picker and the project picker |
+| `SheetHeader(title:closeAction:)` | A sheet's title, centred between an empty slot at the leading edge and the round close button at the trailing one, as wide as each other, so a long title wraps instead of running under the button. Escape closes it too | The top of the model picker, the project picker and the tasks notice. Every sheet that is not an editor closes by one round button at the trailing edge (Settings and the canvas too); an editor has Cancel leading and Done trailing |
 | `Haptics.play(_:)`, `.haptic(_:trigger:when:)` | The one place a haptic is played from | Every haptic; see below |
 | `.surface(_:fill:border:)` | A filled shape with a hairline border inside its edge | Any bordered shape; the modifiers below are built on it |
 | `.cardSurface(radius:border:)` | A card-coloured rounded rectangle with a border | Code blocks, tables, the search field, the composer, the error banner |
@@ -138,8 +162,12 @@ Apply one with `.hearthShadow(.composer)`.
 | `.capsuleOutline(_:)` | A capsule's border with nothing behind it | Quiet controls such as attach and dictate |
 | `.glassSurface(_:tint:)` | The system's interactive glass in the given shape on iOS 26 and later; before that a frosted fill, a hairline edge and the floating shadow | The glass buttons, and the pill holding New chat and the chat's menu |
 | `.hearthShadow(_:)` | One of the shadows above | Lifting a surface off the paper |
+| `.hoverHighlight(_:)` | The system's highlight under an iPad's pointer, a faint wash of ink on a Mac, in the given shape | Every control drawn with the plain button style: the round buttons, the chips, menu labels, the composer's controls, the rows of the chat list and the settings. Put it after `.minimumHitTarget()` |
 | `.minimumHitTarget()` | Grows the touchable area of a control to at least 44 points a side without moving or redrawing it | Every icon control drawn smaller than 44 points; put it last on the label |
 | `.folded(_:)` | Keeps a view in place but folds it to nothing: unseen, untouchable and unread | A line that comes and goes, such as a check's result or an empty note, without an `if` |
+| `.iconGlyphSize()` | Caps a symbol at the largest standard text size | The symbol of every icon control drawn in a fixed frame |
+| `.largeContentLabel(_:systemImage:)` | Shows the control's name and symbol in the large content viewer | Every icon-only control |
+| `.discardChangesDialog(isPresented:discardAction:)` | Asks "Discard your changes?" with Discard Changes and Keep Editing | Cancel in an editor that has been changed, alongside `.interactiveDismissDisabled` |
 | `SectionHeading(title:kerning:)` | Small capitals in the muted colour, read as a heading | The caption above a group of rows; the caller pads it |
 
 Order matters where a surface also casts a shadow: apply the surface first, then the shadow.

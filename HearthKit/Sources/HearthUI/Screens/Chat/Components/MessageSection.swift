@@ -160,14 +160,21 @@ struct MessageSection: View {
     /// Copy, share and read aloud, for a reply made of words.
     @ViewBuilder private var textActions: some View {
         actionButton(systemImage: "doc.on.doc", label: Strings.copy, action: copyAction)
+        // A share link draws its own button around the label, which takes no notice of the label's touch area, so
+        // the link itself is given the plain style and the 44-point area.
         ShareLink(item: message.text) {
             Image(systemName: "square.and.arrow.up")
                 .font(.hearth(.footnote))
+                .iconGlyphSize()
                 .foregroundStyle(HearthColor.mute)
                 .frame(size: HearthSize.messageAction)
                 .minimumHitTarget()
+                .hoverHighlight(Capsule())
         }
+        .buttonStyle(.plain)
+        .minimumHitTarget()
         .accessibilityLabel(Strings.share)
+        .largeContentLabel(Strings.share, systemImage: "square.and.arrow.up")
         if let speakAction {
             actionButton(
                 systemImage: isSpeaking ? "stop.circle" : "speaker.wave.2",
@@ -189,6 +196,7 @@ struct MessageSection: View {
                 .opacity(index == 0 ? 0.35 : 1)
             Text(verbatim: "\(index + 1)/\(message.versionCount)")
                 .font(.hearth(.footnote).monospacedDigit())
+                .iconGlyphSize()
                 .foregroundStyle(HearthColor.mute)
                 .accessibilityLabel(Strings.versionPosition(number: index + 1, total: message.versionCount))
             actionButton(systemImage: "chevron.right", label: Strings.nextVersion) {
@@ -204,12 +212,15 @@ struct MessageSection: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(.hearth(.footnote))
+                .iconGlyphSize()
                 .foregroundStyle(HearthColor.mute)
                 .frame(size: HearthSize.messageAction)
                 .minimumHitTarget()
+                .hoverHighlight(Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
+        .largeContentLabel(label, systemImage: systemImage)
     }
 }
 

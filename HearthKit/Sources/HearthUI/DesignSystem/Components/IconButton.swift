@@ -11,11 +11,14 @@ struct IconButton: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(HearthFont.icon)
+                .iconGlyphSize()
                 .foregroundStyle(HearthColor.ink)
                 .frame(width: HearthSize.iconButton, height: HearthSize.iconButton)
                 .minimumHitTarget()
+                .hoverHighlight(Circle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
+        .largeContentLabel(label, systemImage: systemImage)
     }
 }

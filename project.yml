@@ -35,6 +35,9 @@ targets:
         SUPPORTS_MACCATALYST: YES
         DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: NO
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+        # The Mac may open more than one window, so that the settings have one of their own. An iPhone or iPad keeps
+        # to one window and shows the settings as a sheet.
+        "INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=macosx*]": YES
         # Only the Mac build carries these; iPhone and iPad ask for the microphone through Info.plist alone.
         "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": App/HearthMac.entitlements
         "CODE_SIGN_ENTITLEMENTS[sdk=iphone*]": App/Hearth.entitlements

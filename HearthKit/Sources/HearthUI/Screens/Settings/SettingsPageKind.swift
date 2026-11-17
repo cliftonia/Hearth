@@ -19,6 +19,11 @@ enum SettingsPageKind: Hashable {
 
 /// A row in the settings that opens a page: its own content, and a chevron at the end.
 struct SettingsLinkRow<Label: View>: View {
+    /// The row's own content sits inside the list's insets, so the pointer's highlight reaches a little past it.
+    static var hoverShape: some InsettableShape {
+        RoundedRectangle(cornerRadius: HearthRadius.row, style: .continuous).inset(by: -HearthSpacing.s6)
+    }
+
     let action: () -> Void
     /// What VoiceOver reads for the row; without one it reads the row's content.
     var accessibilityLabel: String?
@@ -35,6 +40,7 @@ struct SettingsLinkRow<Label: View>: View {
                     .accessibilityHidden(true)
             }
             .contentShape(Rectangle())
+            .hoverHighlight(Self.hoverShape)
         }
         .buttonStyle(.plain)
         .foregroundStyle(HearthColor.ink)

@@ -17,14 +17,17 @@ struct GlassCircleButton: View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(HearthFont.icon)
+                .iconGlyphSize()
                 .foregroundStyle(isOn ? HearthColor.pine : HearthColor.ink)
                 .frame(width: HearthSize.glassButton, height: HearthSize.glassButton)
                 .contentShape(Circle())
+                .hoverHighlight(Circle())
         }
         .buttonStyle(.plain)
         .glassSurface(Circle(), tint: isOn ? HearthColor.pineSoft : nil)
         .accessibilityLabel(label)
         .accessibilityAddTraits(isOn ? .isSelected : [])
+        .largeContentLabel(label, systemImage: systemImage)
     }
 }
 

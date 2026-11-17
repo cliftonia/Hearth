@@ -1,7 +1,9 @@
 import HearthDomain
 import SwiftUI
 
-/// The settings sheet: one list of rows, most leading to a page of their own, and a Close button.
+/// The settings: one list of rows, most leading to a page of their own. As a sheet it closes by the round close
+/// button at the trailing edge, as every sheet that is not an editor does; in a window of its own, as on a Mac, by the
+/// window's own controls.
 ///
 /// Every change is kept as it is made; there is no Done and no Cancel. The rows say how things stand on the page they
 /// lead to, so that most settings can be read without opening anything.
@@ -9,6 +11,8 @@ struct SettingsView: View {
     let presenter: SettingsPresenter
     /// The scheduled tasks page, a screen of its own pushed from here.
     let tasksPresenter: ScheduledTasksPresenter
+    /// Whether the settings have a window of their own, which closes by its own controls rather than a button here.
+    let isInWindow: Bool
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -34,11 +38,18 @@ struct SettingsView: View {
             .navigationTitle(Strings.settings)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(Strings.close) { Task { await presenter.closeAction() } }
-                        .fontWeight(.semibold)
-                        .foregroundStyle(HearthColor.pine)
+                if !isInWindow {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        // The system draws the symbol as its own round close button in the bar.
+                        Button(action: { Task { await presenter.closeAction() } }, label: {
+                            Label(Strings.close, systemImage: "xmark")
+                                .labelStyle(.iconOnly)
+                                .foregroundStyle(HearthColor.ink)
+                        })
+                        .tint(HearthColor.ink)
                         .accessibilityLabel(Strings.close)
+                        .keyboardShortcut(.cancelAction)
+                    }
                 }
             }
         }

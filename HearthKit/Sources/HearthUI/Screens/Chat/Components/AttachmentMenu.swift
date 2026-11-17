@@ -49,14 +49,21 @@ struct AttachmentMenu: View {
             }
             .accessibilityLabel(Strings.newProject)
         } label: {
-            Image(systemName: "plus")
+            // The label carries the menu's name, and the menu keeps to its size, so VoiceOver finds one element the
+            // size of the button and nothing beside it.
+            Label(Strings.addMenu, systemImage: "plus")
+                .labelStyle(.iconOnly)
                 .font(.hearth(.footnote).weight(.semibold))
+                .iconGlyphSize()
                 .foregroundStyle(HearthColor.mute)
                 .frame(size: HearthSize.composerControl)
                 .capsuleOutline()
                 .minimumHitTarget()
+                .hoverHighlight(Capsule())
         }
-        .accessibilityLabel(Strings.attach)
+        .fixedSize()
+        .accessibilityLabel(Strings.addMenu)
+        .largeContentLabel(Strings.addMenu, systemImage: "plus")
         // Read top to bottom as written, with New project last, rather than turned around when the menu opens upwards.
         .menuOrder(.fixed)
         .photosPicker(isPresented: $isPhotoPickerPresented, selection: $pickedItems, maxSelectionCount: Self.maximumPhotoCount, matching: .images)

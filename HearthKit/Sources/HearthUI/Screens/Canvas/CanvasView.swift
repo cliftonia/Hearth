@@ -50,15 +50,22 @@ struct CanvasView: View {
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            IconButton(systemImage: "doc.on.doc", label: Strings.canvasCopy, action: presenter.copyAction)
+            // Named for what they hold, so VoiceOver does not confuse them with the copy and share under a reply.
+            let kind = content?.kind ?? .code(language: nil)
+            IconButton(systemImage: "doc.on.doc", label: kind.copyLabel, action: presenter.copyAction)
             ShareLink(item: content?.text ?? "") {
                 Image(systemName: "square.and.arrow.up")
                     .font(HearthFont.icon)
+                    .iconGlyphSize()
                     .foregroundStyle(HearthColor.ink)
                     .frame(width: HearthSize.iconButton, height: HearthSize.iconButton)
                     .minimumHitTarget()
+                    .hoverHighlight(Circle())
             }
-            .accessibilityLabel(Strings.canvasShare)
+            .buttonStyle(.plain)
+            .minimumHitTarget()
+            .accessibilityLabel(kind.shareLabel)
+            .largeContentLabel(kind.shareLabel, systemImage: "square.and.arrow.up")
             IconButton(systemImage: "xmark", label: Strings.canvasClose, action: presenter.closeAction)
         }
         .padding(.leading, HearthSpacing.s16)

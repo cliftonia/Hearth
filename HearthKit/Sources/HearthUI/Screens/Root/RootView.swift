@@ -35,9 +35,7 @@ struct RootView: View {
             InterfaceStyle.apply(colorScheme)
             coordinator.showLockWindow(colorScheme: colorScheme)
         }
-        .sheet(isPresented: $router.isSettingsPresented, onDismiss: coordinator.settingsSheetDidDismiss) {
-            SettingsView(presenter: coordinator.settingsPresenter, tasksPresenter: coordinator.tasksPresenter)
-        }
+        .modifier(SettingsPresentation(coordinator: coordinator))
         .sheet(item: $router.taskSheet, onDismiss: coordinator.taskSheetDidDismiss) { sheet in
             taskSheet(sheet)
         }
@@ -56,6 +54,8 @@ struct RootView: View {
             VoiceView(presenter: coordinator.voicePresenter)
         }
         .tint(HearthColor.pine)
+        // On a Mac the window cannot be made so small that the chat list and the chat no longer fit.
+        .windowMinimumSize(WindowMinimumSize.chat)
     }
 
     /// The editor of a task begun from the composer, or the notice that tasks need sync.

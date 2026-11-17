@@ -37,7 +37,7 @@ public final class AppCoordinator {
 
     public init(dependencies: AppDependencies) {
         let settingsStore = dependencies.settingsStore
-        let router = AppRouter()
+        let router = AppRouter(usesSettingsWindow: SettingsWindow.isUsed)
         let lockPresenter = LockPresenter(authentication: dependencies.authentication) { settingsStore.settings.isLockEnabled }
         let chatPresenter = Self.makeChatPresenter(dependencies: dependencies, router: router, lockPresenter: lockPresenter)
         self.router = router
@@ -89,6 +89,8 @@ public final class AppCoordinator {
         let chatPresenter = chatPresenter
         let scheduler = syncScheduler
         dependencies.syncHooks.isBusy = { chatPresenter.isWriting($0) }
+        let syncStore = dependencies.syncStore
+        sidebarPresenter.isSyncOn = { syncStore.settings.isActive }
         dependencies.syncHooks.didApplyRemote = { keys in
             let ids = Set(keys.filter { $0.kind == .conversation }.compactMap(\.uuid).map { Conversation.ID($0) })
             guard !ids.isEmpty else {
@@ -131,7 +133,8 @@ public final class AppCoordinator {
     }
 
     private static func makeChatPresenter(dependencies: AppDependencies, router: AppRouter, lockPresenter: LockPresenter) -> ChatPresenter {
-        ChatPresenter(dependencies: ChatPresenter.Dependencies(
+        let syncStore = dependencies.syncStore
+        return ChatPresenter(dependencies: ChatPresenter.Dependencies(
             chat: dependencies.chat,
             speech: dependencies.speech,
             image: dependencies.image,
@@ -147,7 +150,8 @@ public final class AppCoordinator {
             isLocked: { lockPresenter.viewModel.isLocked },
             isOnScreen: { router.isSceneActive },
             announce: { AccessibilityNotification.Announcement($0).post() },
-            isVoiceOverRunning: { UIAccessibility.isVoiceOverRunning }
+            isVoiceOverRunning: { UIAccessibility.isVoiceOverRunning },
+            isSyncOn: { syncStore.settings.isActive }
         ))
     }
 
@@ -249,6 +253,8 @@ public final class AppCoordinator {
 
     /// The settings sheet has gone, by Close or by a swipe: what was being typed in it is kept.
     func settingsSheetDidDismiss() {
+        // A task editor left open on the tasks page goes with the settings, so that it does not come back by itself.
+        tasksPresenter.viewModel.isEditorPresented = false
         Task { await settingsPresenter.sheetDidDismissAction() }
     }
 
@@ -261,5 +267,10 @@ public final class AppCoordinator {
     /// The root of the app's interface.
     public func start() -> some View {
         RootView(coordinator: self)
+    }
+
+    /// The contents of the settings window, on a Mac that shows the settings in a window of their own.
+    public func settingsWindow() -> some View {
+        SettingsWindowRoot(coordinator: self)
     }
 }

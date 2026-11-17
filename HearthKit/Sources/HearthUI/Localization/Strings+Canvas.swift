@@ -13,8 +13,6 @@ extension Strings {
     static let canvasOneLine = String(localized: "canvas.oneLine", defaultValue: "1 line", bundle: .module)
     static let canvasPreview = String(localized: "canvas.preview", defaultValue: "Preview", bundle: .module)
     static let canvasShowAs = String(localized: "canvas.showAs", defaultValue: "Show as", bundle: .module)
-    static let canvasCopy = String(localized: "canvas.copy", defaultValue: "Copy", bundle: .module)
-    static let canvasShare = String(localized: "canvas.share", defaultValue: "Share", bundle: .module)
     static let canvasClose = String(localized: "canvas.close", defaultValue: "Close canvas", bundle: .module)
     static let canvasEarlier = String(localized: "canvas.earlier", defaultValue: "Earlier version", bundle: .module)
     static let canvasLater = String(localized: "canvas.later", defaultValue: "Later version", bundle: .module)

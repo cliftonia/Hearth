@@ -55,7 +55,8 @@ struct VoicePictureTests {
                 isLocked: { false },
                 isOnScreen: { true },
                 announce: { _ in },
-                isVoiceOverRunning: { false }
+                isVoiceOverRunning: { false },
+                isSyncOn: { false }
             ))
             subject.viewModel.selectedModel = ChatModel(id: ChatModel.ID("vision"), isCloud: true, canSee: true)
             return subject

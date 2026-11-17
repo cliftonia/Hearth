@@ -14,15 +14,25 @@ struct SidebarView: View {
     #endif
     /// The vertical padding that gives the search field and each chat their height.
     static let rowVerticalPadding: CGFloat = 9
-    /// Room for the last chat to be scrolled clear of the floating controls.
-    private static let listBottomClearance: CGFloat = 74 + footerBottomGap
-    private static let statusDotRingWidth: CGFloat = 2
+    /// Room for the last chat to be scrolled clear of the floating controls, which grow with the text.
+    @ScaledMetric(relativeTo: .subheadline) private var listBottomClearance: CGFloat = 74
     /// The headings above the groups are spaced out a little, to read as labels.
     private static let headingKerning: CGFloat = 0.6
     /// How far down the floating controls the list has faded out completely.
     private static let fadeEnd = UnitPoint(x: 0.5, y: 0.4)
 
     let presenter: SidebarPresenter
+
+    @Environment(\.dynamicTypeSize) var dynamicTypeSize
+    /// The column a project row's symbol sits in, which grows with the text so the symbol never runs into the name.
+    @ScaledMetric(relativeTo: .footnote) var rowSymbolWidth: CGFloat = 20
+    @FocusState private var isSearchFocused: Bool
+
+    /// How many lines a chat's or a project's name may take: one, and up to three at the accessibility sizes, where
+    /// one line would hold only a word or two.
+    var titleLineLimit: Int {
+        dynamicTypeSize.isAccessibilitySize ? 3 : 1
+    }
 
     var body: some View {
         @Bindable var viewModel = presenter.viewModel
@@ -43,6 +53,10 @@ struct SidebarView: View {
                 .overlay(alignment: .bottom) { floatingControls }
         }
         .background(HearthColor.paper.ignoresSafeArea())
+        // Find on the keyboard, or Search Chats in the menu bar, puts the cursor in the search field.
+        .onChange(of: viewModel.searchFocusRequestCount) {
+            isSearchFocused = true
+        }
         .alert(Strings.renameChat, isPresented: $viewModel.isRenaming) {
             TextField(Strings.chatTitle, text: $viewModel.renameDraft)
             Button(Strings.cancel, role: .cancel) {}
@@ -50,6 +64,21 @@ struct SidebarView: View {
         }
         .alert(Strings.errorChangeFailed, isPresented: $viewModel.isShowingSaveFailure) {
             Button(Strings.ok, role: .cancel) {}
+        }
+        // The chat is handed to the dialog as it opens, so the answer deletes the one that was asked about.
+        .confirmationDialog(
+            Strings.deleteChatQuestion,
+            isPresented: $viewModel.isConfirmingDelete,
+            titleVisibility: .visible,
+            presenting: viewModel.deletingID
+        ) { id in
+            Button(Strings.deleteChat, role: .destructive) {
+                Haptics.play(.warning)
+                Task { await presenter.confirmDeleteAction(id) }
+            }
+            Button(Strings.cancel, role: .cancel) {}
+        } message: { id in
+            Text(presenter.deleteDetail(for: id))
         }
     }
 
@@ -65,6 +94,7 @@ struct SidebarView: View {
                 .font(.hearth(.subheadline))
                 .foregroundStyle(HearthColor.ink)
                 .autocorrectionDisabled()
+                .focused($isSearchFocused)
         }
         .padding(.horizontal, HearthSpacing.s12)
         .padding(.vertical, Self.rowVerticalPadding)
@@ -93,7 +123,7 @@ struct SidebarView: View {
                     .padding(.top, HearthSpacing.s32)
                     .folded(!groups.isEmpty)
             }
-            .padding(.bottom, Self.listBottomClearance)
+            .padding(.bottom, listBottomClearance + Self.footerBottomGap)
         }
         .scrollDismissesKeyboard(.immediately)
     }
@@ -117,11 +147,11 @@ struct SidebarView: View {
                     Text(row.title)
                         .font(.hearth(.subheadline))
                         .foregroundStyle(HearthColor.ink)
-                        .lineLimit(1)
+                        .lineLimit(titleLineLimit)
                     Label(row.isFromTask ? Strings.scheduledTaskMark : "", systemImage: "clock")
                         .font(.hearth(.caption2))
                         .foregroundStyle(HearthColor.mute)
-                        .lineLimit(1)
+                        .lineLimit(titleLineLimit)
                         .folded(!row.isFromTask)
                         .accessibilityHidden(true)
                 }
@@ -148,43 +178,13 @@ struct SidebarView: View {
             .padding(.vertical, Self.rowVerticalPadding)
             .background(isSelected ? HearthColor.bubble : .clear, in: RoundedRectangle(cornerRadius: HearthRadius.row, style: .continuous))
             .contentShape(Rectangle())
+            .hoverHighlight(RoundedRectangle(cornerRadius: HearthRadius.row, style: .continuous))
         })
         .buttonStyle(.plain)
         .padding(.horizontal, HearthSpacing.s8)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityValue(Self.spokenMarks(for: row))
         .contextMenu { conversationMenu(for: row) }
-    }
-
-    /// What a long press on a chat offers: pin, rename, a project to file it in or leave, share and delete.
-    @ViewBuilder
-    private func conversationMenu(for row: SidebarRowViewConfiguration) -> some View {
-        Button(action: {
-            Haptics.play(.light)
-            Task { await presenter.pinAction(row) }
-        }, label: {
-            Label(row.isPinned ? Strings.unpin : Strings.pin, systemImage: row.isPinned ? "pin.slash" : "pin")
-        })
-        Button(action: { presenter.renameAction(row) }, label: {
-            Label(Strings.rename, systemImage: "pencil")
-        })
-        Button(action: { presenter.addToProjectAction(row) }, label: {
-            Label(Strings.addToProjectEllipsis, systemImage: "folder.badge.plus")
-        })
-        if row.isInProject {
-            Button(action: { Task { await presenter.removeFromProjectAction(row) } }, label: {
-                Label(Strings.removeFromProject, systemImage: "folder.badge.minus")
-            })
-        }
-        ShareLink(item: presenter.exportText(for: row.id)) {
-            Label(Strings.share, systemImage: "square.and.arrow.up")
-        }
-        Button(role: .destructive, action: {
-            Haptics.play(.warning)
-            Task { await presenter.deleteAction(row.id) }
-        }, label: {
-            Label(Strings.delete, systemImage: "trash")
-        })
     }
 
     /// What VoiceOver adds after a chat's title: whether it is pinned, private, in a project, filed by a scheduled
@@ -219,17 +219,25 @@ struct SidebarView: View {
         }
     }
 
+    /// A new chat; while a project's chats are being looked at, a new chat in that project, which it names.
     private var newChatButton: some View {
-        Button(action: presenter.newChatAction) {
-            Label(Strings.newChat, systemImage: "plus")
+        let title = presenter.selectedProject.map { Strings.newChatIn(project: $0.name) } ?? Strings.newChat
+        // At the largest text sizes the words wrap and the button grows taller, rather than shrinking to "+ …".
+        return Button(action: presenter.newChatAction) {
+            Label(title, systemImage: "plus")
                 .font(.hearth(.subheadline).weight(.semibold))
                 .foregroundStyle(HearthColor.onPine)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
                 .padding(.horizontal, HearthSpacing.s18)
-                .frame(height: HearthSize.floatingButton)
-                .background(HearthColor.pine, in: Capsule())
+                .padding(.vertical, HearthSpacing.s8)
+                .frame(minHeight: HearthSize.floatingButton)
+                .background(HearthColor.pine, in: RoundedRectangle(cornerRadius: HearthSize.floatingButton / 2, style: .continuous))
                 .hearthShadow(.floatingProminent)
+                .hoverHighlight(RoundedRectangle(cornerRadius: HearthSize.floatingButton / 2, style: .continuous))
         }
         .buttonStyle(.plain)
+        .layoutPriority(1)
     }
 
     /// Opens the settings. Its dot shows whether the server can be reached.
@@ -238,22 +246,17 @@ struct SidebarView: View {
         return Button(action: presenter.settingsAction) {
             Image(systemName: "gearshape")
                 .font(.hearth(.body))
+                .iconGlyphSize()
                 .foregroundStyle(HearthColor.ink)
                 .frame(width: HearthSize.floatingButton, height: HearthSize.floatingButton)
                 .surface(Circle())
-                .overlay(alignment: .topTrailing) {
-                    Circle()
-                        .fill(status.isOnline ? HearthColor.online : HearthColor.mute)
-                        .frame(width: HearthSize.statusDot, height: HearthSize.statusDot)
-                        // A ring of paper sets the dot apart from the button's edge.
-                        .overlay { Circle().strokeBorder(HearthColor.paper, lineWidth: Self.statusDotRingWidth) }
-                        .padding(HearthSpacing.s2)
-                        .accessibilityHidden(true)
-                }
+                .overlay(alignment: .topTrailing) { statusDot(isOnline: status.isOnline) }
                 .hearthShadow(.floating)
+                .hoverHighlight(Circle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Strings.settings)
         .accessibilityValue(Strings.serverStatusValue(host: status.host, detail: status.detail))
+        .largeContentLabel(Strings.settings, systemImage: "gearshape")
     }
 }

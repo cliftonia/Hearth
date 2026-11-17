@@ -1,12 +1,14 @@
 import UIKit
 import UniformTypeIdentifiers
 
-/// What the share sheet runs when Hearth is chosen. It leaves what was shared where the app will find it,
-/// then opens the app, which puts it into the message being written.
+/// What the share sheet runs when Hearth is chosen. It leaves what was shared where the app will find it, says so,
+/// and closes. The app takes it into the message being written the next time it comes to the front.
+///
+/// An extension has no public way to open its app, so it does not try to.
 final class ShareViewController: UIViewController {
     private static let padding: CGFloat = 24
-    /// How long the note stays up when the app could not be opened from here.
-    private static let noteDuration: Duration = .seconds(1.6)
+    /// How long the note stays up once what was shared has been saved, or could not be.
+    private static let noteDuration: Duration = .seconds(2)
 
     private let note = UILabel()
 
@@ -32,38 +34,15 @@ final class ShareViewController: UIViewController {
         Task { await shareAction() }
     }
 
-    /// Saves what was shared, opens the app, and closes the sheet.
+    /// Saves what was shared, says where it will be found, and closes the sheet.
     private func shareAction() async {
         let items = (extensionContext?.inputItems as? [NSExtensionItem]) ?? []
         let isSaved = await SharedItemWriter.write(items)
-        if isSaved, openApp() {
-            extensionContext?.completeRequest(returningItems: nil)
-            return
-        }
         note.text = isSaved
-            ? String(localized: "share.saved", defaultValue: "Added. Open Hearth to carry on.")
+            ? String(localized: "share.added", defaultValue: "Added to Hearth. It will be in the composer next time you open Hearth.")
             : String(localized: "share.failed", defaultValue: "Hearth could not take that.")
+        UIAccessibility.post(notification: .announcement, argument: note.text)
         try? await Task.sleep(for: Self.noteDuration)
         extensionContext?.completeRequest(returningItems: nil)
-    }
-
-    /// An extension has no direct way to open its app, so the request is handed up the responder chain to the
-    /// application it runs within, by the name of the method that opens a link.
-    private func openApp() -> Bool {
-        typealias OpenLink = @convention(c) (AnyObject, Selector, NSURL, NSDictionary, AnyObject?) -> Void
-        guard let url = NSURL(string: "hearth://share") else {
-            return false
-        }
-        let selector = NSSelectorFromString("openURL:options:completionHandler:")
-        var responder: UIResponder? = self
-        while let current = responder {
-            if current.responds(to: selector), let method = class_getInstanceMethod(type(of: current), selector) {
-                let open = unsafeBitCast(method_getImplementation(method), to: OpenLink.self)
-                open(current, selector, url, NSDictionary(), nil)
-                return true
-            }
-            responder = current.next
-        }
-        return false
     }
 }

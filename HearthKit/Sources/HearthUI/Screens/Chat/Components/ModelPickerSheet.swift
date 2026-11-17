@@ -8,6 +8,7 @@ struct ModelPickerSheet: View {
     let presenter: ChatPresenter
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         let isPictureMode = presenter.viewModel.isPictureMode
@@ -33,7 +34,8 @@ struct ModelPickerSheet: View {
             }
         }
         .background(HearthColor.paper.ignoresSafeArea())
-        .presentationDetents([.medium, .large])
+        // At the accessibility sizes half the screen holds barely a model, so the sheet opens at its full height.
+        .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.medium, .large])
         .presentationDragIndicator(.visible)
     }
 
@@ -119,18 +121,26 @@ struct ModelPickerSheet: View {
                 .disabled(!isAvailable)
             }
         } label: {
-            HStack(spacing: HearthSpacing.s8) {
+            // At the accessibility sizes the choice goes beneath the word Effort, where it has the width to be read.
+            let layout = dynamicTypeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: HearthSpacing.s4))
+                : AnyLayout(HStackLayout(spacing: HearthSpacing.s8))
+            layout {
                 Text(Strings.effort)
                     .font(.hearth(.body))
                     .foregroundStyle(HearthColor.ink)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Text(title)
-                    .font(.hearth(.body))
-                    .foregroundStyle(chosen == .research ? HearthColor.pine : HearthColor.mute)
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.hearth(.footnote))
-                    .foregroundStyle(HearthColor.mute)
-                    .accessibilityHidden(true)
+                HStack(spacing: HearthSpacing.s8) {
+                    Text(title)
+                        .font(.hearth(.body))
+                        .foregroundStyle(chosen == .research ? HearthColor.pine : HearthColor.mute)
+                        .lineLimit(2)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.hearth(.footnote))
+                        .iconGlyphSize()
+                        .foregroundStyle(HearthColor.mute)
+                        .accessibilityHidden(true)
+                }
             }
             .padding(.horizontal, HearthSpacing.s16)
             .padding(.vertical, HearthSpacing.s14)
@@ -183,11 +193,11 @@ struct ModelPickerSheet: View {
                     Text(title)
                         .font(.hearth(.body))
                         .foregroundStyle(HearthColor.ink)
-                        .lineLimit(1)
+                        .lineLimit(2)
                     Text(detail)
                         .font(.hearth(.footnote))
                         .foregroundStyle(HearthColor.mute)
-                        .lineLimit(1)
+                        .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 2)
                         .frame(height: detail.isEmpty ? 0 : nil)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

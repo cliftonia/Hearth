@@ -83,6 +83,46 @@ enum PresenterFixtures {
     static var dictation: DictationProvider {
         DictationProvider(requestAuthorization: { false }, start: { AsyncStream { $0.finish() } }, stop: {})
     }
+
+    /// A chat presenter over the given stores, with servers that never answer.
+    static func chatPresenter(
+        conversationStore: ConversationStore = conversationStore(),
+        isSyncOn: @escaping @MainActor () -> Bool = { false }
+    ) -> ChatPresenter {
+        ChatPresenter(dependencies: ChatPresenter.Dependencies(
+            chat: chat,
+            speech: speech,
+            image: image,
+            research: research,
+            dictation: dictation,
+            notifications: NotificationsFixture().provider,
+            photoLibrary: photoLibrary,
+            settingsStore: settingsStore(),
+            modelStore: ModelStore(fetchModels: { _ in [] }),
+            conversationStore: conversationStore,
+            memoryStore: memoryStore(),
+            projectStore: projectStore(),
+            isLocked: { false },
+            isOnScreen: { true },
+            announce: { _ in },
+            isVoiceOverRunning: { false },
+            isSyncOn: isSyncOn
+        ))
+    }
+}
+
+/// The identifiers a store in a test was asked to delete, safely across tasks.
+final class DeletedIDs<ID: Sendable>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var stored: [ID] = []
+
+    var all: [ID] {
+        lock.withLock { stored }
+    }
+
+    func record(_ id: ID) {
+        lock.withLock { stored.append(id) }
+    }
 }
 
 /// The system's notifications as a test sees them: what the user would answer, and what was asked and posted.

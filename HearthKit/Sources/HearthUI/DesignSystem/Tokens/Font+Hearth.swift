@@ -3,11 +3,10 @@ import UIKit
 
 extension Font {
     /// How much larger text is set on a Mac, whose window is read from further away than a phone.
-    ///
-    /// A Mac ignores the Dynamic Type setting and draws every text style at one fixed size, so the size is set here.
     static let macTextScale: CGFloat = 1.1
 
-    /// A system text style. On an iPhone or iPad it follows the reader's text size; on a Mac it is set a little larger.
+    /// A system text style. On an iPhone or iPad it follows the reader's text size; on a Mac it is set a little larger,
+    /// and follows the text size chosen for the app in the Mac's settings where the system passes it on.
     static func hearth(_ style: TextStyle, design: Design = .default, weight: Weight? = nil) -> Font {
         #if targetEnvironment(macCatalyst)
         .system(size: pointSize(of: style), weight: weight ?? (style == .headline ? .semibold : .regular), design: design)
@@ -19,10 +18,29 @@ extension Font {
     /// The size, in points, a text style is drawn at here.
     static func pointSize(of style: TextStyle) -> CGFloat {
         #if targetEnvironment(macCatalyst)
-        baseSize(of: style) * macTextScale
+        macPointSize(base: baseSize(of: style), preferred: preferredSize(of: style), standard: standardSize(of: style))
         #else
-        UIFont.preferredFont(forTextStyle: style.uiTextStyle).pointSize
+        preferredSize(of: style)
         #endif
+    }
+
+    /// A text style's size on a Mac: its size at the default text size, made larger by `macTextScale`, and grown or
+    /// shrunk by as much as the system's preferred size for the style differs from its standard one. A Mac that passes
+    /// on no text size reports the two as equal, which leaves the size as it was.
+    static func macPointSize(base: CGFloat, preferred: CGFloat, standard: CGFloat) -> CGFloat {
+        let ratio = standard > 0 ? preferred / standard : 1
+        return base * macTextScale * ratio
+    }
+
+    /// The size the system prefers for a text style at the reader's text size.
+    private static func preferredSize(of style: TextStyle) -> CGFloat {
+        UIFont.preferredFont(forTextStyle: style.uiTextStyle).pointSize
+    }
+
+    /// The size the system gives a text style at the default text size, to measure the reader's choice against.
+    private static func standardSize(of style: TextStyle) -> CGFloat {
+        let standard = UITraitCollection(preferredContentSizeCategory: .large)
+        return UIFont.preferredFont(forTextStyle: style.uiTextStyle, compatibleWith: standard).pointSize
     }
 
     /// Each text style's size at the default text size.

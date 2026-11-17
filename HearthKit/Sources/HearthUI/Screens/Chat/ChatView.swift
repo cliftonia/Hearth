@@ -64,6 +64,15 @@ struct ChatView: View {
             Button(Strings.cancel, role: .cancel) {}
             Button(Strings.save) { Task { await presenter.commitRenameChatAction() } }
         }
+        .confirmationDialog(Strings.deleteChatQuestion, isPresented: Bindable(viewModel).isConfirmingDeleteChat, titleVisibility: .visible) {
+            Button(Strings.deleteChat, role: .destructive) {
+                Haptics.play(.warning)
+                Task { await presenter.deleteChatAction() }
+            }
+            Button(Strings.cancel, role: .cancel) {}
+        } message: {
+            Text(presenter.deleteChatDetail)
+        }
         .sheet(isPresented: Bindable(viewModel).isModelPickerPresented) {
             ModelPickerSheet(presenter: presenter)
         }

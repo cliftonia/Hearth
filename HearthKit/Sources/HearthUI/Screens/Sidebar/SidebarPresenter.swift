@@ -32,6 +32,8 @@ final class SidebarPresenter {
     /// The chat that is open, which belongs to the chat screen; the list only highlights it.
     private let selectedConversationID: @MainActor () -> Conversation.ID
     let logger = Logger(for: SidebarPresenter.self)
+    /// Whether chats are being synced, in which case deleting one removes it from every device. Set by the coordinator.
+    var isSyncOn: @MainActor () -> Bool = { false }
 
     init(
         conversationStore: ConversationStore,
@@ -94,6 +96,11 @@ final class SidebarPresenter {
         delegate?.sidebarPresenterDidRequestSettings(self)
     }
 
+    /// Puts the cursor in the search field, as Find on the keyboard asks.
+    func focusSearchAction() {
+        viewModel.searchFocusRequestCount += 1
+    }
+
     // MARK: Changing a chat
 
     /// Pins a chat to the top of the list, or lets it go back among the others.
@@ -143,6 +150,26 @@ final class SidebarPresenter {
     func exportText(for id: Conversation.ID) -> String {
         let exporter = ConversationExporter(userLabel: Strings.exportUser, assistantLabel: Strings.brand, untitled: Strings.newChat)
         return conversationStore.conversation(for: id).map(exporter.markdown(for:)) ?? ""
+    }
+
+    // MARK: Deleting a chat
+
+    /// Asks whether to delete a chat. Nothing is deleted until the answer.
+    func requestDeleteAction(_ id: Conversation.ID) {
+        viewModel.deletingID = id
+    }
+
+    /// What the delete confirmation says beneath its question: that the chat goes from every device when it is
+    /// synced, which a private chat never is.
+    func deleteDetail(for id: Conversation.ID) -> String {
+        let isPrivate = conversationStore.conversation(for: id)?.isPrivate ?? false
+        return isSyncOn() && !isPrivate ? Strings.deleteChatSyncedDetail : Strings.deleteChatDetail
+    }
+
+    /// Deletes the chat that was asked about, once the user has confirmed.
+    func confirmDeleteAction(_ id: Conversation.ID) async {
+        viewModel.deletingID = nil
+        await deleteAction(id)
     }
 
     func deleteAction(_ id: Conversation.ID) async {

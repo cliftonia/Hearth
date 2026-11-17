@@ -77,6 +77,7 @@ extension ChatPresenter {
         viewModel.isResearchMode = false
         viewModel.pictureModels = []
         await newChatAction()
+        composerDrafts = [:]
         await refreshModelsAction()
     }
 }

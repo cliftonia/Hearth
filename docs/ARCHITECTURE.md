@@ -61,8 +61,8 @@ AppCoordinator ─────────────────────�
 3. The coordinator sets itself as each Presenter's delegate. A Presenter that wants to go somewhere
    calls its delegate (`chatPresenterDidRequestSettings`), and the coordinator changes the `AppRouter`.
 4. `RootView` reads the router and presents what it says: the sidebar beside the chat or in a drawer,
-   Settings and the project sheets as sheets, the canvas beside the chat or as a sheet, the voice conversation
-   as a full-screen cover, and the lock over everything.
+   Settings and the project sheets as sheets (on a Mac, Settings in a window of their own), the canvas beside the
+   chat or as a sheet, the voice conversation as a full-screen cover, and the lock over everything.
 5. A View takes its Presenter, reads `presenter.viewModel`, and turns each tap into
    `presenter.somethingAction()`, inside a `Task` when the action is `async`.
 
@@ -79,7 +79,8 @@ App/
   StartVoiceIntent.swift        "Start Voice Conversation" for Siri, Shortcuts and the Action button
 
 Widgets/                        The widget extension: shortcuts that open `hearth://new` and `hearth://voice`
-Share/                          The share extension: writes what is shared into the app group's inbox, then opens `hearth://share`
+Share/                          The share extension: writes what is shared into the app group's inbox and says it is waiting
+                                in the composer; the app takes the inbox in each time it comes to the front
 
 HearthKit/Sources/HearthUI/
   AppCoordinator.swift          Builds and connects the screens (+Projects: where the project sheets lead; +Canvas:
@@ -90,12 +91,13 @@ HearthKit/Sources/HearthUI/
   AppDefaults.swift             The addresses the app starts with
   Sync/                         SyncScheduler (when to sync, one at a time) and SyncHooks (what sync asks of the chat)
   Screens/
-    Root/                       RootView, DrawerContainer
+    Root/                       RootView, DrawerContainer, SettingsWindowRoot (the Mac's settings window and how the
+                                settings are presented)
     Chat/                       ChatView, ChatPresenter (+Replying, +Pictures, +Research, +Editing, +FollowUps, +Menu, +Greeting,
                                 +Notifications, +Sync, +Voice, +Canvas), ChatViewModel
       Components/               The header, a message, the composer and the other sections of the chat
       Attachments/              The camera, and loading photos and files
-    Sidebar/                    SidebarView (+Projects), SidebarPresenter (+Projects), SidebarViewModel, its configurations, ConversationGrouper
+    Sidebar/                    SidebarView (+Projects, +Menu), SidebarPresenter (+Projects), SidebarViewModel, its configurations, ConversationGrouper
     Project/                    ProjectView, ProjectPresenter, ProjectViewModel: the sheet that makes or edits a project
     ProjectPicker/              ProjectPickerView, ProjectPickerPresenter, ProjectPickerViewModel: the sheet that files a chat
     Settings/                   SettingsView (the list), SettingsSections, SettingsPresenter (+Servers, +Status, +Profile,
@@ -119,6 +121,8 @@ HearthKit/Sources/HearthUI/
                                 ImageModelKind, ThinkingLevelKind
   Localization/                 Every user-facing string: Strings.swift and its Strings+Topic.swift extensions
   Platform/                     Thin wrappers over the system: the keyboard, the theme set on the windows (InterfaceStyle),
+                                a window's scene and its smallest size on a Mac (WindowScene), the settings window
+                                (SettingsWindow),
                                 background time, BackgroundRefresh (asking
                                 the system to wake the app for a sync), and SharedInbox (what the share extension left in
                                 the app group)
@@ -405,7 +409,9 @@ they filed. The body is the hub's (`WIRE_FORMAT.md`, section 7; `Spec/wire/task*
   sync opens the settings on the sync page once the notice has gone.
 - **On screen.** Settings → Scheduled tasks lists each task with `TaskScheduleFormatter`'s words ("Every day at 7:30",
   "Every Friday at 18:00", "Once, 20 Nov at 9:00"; 12-hour where the language uses it) and its last run ("Ran today
-  at 7:30", "Last run failed", "Not run yet"), with a switch; a tap opens `ScheduledTaskEditorView` as a sheet.
+  at 7:30", "Last run failed", "Not run yet"), with a switch; a row, which ends in a chevron, opens the editor (`ScheduledTaskEditorForm`) pushed within the
+  settings' own navigation, without a back button since Cancel and Done stand in its bar. Only a task begun from the
+  composer shows the editor as a sheet of its own (`ScheduledTaskEditorView`).
 - **What they file.** A chat the hub filed carries `taskId`, which schema 1 does not define: it stays among the
   unknown fields (and so in the shared vectors) and is also read into `Conversation.taskID` and written back by
   `Conversation.syncBody()`. The chat header shows "Scheduled task". The chat list gathers these chats under their
@@ -420,7 +426,7 @@ they filed. The body is the hub's (`WIRE_FORMAT.md`, section 7; `Spec/wire/task*
 
 ## Settings, the profile and erasing
 
-Settings is one sheet with one Presenter. Its first page is a list (`SettingsView` and `SettingsSections`): the
+Settings is one sheet with one Presenter; on a Mac it is a window of its own instead (see below). Its first page is a list (`SettingsView` and `SettingsSections`): the
 profile row, then Chats (Memory, Suggest follow-up questions, Web search, Scheduled tasks), Voice & Pictures,
 Notifications, Appearance & Privacy (theme, Vibration, the lock), Servers & Sync, and Erase all data on this device
 last. Section headings are in Title Case, as written. Most rows lead to a page pushed from the list, drawn as cards
@@ -428,11 +434,21 @@ last. Section headings are in Title Case, as written. Most rows lead to a page p
 "On · 12 saved", "Connected · 14 models", "On · synced 2 min ago"), which VoiceOver reads with the title as one
 label ("Memory, On, 12 saved"). A Cloud providers row will go under Servers & Sync.
 
-- **Saved as it is made.** There is no Done and no Cancel, only Close. A switch or a choice is kept at once
+- **Saved as it is made.** There is no Done and no Cancel, only the round close button at the trailing edge, as on
+  every sheet that is not an editor. A switch or a choice is kept at once
   (`SettingsPresenter.keepAction`). Typed text, the names, the instructions, a voice's name and the server addresses,
   is kept when its field is left or submitted (`keepOnLeaving`), when its page closes, when the app leaves the front,
-  and when the sheet goes, by Close or by a swipe (`RootView` reports the dismissal). Nothing is written per letter
-  and nothing typed is lost.
+  and when the sheet goes, by its close button or by a swipe (`RootView` reports the dismissal). Nothing is written per
+  letter and nothing typed is lost.
+- **A window of its own on a Mac.** The Mac build may open more than one window
+  (`INFOPLIST_KEY_UIApplicationSceneManifest_Generation`, for the Mac only), and `HearthApp` declares a second
+  `WindowGroup` with the id `SettingsWindow.id`. The router still says whether the settings are showing
+  (`isSettingsPresented`); where `usesSettingsWindow`, `SettingsPresentation` opens the window with `openWindow`
+  instead of a sheet, and `SettingsWindowRoot` shows the same presenters in it, closes it when the router says the
+  settings have gone (the lock, a tapped notification) and tells the router when the window is closed by its own
+  button. Asking for the settings again brings the open window forward. The window has no close button of its own,
+  hides its contents while the app is locked or hidden, and closes if it is brought back by the system while locked.
+  The lock covers every window the app has.
 - **Pages are opened by path.** A row appends a `SettingsPageKind` to `SettingsViewModel.path` with a plain button
   (`SettingsLinkRow`). A `NavigationLink` was pushed again on the Mac whenever its row changed, and the profile row
   changes with each letter of the name typed on the page it opens. Keeping the path in the view model also lets the
@@ -557,6 +573,26 @@ wire examples. So far the vectors cover pure functions only, and they settle the
   block a beacon like any other load; Android replaces `Document.parseHTMLUnsafe` only where the engine has it, where
   here it is put in place always, the stricter choice; and Android keeps a `DOMParser` from being asked to
   `includeShadowRoots`, an option WebKit's parser does not have.
+
+## Keyboard, confirmations and drafts
+
+- **Commands.** `HearthCommands` (in `AppCoordinator+Commands.swift`), added to the scene in `HearthApp`, puts these in
+  the Mac's menu bar and in the list an iPad shows while Command is held: New Chat ⌘N (File), Settings… ⌘, (the app
+  menu), Search Chats ⌘F (Edit, in place of the system's Find, which looks in text views the app does not have), Delete
+  Chat… ⌘⌫ (Edit) and Show or Hide Chat List ⌃⌘S (View). Each calls the coordinator, which uses the same presenter
+  action as the matching button; none acts while the app is locked or a sheet is over the chat. On a Mac Settings…
+  opens the settings window, or brings it forward, and leaves the chat's commands free while it is open. Delete goes through
+  the same confirmation as the chat's menu. Search Chats shows the chat list first if it is put away.
+- **Return in the composer.** With a hardware keyboard Return sends and Shift-Return starts a new line
+  (`ComposerReturnKey`, through `.onKeyPress`); the on-screen keyboard sends no key presses, so on it Return still
+  starts a new line. Return never stops a reply on its way.
+- **Deleting a chat** from its menu, from the chat list or from the keyboard asks first (`ChatViewModel.isConfirmingDeleteChat`,
+  `SidebarViewModel.deletingID`). With sync on, and the chat not private, the question says it goes from every device.
+- **Unsaved edits.** The project and task editors compare their draft with what they opened with (`ProjectDraft`,
+  `TaskDraft`); while it differs the sheet cannot be swiped away and Cancel asks "Discard your changes?".
+- **Drafts belong to their chat.** What is being written, with its attachments, is put aside when another chat is
+  opened and given back when the first is opened again (`ChatPresenter+Drafts`). It is held only while the app runs;
+  a sent message being edited is not kept as a draft.
 
 ## Conventions
 

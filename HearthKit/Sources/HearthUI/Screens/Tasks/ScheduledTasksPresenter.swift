@@ -163,8 +163,18 @@ final class ScheduledTasksPresenter {
         viewModel.isEditorPresented = true
     }
 
-    /// Closes the editor and lets the draft go.
+    /// Closes the editor, asking first if anything has been changed, so that editing is never lost to a stray tap.
     func cancelAction() {
+        guard !hasEditorChanges else {
+            viewModel.isConfirmingDiscard = true
+            return
+        }
+        closeEditor()
+    }
+
+    /// Lets the changes go and closes the editor, once the user has said to.
+    func discardChangesAction() {
+        viewModel.isConfirmingDiscard = false
         closeEditor()
     }
 
@@ -261,6 +271,8 @@ final class ScheduledTasksPresenter {
             viewModel.earliestOnceDate = min(date, now)
         }
         viewModel.isConfirmingDelete = false
+        viewModel.isConfirmingDiscard = false
+        viewModel.originalDraft = currentDraft
     }
 
     /// Closes the editor wherever it is showing: on the tasks page, or over the chat.

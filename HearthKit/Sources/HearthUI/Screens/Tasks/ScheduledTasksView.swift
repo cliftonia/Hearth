@@ -21,8 +21,10 @@ struct ScheduledTasksPage: View {
                 tasksCard(rows: rows, isSyncOn: isSyncOn)
             }
         }
-        .sheet(isPresented: $viewModel.isEditorPresented) {
-            ScheduledTaskEditorView(presenter: presenter)
+        // The editor is pushed within the settings, rather than stacked over them as a second sheet.
+        .navigationDestination(isPresented: $viewModel.isEditorPresented) {
+            ScheduledTaskEditorForm(presenter: presenter)
+                .navigationBarBackButtonHidden()
         }
         .alert(Strings.taskActionFailed, isPresented: $viewModel.isShowingFailure) {
             Button(Strings.ok, role: .cancel) {}
@@ -67,6 +69,7 @@ struct ScheduledTasksPage: View {
                 .padding(.horizontal, HearthSpacing.s16)
                 .padding(.vertical, HearthSpacing.s14)
                 .contentShape(Rectangle())
+                .hoverHighlight(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
@@ -74,7 +77,8 @@ struct ScheduledTasksPage: View {
     }
 }
 
-/// One task: its title, schedule and last run, which open it in the editor, and its switch.
+/// One task: its title, schedule and last run, which open it in the editor (as the chevron after them says), and its
+/// switch.
 private struct TaskRow: View {
     let row: TaskRowViewConfiguration
     let presenter: ScheduledTasksPresenter
@@ -85,20 +89,16 @@ private struct TaskRow: View {
     var body: some View {
         HStack(spacing: HearthSpacing.s12) {
             Button(action: { presenter.editAction(row.id) }, label: {
-                VStack(alignment: .leading, spacing: HearthSpacing.s2) {
-                    Text(row.title)
-                        .font(.hearth(.body))
-                        .foregroundStyle(HearthColor.ink)
-                        .lineLimit(2)
-                    Text(Strings.taskScheduleAndModel(schedule: row.scheduleText, model: row.modelName))
-                        .font(.hearth(.footnote))
+                HStack(spacing: HearthSpacing.s8) {
+                    details
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Image(systemName: "chevron.right")
+                        .font(.hearth(.footnote).weight(.semibold))
                         .foregroundStyle(HearthColor.mute)
-                    Text(row.lastRunText)
-                        .font(.hearth(.footnote))
-                        .foregroundStyle(row.lastRunFailed ? HearthColor.danger : HearthColor.mute)
+                        .accessibilityHidden(true)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
+                .hoverHighlight(RoundedRectangle(cornerRadius: HearthRadius.row, style: .continuous).inset(by: -HearthSpacing.s6))
             })
             .buttonStyle(.plain)
             .accessibilityElement(children: .ignore)
@@ -118,6 +118,22 @@ private struct TaskRow: View {
                 return
             }
             Task { await presenter.setEnabledAction(row.id, isEnabled: isOn) }
+        }
+    }
+
+    /// The title, the schedule and model, and how the last run went.
+    private var details: some View {
+        VStack(alignment: .leading, spacing: HearthSpacing.s2) {
+            Text(row.title)
+                .font(.hearth(.body))
+                .foregroundStyle(HearthColor.ink)
+                .lineLimit(2)
+            Text(Strings.taskScheduleAndModel(schedule: row.scheduleText, model: row.modelName))
+                .font(.hearth(.footnote))
+                .foregroundStyle(HearthColor.mute)
+            Text(row.lastRunText)
+                .font(.hearth(.footnote))
+                .foregroundStyle(row.lastRunFailed ? HearthColor.danger : HearthColor.mute)
         }
     }
 }
