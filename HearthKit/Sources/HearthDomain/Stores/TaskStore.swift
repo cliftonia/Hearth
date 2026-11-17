@@ -36,50 +36,22 @@ public final class TaskStore {
     public func save(_ task: ScheduledTask) async throws {
         let previous = self.task(for: task.id)
         let task = task.stamped(at: SyncClock.stamp(now: clock(), after: previous?.updatedAt))
-        let before = tasks
-        tasks = Self.ordered(tasks.filter { $0.id != task.id } + [task])
-        do {
-            try await provider.save(task)
-        } catch {
-            tasks = before
-            throw error
-        }
+        try await provider.write(task, into: \.tasks, of: self) { others, item in Self.ordered(others + [item]) }
         onLocalChange?(.changed(.task(task.id)))
     }
 
     /// Removes a task from the list and from disk; the hub stops running it once sync sends the deletion. If it
     /// cannot be removed from disk it stays in the list.
     public func delete(_ id: ScheduledTask.ID) async throws {
-        guard let removed = task(for: id) else {
-            try await provider.delete(id)
+        guard let removed = try await provider.remove(id, from: \.tasks, of: self) else {
             return
-        }
-        let before = tasks
-        tasks.removeAll { $0.id == id }
-        do {
-            try await provider.delete(id)
-        } catch {
-            tasks = before
-            throw error
         }
         onLocalChange?(.deleted(.task(id), at: SyncClock.stamp(now: clock(), after: removed.updatedAt)))
     }
 
     /// Removes every task from this device, as erasing everything does. The hub keeps them and sync is not told.
     public func deleteAll() async throws {
-        do {
-            if let deleteAll = provider.deleteAll {
-                try await deleteAll()
-            } else {
-                for task in tasks {
-                    try await provider.delete(task.id)
-                }
-            }
-            tasks = []
-        } catch {
-            try? await load()
-            throw error
-        }
+        try await provider.removeAll(from: \.tasks, of: self) { try await self.load() }
     }
 
     // MARK: From the hub and other devices

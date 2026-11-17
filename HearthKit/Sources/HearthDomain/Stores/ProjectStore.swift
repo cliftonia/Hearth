@@ -36,20 +36,9 @@ public final class ProjectStore {
     /// It is stamped as changed now, which is also when the list says it last changed. If the write fails the list
     /// goes back to what is on disk, and the error is passed on.
     public func save(_ project: Project) async throws {
-        let previousIndex = projects.firstIndex { $0.id == project.id }
-        let previous = previousIndex.map { projects[$0] }
+        let previous = self.project(for: project.id)
         let project = project.updating(updatedAt: SyncClock.stamp(now: clock(), after: previous?.updatedAt))
-        projects.removeAll { $0.id == project.id }
-        projects.insert(project, at: 0)
-        do {
-            try await provider.save(project)
-        } catch {
-            projects.removeAll { $0.id == project.id }
-            if let previous, let previousIndex {
-                projects.insert(previous, at: min(previousIndex, projects.count))
-            }
-            throw error
-        }
+        try await provider.write(project, into: \.projects, of: self) { others, item in [item] + others }
         onLocalChange?(.changed(.project(project.id)))
     }
 
@@ -57,35 +46,15 @@ public final class ProjectStore {
     /// Sync is not told: erasing this device deletes nothing anywhere else.
     /// If that cannot be done the list is read again from what is left on disk, and the error is passed on.
     public func deleteAll() async throws {
-        do {
-            if let deleteAll = provider.deleteAll {
-                try await deleteAll()
-            } else {
-                for project in projects {
-                    try await provider.delete(project.id)
-                }
-            }
-            projects = []
-        } catch {
-            try? await load()
-            throw error
-        }
+        try await provider.removeAll(from: \.projects, of: self) { try await self.load() }
     }
 
     /// Removes a project from the list and from disk. If it cannot be removed from disk it stays in the list.
     ///
     /// The project's chats are not touched here; `ProjectInteractor` lets them go first.
     public func delete(_ id: Project.ID) async throws {
-        guard let index = projects.firstIndex(where: { $0.id == id }) else {
-            try await provider.delete(id)
+        guard let removed = try await provider.remove(id, from: \.projects, of: self) else {
             return
-        }
-        let removed = projects.remove(at: index)
-        do {
-            try await provider.delete(id)
-        } catch {
-            projects.insert(removed, at: min(index, projects.count))
-            throw error
         }
         onLocalChange?(.deleted(.project(id), at: SyncClock.stamp(now: clock(), after: removed.updatedAt)))
     }

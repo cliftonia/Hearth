@@ -19,18 +19,10 @@ struct RootView: View {
                 LockView(presenter: coordinator.lockPresenter)
             }
         }
+        // Not a `.task(id:)`: the unlock prompt itself makes the app inactive, which must not cancel the prompt.
         .onChange(of: scenePhase, initial: true) {
-            coordinator.router.isSceneActive = scenePhase == .active
-            if scenePhase == .active {
-                coordinator.sceneDidBecomeActive()
-            } else if scenePhase == .background {
-                coordinator.sceneDidBecomeInactive()
-            }
-            let shouldPrompt = coordinator.lockPresenter.sceneChanged(to: scenePhase)
-            coordinator.showLockWindow(colorScheme: colorScheme)
-            if shouldPrompt {
-                Task { await coordinator.lockPresenter.unlockAction() }
-            }
+            let phase = scenePhase
+            Task { await coordinator.sceneAction(phase) }
         }
         // Every haptic in the app asks this one switch.
         .onChange(of: coordinator.settingsStore.settings.isHapticsEnabled, initial: true) {

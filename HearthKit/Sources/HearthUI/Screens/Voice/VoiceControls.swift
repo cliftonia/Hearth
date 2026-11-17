@@ -49,6 +49,7 @@ struct VoiceControls: View {
             Haptics.play(.light)
             Task { await presenter.cameraAction() }
         }
+        .accessibilityAddTraits(isOn ? .isSelected : [])
         .accessibilityHint(isEnabled ? Strings.cameraHint : Strings.cameraModelCannotSee)
         .disabled(!isEnabled)
         .opacity(isEnabled ? 1 : 0.4)
@@ -127,7 +128,7 @@ struct VoiceRoundButton: View {
         case .switchedOn:
             HearthColor.pineSoft
         case .ending:
-            HearthColor.danger
+            HearthColor.dangerFill
         }
     }
 
@@ -140,16 +141,5 @@ struct VoiceRoundButton: View {
         case .ending:
             .clear
         }
-    }
-}
-
-private extension View {
-    /// Keeps the view in place but folds it to nothing, unseen, untouchable and unread, while it has nothing to say.
-    func folded(_ isFolded: Bool) -> some View {
-        opacity(isFolded ? 0 : 1)
-            .frame(height: isFolded ? 0 : nil, alignment: .top)
-            .clipped()
-            .allowsHitTesting(!isFolded)
-            .accessibilityHidden(isFolded)
     }
 }

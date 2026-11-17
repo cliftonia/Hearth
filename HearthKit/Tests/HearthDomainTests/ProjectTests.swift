@@ -38,6 +38,9 @@ struct ProjectStoreTests {
             },
             delete: { _ in
                 if failsProjectWrites { throw DiskFull() }
+            },
+            deleteAll: {
+                if failsProjectWrites { throw DiskFull() }
             }
         ))
         let conversationStore = ConversationStore(provider: ConversationDataProvider(
@@ -46,7 +49,8 @@ struct ProjectStoreTests {
                 if failsConversationWrites { throw DiskFull() }
                 savedConversations.record($0)
             },
-            delete: { _ in }
+            delete: { _ in },
+            deleteAll: {}
         ))
         return Fixture(
             subject: subject,

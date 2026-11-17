@@ -123,9 +123,7 @@ struct SettingsEraseSection: View {
                 Text(Strings.eraseAllFooter)
                 Label(error ?? "", systemImage: "exclamationmark.triangle.fill")
                     .foregroundStyle(HearthColor.danger)
-                    .opacity(error == nil ? 0 : 1)
-                    .frame(height: error == nil ? 0 : nil)
-                    .accessibilityHidden(error == nil)
+                    .folded(error == nil)
             }
         }
         .confirmationDialog(Strings.eraseAllQuestion, isPresented: $viewModel.isConfirmingErase, titleVisibility: .visible) {

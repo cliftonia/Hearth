@@ -84,13 +84,16 @@ struct ChatResearchTests {
                 research: ResearchInteractor(chat: researchChat, search: search),
                 dictation: PresenterFixtures.dictation,
                 notifications: NotificationsFixture(permission: .denied).provider,
+                photoLibrary: PresenterFixtures.photoLibrary,
                 settingsStore: settingsStore,
                 modelStore: ModelStore(fetchModels: { _ in [Fixture.model] }),
                 conversationStore: conversationStore,
                 memoryStore: PresenterFixtures.memoryStore(),
                 projectStore: PresenterFixtures.projectStore(),
                 isLocked: { false },
-                isOnScreen: { true }
+                isOnScreen: { true },
+                announce: { _ in },
+                isVoiceOverRunning: { false }
             ))
             subject.viewModel.selectedModel = Self.model
             return subject

@@ -1,11 +1,12 @@
 import Accessibility
 import HearthDomain
 import SwiftUI
+import UIKit
 
 /// Builds the screens, wires them together and decides where each request leads.
 ///
 /// The app has one coordinator. Each presenter reports to it through a delegate protocol, which it conforms to in
-/// the extensions below; it answers by changing the `AppRouter` or by asking another presenter to act. What it does
+/// `AppCoordinator+Delegates`; it answers by changing the `AppRouter` or by asking another presenter to act. What it does
 /// for projects is in `AppCoordinator+Projects`, for the canvas in `AppCoordinator+Canvas`, and for scheduled tasks
 /// and background refresh in `AppCoordinator+Tasks`.
 @MainActor
@@ -25,9 +26,11 @@ public final class AppCoordinator {
     /// Decides when to sync with the hub.
     let syncScheduler: SyncScheduler
     let taskStore: TaskStore
+    /// Read for the chats whose answers a scheduled task filed.
+    let conversationStore: ConversationStore
     let notifications: NotificationProvider
     /// A voice conversation asked for while locked, begun once the owner is in.
-    private var isVoicePending = false
+    var isVoicePending = false
     /// Settings are to open on the sync page once the task sheet over the chat has gone.
     var opensSyncAfterTaskSheet = false
     private let lockWindowController = LockWindowController()
@@ -36,21 +39,7 @@ public final class AppCoordinator {
         let settingsStore = dependencies.settingsStore
         let router = AppRouter()
         let lockPresenter = LockPresenter(authentication: dependencies.authentication) { settingsStore.settings.isLockEnabled }
-        let chatPresenter = ChatPresenter(dependencies: ChatPresenter.Dependencies(
-            chat: dependencies.chat,
-            speech: dependencies.speech,
-            image: dependencies.image,
-            research: dependencies.research,
-            dictation: dependencies.dictation,
-            notifications: dependencies.notifications,
-            settingsStore: dependencies.settingsStore,
-            modelStore: dependencies.modelStore,
-            conversationStore: dependencies.conversationStore,
-            memoryStore: dependencies.memoryStore,
-            projectStore: dependencies.projectStore,
-            isLocked: { lockPresenter.viewModel.isLocked },
-            isOnScreen: { router.isSceneActive }
-        ))
+        let chatPresenter = Self.makeChatPresenter(dependencies: dependencies, router: router, lockPresenter: lockPresenter)
         self.router = router
         self.settingsStore = settingsStore
         self.chatPresenter = chatPresenter
@@ -83,6 +72,7 @@ public final class AppCoordinator {
         ))
         self.tasksPresenter = Self.makeTasksPresenter(dependencies: dependencies)
         (syncScheduler, taskStore, notifications) = (dependencies.syncScheduler, dependencies.taskStore, dependencies.notifications)
+        self.conversationStore = dependencies.conversationStore
         connect(dependencies)
     }
 
@@ -118,15 +108,47 @@ public final class AppCoordinator {
         }
     }
 
-    /// The app has come to the front: sync, if sync is on, and keep syncing while it stays.
-    func sceneDidBecomeActive() {
-        syncScheduler.appBecameActive()
+    /// The app has come to the front, stepped back from it, or gone to the background.
+    ///
+    /// At the front it syncs, if sync is on, and keeps syncing while it stays; in the background the regular syncs
+    /// stop and a background refresh is asked for. The lock hides or locks the app at once, before the system
+    /// pictures it for the app switcher, and asks the owner to unlock when the app comes forward locked; the lock
+    /// window follows the lock as the root view sees it change.
+    func sceneAction(_ phase: ScenePhase) async {
+        router.isSceneActive = phase == .active
+        switch phase {
+        case .active:
+            syncScheduler.appBecameActive()
+        case .background:
+            syncScheduler.appBecameInactive()
+            BackgroundRefresh.schedule()
+        case .inactive:
+            break
+        @unknown default:
+            break
+        }
+        await lockPresenter.sceneAction(phase)
     }
 
-    /// The app has left the front: the regular syncs stop, and a background refresh is asked for.
-    func sceneDidBecomeInactive() {
-        syncScheduler.appBecameInactive()
-        BackgroundRefresh.schedule()
+    private static func makeChatPresenter(dependencies: AppDependencies, router: AppRouter, lockPresenter: LockPresenter) -> ChatPresenter {
+        ChatPresenter(dependencies: ChatPresenter.Dependencies(
+            chat: dependencies.chat,
+            speech: dependencies.speech,
+            image: dependencies.image,
+            research: dependencies.research,
+            dictation: dependencies.dictation,
+            notifications: dependencies.notifications,
+            photoLibrary: dependencies.photoLibrary,
+            settingsStore: dependencies.settingsStore,
+            modelStore: dependencies.modelStore,
+            conversationStore: dependencies.conversationStore,
+            memoryStore: dependencies.memoryStore,
+            projectStore: dependencies.projectStore,
+            isLocked: { lockPresenter.viewModel.isLocked },
+            isOnScreen: { router.isSceneActive },
+            announce: { AccessibilityNotification.Announcement($0).post() },
+            isVoiceOverRunning: { UIAccessibility.isVoiceOverRunning }
+        ))
     }
 
     private static func makeSettingsPresenter(dependencies: AppDependencies, chatPresenter: ChatPresenter) -> SettingsPresenter {
@@ -239,147 +261,5 @@ public final class AppCoordinator {
     /// The root of the app's interface.
     public func start() -> some View {
         RootView(coordinator: self)
-    }
-}
-
-// MARK: - ChatPresenterDelegate
-
-extension AppCoordinator: ChatPresenterDelegate {
-    func chatPresenterDidRequestNewProject(_ presenter: ChatPresenter) {
-        projectPresenter.begin()
-        router.projectSheet = .editor
-    }
-
-    /// A narrow screen opens the drawer; a wide one shows the chats beside the chat or puts them away.
-    func chatPresenterDidRequestSidebar(_ presenter: ChatPresenter) {
-        if router.isWide {
-            guard !closeCanvasForSidebar() else {
-                return
-            }
-            router.isSidebarPinned.toggle()
-        } else {
-            router.isSidebarOpen = true
-        }
-    }
-
-    func chatPresenterDidRequestVoice(_ presenter: ChatPresenter) {
-        router.isVoicePresented = true
-    }
-
-    func chatPresenterDidRequestSettings(_ presenter: ChatPresenter) {
-        router.isSettingsPresented = true
-    }
-
-    func chatPresenter(_ presenter: ChatPresenter, didRequestProjectFor id: Conversation.ID) {
-        presentProjectPicker(for: id)
-    }
-
-    func chatPresenter(_ presenter: ChatPresenter, didRequestCanvasFor reference: CanvasReference) {
-        openCanvas(reference)
-    }
-
-    func chatPresenter(_ presenter: ChatPresenter, didRequestTaskWith prompt: String) {
-        presentTaskSheet(prompt: prompt)
-    }
-}
-
-// MARK: - SidebarPresenterDelegate
-
-extension AppCoordinator: SidebarPresenterDelegate {
-    func sidebarPresenter(_ presenter: SidebarPresenter, didSelect id: Conversation.ID) {
-        router.isSidebarOpen = false
-        Task { await chatPresenter.selectConversationAction(id) }
-    }
-
-    /// Deleting the open chat leaves nothing to show, so a new one takes its place.
-    func sidebarPresenter(_ presenter: SidebarPresenter, didDelete id: Conversation.ID) {
-        guard chatPresenter.viewModel.conversation.id == id else {
-            return
-        }
-        Task { await chatPresenter.newChatAction() }
-    }
-
-    func sidebarPresenter(_ presenter: SidebarPresenter, didRename id: Conversation.ID, to title: String) {
-        chatPresenter.conversationWasRenamed(id, to: title)
-    }
-
-    func sidebarPresenter(_ presenter: SidebarPresenter, didRequestNewChatIn projectID: Project.ID?) {
-        router.isSidebarOpen = false
-        Task { await chatPresenter.newChatAction(in: projectID) }
-    }
-
-    func sidebarPresenter(_ presenter: SidebarPresenter, didRequestEditing projectID: Project.ID) {
-        projectPresenter.begin(editing: projectID)
-        router.projectSheet = .editor
-    }
-
-    func sidebarPresenter(_ presenter: SidebarPresenter, didRequestProjectFor id: Conversation.ID) {
-        presentProjectPicker(for: id)
-    }
-
-    func sidebarPresenterDidRequestSettings(_ presenter: SidebarPresenter) {
-        router.isSettingsPresented = true
-    }
-}
-
-// MARK: - SettingsPresenterDelegate
-
-extension AppCoordinator: SettingsPresenterDelegate {
-    func settingsPresenterDidFinish(_ presenter: SettingsPresenter) {
-        router.isSettingsPresented = false
-    }
-
-    /// Another chat server may offer other models, so they are fetched afresh.
-    func settingsPresenterDidChangeChatServer(_ presenter: SettingsPresenter) {
-        Task { await chatPresenter.refreshModelsAction() }
-    }
-
-    /// With everything erased the app goes back to how it first opened: no sheet, every chat list choice
-    /// forgotten, an empty chat, and the models of the server it was built to start with.
-    func settingsPresenterDidErase(_ presenter: SettingsPresenter) {
-        router.isSettingsPresented = false
-        router.isSidebarOpen = false
-        router.isSidebarPinned = true
-        sidebarPresenter.viewModel.selectedProjectID = nil
-        Task { await chatPresenter.resetAction() }
-    }
-}
-
-// MARK: - VoicePresenterDelegate
-
-extension AppCoordinator: VoicePresenterDelegate {
-    func voicePresenterDidFinish(_ presenter: VoicePresenter) {
-        router.isVoicePresented = false
-    }
-}
-
-// MARK: - LockPresenterDelegate
-
-extension AppCoordinator: LockPresenterDelegate {
-    /// A locked app shows nothing, says nothing and listens to nothing: sheets close and voice and speech stop.
-    func lockPresenterDidLock(_ presenter: LockPresenter) {
-        let wasInVoice = router.isVoicePresented
-        router.isSettingsPresented = false
-        router.projectSheet = nil
-        router.taskSheet = nil
-        router.isVoicePresented = false
-        router.isSidebarOpen = false
-        router.isCanvasOpen = false
-        sidebarPresenter.viewModel.isRenaming = false
-        Task {
-            if wasInVoice {
-                await voicePresenter.endAction()
-            }
-            await chatPresenter.stopSpeaking()
-            await chatPresenter.stopDictation()
-        }
-    }
-
-    /// Begins the voice conversation that was asked for while the app was locked, if there was one.
-    func lockPresenterDidUnlock(_ presenter: LockPresenter) {
-        if isVoicePending {
-            isVoicePending = false
-            startVoice()
-        }
     }
 }

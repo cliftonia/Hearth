@@ -129,8 +129,6 @@ struct ProfilePage: View {
             .font(.hearth(.footnote))
             .foregroundStyle(HearthColor.danger)
             .padding(.horizontal, HearthSpacing.s4)
-            .opacity(error == nil ? 0 : 1)
-            .frame(height: error == nil ? 0 : nil)
-            .accessibilityHidden(error == nil)
+            .folded(error == nil)
     }
 }

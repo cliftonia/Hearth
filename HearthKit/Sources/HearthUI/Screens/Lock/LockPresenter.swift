@@ -35,7 +35,7 @@ final class LockPresenter {
 
     /// Hides or locks at once, before the system pictures the app for its switcher.
     /// Returns whether the owner should now be asked to unlock.
-    func sceneChanged(to phase: ScenePhase) -> Bool {
+    private func sceneChanged(to phase: ScenePhase) -> Bool {
         guard isEnabled() else {
             viewModel.isLocked = false
             viewModel.isObscured = false

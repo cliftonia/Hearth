@@ -13,7 +13,7 @@ struct IconButton: View {
                 .font(HearthFont.icon)
                 .foregroundStyle(HearthColor.ink)
                 .frame(width: HearthSize.iconButton, height: HearthSize.iconButton)
-                .contentShape(Rectangle())
+                .minimumHitTarget()
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)

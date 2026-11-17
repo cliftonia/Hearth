@@ -17,6 +17,8 @@ struct SidebarView: View {
     /// Room for the last chat to be scrolled clear of the floating controls.
     private static let listBottomClearance: CGFloat = 74 + footerBottomGap
     private static let statusDotRingWidth: CGFloat = 2
+    /// The headings above the groups are spaced out a little, to read as labels.
+    private static let headingKerning: CGFloat = 0.6
     /// How far down the floating controls the list has faded out completely.
     private static let fadeEnd = UnitPoint(x: 0.5, y: 0.4)
 
@@ -89,26 +91,19 @@ struct SidebarView: View {
                     .foregroundStyle(HearthColor.mute)
                     .frame(maxWidth: .infinity)
                     .padding(.top, HearthSpacing.s32)
-                    .opacity(groups.isEmpty ? 1 : 0)
-                    .frame(height: groups.isEmpty ? nil : 0)
-                    .accessibilityHidden(!groups.isEmpty)
+                    .folded(!groups.isEmpty)
             }
             .padding(.bottom, Self.listBottomClearance)
         }
         .scrollDismissesKeyboard(.immediately)
     }
 
-    /// The small capitals above a group of rows.
+    /// The small capitals above a group of rows, set in from the list's edge.
     func heading(_ title: String) -> some View {
-        Text(title)
-            .font(.hearth(.caption).weight(.medium))
-            .textCase(.uppercase)
-            .kerning(0.6)
-            .foregroundStyle(HearthColor.mute)
+        SectionHeading(title: title, kerning: Self.headingKerning)
             .padding(.horizontal, HearthSpacing.s18)
             .padding(.top, HearthSpacing.s14)
             .padding(.bottom, HearthSpacing.s4)
-            .accessibilityAddTraits(.isHeader)
     }
 
     /// One chat. A long press offers to pin or rename it, file it in a project, share it or delete it.
@@ -127,8 +122,7 @@ struct SidebarView: View {
                         .font(.hearth(.caption2))
                         .foregroundStyle(HearthColor.mute)
                         .lineLimit(1)
-                        .opacity(row.isFromTask ? 1 : 0)
-                        .frame(height: row.isFromTask ? nil : 0)
+                        .folded(!row.isFromTask)
                         .accessibilityHidden(true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -260,6 +254,6 @@ struct SidebarView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Strings.settings)
-        .accessibilityValue("\(status.host), \(status.detail)")
+        .accessibilityValue(Strings.serverStatusValue(host: status.host, detail: status.detail))
     }
 }

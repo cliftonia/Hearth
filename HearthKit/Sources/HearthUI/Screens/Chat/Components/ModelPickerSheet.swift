@@ -60,12 +60,8 @@ struct ModelPickerSheet: View {
 
     private func group(title: String, models: [ChatModel]) -> some View {
         VStack(alignment: .leading, spacing: HearthSpacing.s6) {
-            Text(title)
-                .font(.hearth(.caption).weight(.medium))
-                .textCase(.uppercase)
-                .foregroundStyle(HearthColor.mute)
+            SectionHeading(title: title)
                 .padding(.horizontal, HearthSpacing.s4)
-                .accessibilityAddTraits(.isHeader)
             VStack(spacing: 0) {
                 ForEach(models) { model in
                     row(

@@ -7,7 +7,7 @@ extension ChatPresenter {
     func addDocumentsAction(_ documents: [AttachedDocument], unreadableCount: Int) {
         viewModel.pendingDocuments.append(contentsOf: documents)
         if unreadableCount > 0 {
-            viewModel.error = ErrorViewConfiguration(title: Strings.attach, message: Strings.filesUnreadable, retryActionLabel: nil)
+            showError(ErrorViewConfiguration(title: Strings.attach, message: Strings.filesUnreadable, retryActionLabel: nil))
         }
     }
 

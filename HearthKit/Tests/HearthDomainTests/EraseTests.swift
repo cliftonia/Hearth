@@ -32,7 +32,8 @@ struct EraseTests {
         private(set) lazy var projects = ProjectStore(provider: ProjectDataProvider(
             loadAll: { await self.projectFiles },
             save: { _ in },
-            delete: { id in try await self.deleteProject(id) }
+            delete: { id in try await self.deleteProject(id) },
+            deleteAll: { try await self.deleteAllProjects() }
         ))
         private(set) lazy var memories = MemoryStore(provider: MemoryDataProvider(
             load: { await self.memoryFile },
@@ -68,6 +69,11 @@ struct EraseTests {
         private func deleteProject(_ id: Project.ID) throws {
             if failsProjects { throw DiskFull() }
             projectFiles.removeAll { $0.id == id }
+        }
+
+        private func deleteAllProjects() throws {
+            if failsProjects { throw DiskFull() }
+            projectFiles = []
         }
     }
 
@@ -116,16 +122,6 @@ struct EraseTests {
         #expect(fixture.settings.settings == Fixture.saved)
         #expect(fixture.settingsData != nil)
         #expect(fixture.memories.memories.count == 1)
-    }
-
-    @Test func `a store without a way to delete everything at once deletes each in turn`() async throws {
-        let fixture = Fixture()
-        _ = try await fixture.makeTestSubject()
-
-        try await fixture.projects.deleteAll()
-
-        #expect(fixture.projects.projects.isEmpty)
-        #expect(fixture.projectFiles.isEmpty)
     }
 
     @Test func `the profile photo is kept, replaced and removed through its store`() async throws {

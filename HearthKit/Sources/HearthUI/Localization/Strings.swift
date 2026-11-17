@@ -37,7 +37,6 @@ enum Strings {
     static let photoLibrary = String(localized: "composer.photoLibrary", defaultValue: "Photo library", bundle: .module)
     static let removeFile = String(localized: "composer.removeFile", defaultValue: "Remove file", bundle: .module)
     static let filesUnreadable = String(localized: "composer.filesUnreadable", defaultValue: "Some files could not be read. PDFs and text files are supported.", bundle: .module)
-    static let thinkingLevel = String(localized: "composer.thinking", defaultValue: "Thinking", bundle: .module)
     static let thinkingOff = String(localized: "composer.thinkingOff", defaultValue: "Off", bundle: .module)
     static let thinkingLight = String(localized: "composer.thinkingLight", defaultValue: "Light", bundle: .module)
     static let thinkingMedium = String(localized: "composer.thinkingMedium", defaultValue: "Medium", bundle: .module)
@@ -99,6 +98,12 @@ enum Strings {
     static let pictureChanging = String(localized: "picture.changing", defaultValue: "Changing your picture…", bundle: .module)
     static let pictureEnlarging = String(localized: "picture.enlarging", defaultValue: "Enlarging your picture…", bundle: .module)
     static let pictureSave = String(localized: "picture.save", defaultValue: "Save", bundle: .module)
+    #if targetEnvironment(macCatalyst)
+    static let pictureSaveNotAllowed = String(localized: "picture.saveNotAllowed.mac", defaultValue: "Hearth is not allowed to add to your photos. Allow it in System Settings.", bundle: .module)
+    #else
+    static let pictureSaveNotAllowed = String(localized: "picture.saveNotAllowed", defaultValue: "Hearth is not allowed to add to your photos. Allow it in the Settings app.", bundle: .module)
+    #endif
+    static let pictureSaveFailed = String(localized: "picture.saveFailed", defaultValue: "The picture could not be saved to your photos.", bundle: .module)
     static let pictureModel = String(localized: "picture.model", defaultValue: "Model", bundle: .module)
     static let pictureModelAutomatic = String(localized: "picture.modelAutomatic", defaultValue: "Automatic", bundle: .module)
     static let pictureModelZImage = String(localized: "picture.model.zImage", defaultValue: "Z-Image Turbo · fast, all-round", bundle: .module)
@@ -117,6 +122,9 @@ enum Strings {
     static let errorPictureCannotEnlarge = String(localized: "error.pictureCannotEnlarge", defaultValue: "The picture server is not set up to enlarge pictures.", bundle: .module)
     static let errorPictureFailed = String(localized: "error.pictureFailed", defaultValue: "The picture could not be made.", bundle: .module)
     static let errorPictureTimedOut = String(localized: "error.pictureTimedOut", defaultValue: "The picture took too long and was stopped.", bundle: .module)
+    static let expanded = String(localized: "common.expanded", defaultValue: "Expanded", bundle: .module)
+    static let collapsed = String(localized: "common.collapsed", defaultValue: "Collapsed", bundle: .module)
+    static let replyFinished = String(localized: "chat.replyFinished", defaultValue: "Reply finished", bundle: .module)
     static let errorSaveFailed = String(localized: "error.saveFailed", defaultValue: "This chat could not be saved.", bundle: .module)
 
     static let searchChats = String(localized: "sidebar.search", defaultValue: "Search chats", bundle: .module)
@@ -244,6 +252,18 @@ enum Strings {
 
     static func testSucceeded(modelCount: Int) -> String {
         String(localized: "settings.testOK", defaultValue: "Connected. \(modelCount) models found.", bundle: .module) // one: "Connected. \(modelCount) model found."
+    }
+
+    static func errorAnnouncement(title: String, message: String) -> String {
+        String(localized: "error.announcement", defaultValue: "\(title). \(message)", bundle: .module)
+    }
+
+    static func modelAndEffort(model: String, effort: String) -> String {
+        String(localized: "composer.modelAndEffort", defaultValue: "\(model), \(effort)", bundle: .module)
+    }
+
+    static func serverStatusValue(host: String, detail: String) -> String {
+        String(localized: "sidebar.statusValue", defaultValue: "\(host), \(detail)", bundle: .module)
     }
 
     static func source(number: Int, host: String) -> String {

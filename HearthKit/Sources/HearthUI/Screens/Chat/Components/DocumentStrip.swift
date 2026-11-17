@@ -28,6 +28,7 @@ struct DocumentStrip: View {
                                     .font(.hearth(.caption2).weight(.bold))
                                     .foregroundStyle(HearthColor.mute)
                                     .frame(width: Self.removeButtonSide, height: Self.removeButtonSide)
+                                    .minimumHitTarget()
                             })
                             .buttonStyle(.plain)
                             .accessibilityLabel(Strings.removeFile)
@@ -36,8 +37,13 @@ struct DocumentStrip: View {
                     .padding(.horizontal, HearthSpacing.s10)
                     .padding(.vertical, HearthSpacing.s6)
                     .capsuleSurface(fill: HearthColor.paper)
-                    .accessibilityElement(children: .combine)
+                    .accessibilityElement(children: .ignore)
                     .accessibilityLabel(Strings.attachedFile(document.name))
+                    .accessibilityActions {
+                        if let removeAction {
+                            Button(Strings.removeFile) { removeAction(document.id) }
+                        }
+                    }
                 }
             }
         }

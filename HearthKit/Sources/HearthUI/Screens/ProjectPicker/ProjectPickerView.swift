@@ -18,13 +18,9 @@ struct ProjectPickerView: View {
                         .foregroundStyle(HearthColor.mute)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, projects.isEmpty ? HearthSpacing.s8 : 0)
-                        .opacity(projects.isEmpty ? 1 : 0)
-                        .frame(height: projects.isEmpty ? nil : 0)
-                        .accessibilityHidden(!projects.isEmpty)
+                        .folded(!projects.isEmpty)
                     projectRows(projects, currentID: viewModel.currentProjectID)
-                        .opacity(projects.isEmpty ? 0 : 1)
-                        .frame(height: projects.isEmpty ? 0 : nil)
-                        .accessibilityHidden(projects.isEmpty)
+                        .folded(projects.isEmpty)
                     otherRows
                 }
                 .padding(.horizontal, HearthSpacing.s16)

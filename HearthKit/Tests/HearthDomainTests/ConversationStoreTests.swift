@@ -27,6 +27,9 @@ struct ConversationStoreTests {
             },
             delete: { _ in
                 if failsWrites { throw DiskFull() }
+            },
+            deleteAll: {
+                if failsWrites { throw DiskFull() }
             }
         )
         return Fixture(subject: ConversationStore(provider: provider), saved: saved)

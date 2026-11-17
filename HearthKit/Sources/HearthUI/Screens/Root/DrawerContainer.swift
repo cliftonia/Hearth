@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// A panel that slides in from the leading edge over dimmed content, by button or by drag.
+/// A panel that slides in from the leading edge over dimmed content, by button or by drag. With Reduce Motion on it
+/// appears and goes without sliding, except under the finger.
 struct DrawerContainer<Drawer: View, Content: View>: View {
     /// The share of the screen's width the drawer covers, up to `HearthSize.drawerMaximumWidth`.
     private static var widthFraction: CGFloat { 0.84 }
@@ -12,6 +13,7 @@ struct DrawerContainer<Drawer: View, Content: View>: View {
     @ViewBuilder let content: Content
 
     @GestureState private var dragTranslationX: CGFloat = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         GeometryReader { proxy in
@@ -34,9 +36,12 @@ struct DrawerContainer<Drawer: View, Content: View>: View {
                     .frame(width: width)
                     .offset(x: (progress - 1) * width)
                     .accessibilityHidden(!isOpen)
+                    // While open, VoiceOver keeps to the drawer, and the two-finger scrub closes it.
+                    .accessibilityAddTraits(isOpen ? .isModal : [])
+                    .accessibilityAction(.escape) { isOpen = false }
             }
             .simultaneousGesture(dragGesture(width: width))
-            .animation(.snappy(duration: 0.28), value: isOpen)
+            .animation(reduceMotion ? nil : .snappy(duration: 0.28), value: isOpen)
             .animation(.interactiveSpring, value: dragTranslationX)
             // The keyboard sits above every view, so left up it would cover the drawer as it opens.
             .onChange(of: isOpen) { _, isNowOpen in

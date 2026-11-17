@@ -10,6 +10,9 @@ struct ChatNotificationTests {
     @MainActor
     final class Fixture {
         var isOnScreen = false
+        var isVoiceOverRunning = false
+        /// What VoiceOver was asked to say.
+        private(set) var announcements: [String] = []
         let notifications = NotificationsFixture(permission: .allowed)
         let settingsStore: SettingsStore
         let conversationStore: ConversationStore
@@ -27,13 +30,16 @@ struct ChatNotificationTests {
                 research: PresenterFixtures.research,
                 dictation: PresenterFixtures.dictation,
                 notifications: notifications.provider,
+                photoLibrary: PresenterFixtures.photoLibrary,
                 settingsStore: settingsStore,
                 modelStore: ModelStore(fetchModels: { _ in [] }),
                 conversationStore: conversationStore,
                 memoryStore: PresenterFixtures.memoryStore(),
                 projectStore: PresenterFixtures.projectStore(),
                 isLocked: { false },
-                isOnScreen: { self.isOnScreen }
+                isOnScreen: { self.isOnScreen },
+                announce: { self.announcements.append($0) },
+                isVoiceOverRunning: { self.isVoiceOverRunning }
             ))
         }
     }
@@ -53,6 +59,40 @@ struct ChatNotificationTests {
 
         let expected = ReplyNotification(conversationID: subject.viewModel.conversation.id, title: "France", body: "Paris is the capital of France.")
         #expect(fixture.notifications.posted == [expected])
+    }
+
+    @Test func `with VoiceOver running a reply that finishes on screen is announced briefly`() async {
+        let fixture = Fixture()
+        fixture.isOnScreen = true
+        fixture.isVoiceOverRunning = true
+        let subject = fixture.makeTestSubject()
+        subject.viewModel.conversation = conversation(reply: reply)
+
+        subject.announceReplyFinished(reply.id)
+
+        #expect(fixture.announcements == [Strings.replyFinished])
+    }
+
+    @Test func `without VoiceOver a finished reply is not announced`() async {
+        let fixture = Fixture()
+        fixture.isOnScreen = true
+        let subject = fixture.makeTestSubject()
+        subject.viewModel.conversation = conversation(reply: reply)
+
+        subject.announceReplyFinished(reply.id)
+
+        #expect(fixture.announcements.isEmpty)
+    }
+
+    @Test func `an error shown in the chat is read out`() {
+        let fixture = Fixture()
+        let subject = fixture.makeTestSubject()
+        let error = ErrorViewConfiguration(title: "Search", message: "The web could not be searched.", retryActionLabel: nil)
+
+        subject.showError(error)
+
+        #expect(subject.viewModel.error == error)
+        #expect(fixture.announcements == [Strings.errorAnnouncement(title: "Search", message: "The web could not be searched.")])
     }
 
     @Test func `nothing is announced while the chat is on screen`() async {

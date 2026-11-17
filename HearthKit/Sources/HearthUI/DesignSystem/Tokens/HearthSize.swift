@@ -9,6 +9,9 @@ enum HearthSize {
 
     // MARK: Controls
 
+    /// The least a control may be touched across on each side, however small it is drawn. See `minimumHitTarget()`.
+    static let minimumHitTarget: CGFloat = 44
+
     /// The side of an `IconButton`, and of anything that must line up with one.
     static let iconButton: CGFloat = 40
     /// The side of a `GlassCircleButton`: the lone buttons at the top of the chat, each in its own bubble of glass.

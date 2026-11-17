@@ -54,6 +54,7 @@ struct AttachmentMenu: View {
                 .foregroundStyle(HearthColor.mute)
                 .frame(size: HearthSize.composerControl)
                 .capsuleOutline()
+                .minimumHitTarget()
         }
         .accessibilityLabel(Strings.attach)
         // Read top to bottom as written, with New project last, rather than turned around when the menu opens upwards.
@@ -73,13 +74,8 @@ struct AttachmentMenu: View {
             }
             .ignoresSafeArea()
         }
-        .fileImporter(isPresented: $isFileImporterPresented, allowedContentTypes: [.pdf, .text], allowsMultipleSelection: true) { result in
-            // Cancelling the picker reports a failure; there is nothing to attach either way.
-            let urls = (try? result.get()) ?? []
-            Task {
-                let documents = await DocumentLoader.documents(from: urls)
-                presenter.addDocumentsAction(documents, unreadableCount: urls.count - documents.count)
-            }
+        .documentImporter(isPresented: $isFileImporterPresented) { documents, unreadableCount in
+            presenter.addDocumentsAction(documents, unreadableCount: unreadableCount)
         }
     }
 }

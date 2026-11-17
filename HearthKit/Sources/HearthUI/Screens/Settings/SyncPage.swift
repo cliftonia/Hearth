@@ -12,7 +12,7 @@ struct SyncPage: View {
         let canEnable = presenter.canEnableSync
         SettingsPage(title: Strings.sync) {
             SettingsCard(footer: Strings.syncHubFooter) {
-                addressField(text: $viewModel.syncAddress)
+                AddressFieldRow(title: Strings.syncHubAddress, text: $viewModel.syncAddress) { Task { await presenter.syncAddressAction() } }
                 Hairline()
                     .padding(.leading, HearthSpacing.s16)
                 tokenField(text: $viewModel.syncTokenDraft, hasToken: store.hasToken)
@@ -23,13 +23,13 @@ struct SyncPage: View {
                     .onChange(of: viewModel.isSyncEnabled) { Task { await presenter.syncEnabledAction() } }
             }
             SettingsCard {
-                actionRow(Strings.syncNow, systemImage: "arrow.triangle.2.circlepath") { await presenter.syncNowAction() }
+                SettingsActionRow(title: Strings.syncNow, systemImage: "arrow.triangle.2.circlepath") { Task { await presenter.syncNowAction() } }
                     .disabled(!store.settings.isEnabled || store.isSyncing)
                 Hairline()
                     .padding(.leading, HearthSpacing.s16)
-                actionRow(Strings.syncCheck, systemImage: "network") { await presenter.checkHubAction() }
+                SettingsActionRow(title: Strings.syncCheck, systemImage: "network") { Task { await presenter.checkHubAction() } }
                     .disabled(!canEnable)
-                checkResult(viewModel.syncCheck)
+                CheckResultLine(outcome: CheckResultLine.OutcomeKind(viewModel.syncCheck))
             }
             SettingsCard(header: Strings.syncStatus) {
                 Text(presenter.syncStatusText)
@@ -38,30 +38,10 @@ struct SyncPage: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, HearthSpacing.s16)
                     .padding(.vertical, HearthSpacing.s12)
-                    .accessibilityLabel("\(Strings.syncStatus): \(presenter.syncStatusText)")
+                    .accessibilityLabel(Strings.syncStatusLabel(presenter.syncStatusText))
             }
         }
         .onDisappear { Task { await presenter.syncAddressAction() } }
-    }
-
-    /// The hub's address under a small caption, typed without autocorrection.
-    private func addressField(text: Binding<String>) -> some View {
-        VStack(alignment: .leading, spacing: HearthSpacing.s2) {
-            Text(Strings.syncHubAddress)
-                .font(.hearth(.caption))
-                .foregroundStyle(HearthColor.mute)
-                .accessibilityHidden(true)
-            TextField("https://", text: text)
-                .font(.hearth(.body))
-                .foregroundStyle(HearthColor.ink)
-                .keyboardType(.URL)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .accessibilityLabel(Strings.syncHubAddress)
-                .keepOnLeaving { Task { await presenter.syncAddressAction() } }
-        }
-        .padding(.horizontal, HearthSpacing.s16)
-        .padding(.vertical, HearthSpacing.s10)
     }
 
     /// A field for a new access key, which is never filled with the saved one, and the buttons that keep or forget it.
@@ -95,54 +75,19 @@ struct SyncPage: View {
         .padding(.horizontal, HearthSpacing.s16)
         .padding(.vertical, HearthSpacing.s10)
     }
-
-    private func actionRow(_ title: String, systemImage: String, action: @escaping () async -> Void) -> some View {
-        Button(action: { Task { await action() } }, label: {
-            Label(title, systemImage: systemImage)
-                .font(.hearth(.body))
-                .foregroundStyle(HearthColor.pine)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, HearthSpacing.s16)
-                .padding(.vertical, HearthSpacing.s14)
-                .contentShape(Rectangle())
-        })
-        .buttonStyle(.plain)
-        .accessibilityLabel(title)
-    }
-
-    /// The outcome of the hub check; nothing until one has been run. Kept in the tree and hidden when there is none.
-    private func checkResult(_ check: SyncCheckKind) -> some View {
-        let look = CheckLook(check)
-        let isShown = check != .idle
-        return Label(look.text, systemImage: look.systemImage)
-            .font(.hearth(.footnote))
-            .foregroundStyle(look.color)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, HearthSpacing.s16)
-            .padding(.bottom, isShown ? HearthSpacing.s12 : 0)
-            .frame(height: isShown ? nil : 0)
-            .opacity(isShown ? 1 : 0)
-            .accessibilityHidden(!isShown)
-    }
-
 }
 
-/// How the outcome of a hub check is drawn.
-private struct CheckLook {
-    let text: String
-    let systemImage: String
-    let color: Color
-
+private extension CheckResultLine.OutcomeKind {
     init(_ check: SyncCheckKind) {
         switch check {
         case .idle:
-            (text, systemImage, color) = ("", "circle", HearthColor.mute)
+            self = .idle
         case .checking:
-            (text, systemImage, color) = (Strings.checking, "ellipsis", HearthColor.mute)
+            self = .checking
         case .succeeded:
-            (text, systemImage, color) = (Strings.syncCheckSucceeded, "checkmark.circle.fill", HearthColor.online)
+            self = .succeeded(Strings.syncCheckSucceeded)
         case .failed(let message):
-            (text, systemImage, color) = (message, "exclamationmark.triangle.fill", HearthColor.danger)
+            self = .failed(message)
         }
     }
 }

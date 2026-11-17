@@ -21,7 +21,7 @@ enum HearthColor {
     /// Body text and primary symbols.
     static let ink = Color(lightHex: 0x18211E, darkHex: 0xE9EEEA)
     /// Secondary text, placeholders and quiet symbols.
-    static let mute = Color(lightHex: 0x6C7772, darkHex: 0x8B9691)
+    static let mute = Color(lightHex: 0x5F6A65, darkHex: 0x8B9691)
 
     // MARK: Accent
 
@@ -34,11 +34,14 @@ enum HearthColor {
 
     // MARK: Status
 
-    /// Errors, recording, and buttons that end or destroy something.
-    static let danger = Color(lightHex: 0xC8553D, darkHex: 0xE0705A)
-    /// Symbols drawn on danger.
+    /// Errors, recording, and buttons that end or destroy something, drawn as text or a symbol on a surface.
+    static let danger = Color(lightHex: 0xB0472F, darkHex: 0xE0705A)
+    /// The fill of a button that ends something, such as a voice conversation. Deeper than `danger` in the dark, so
+    /// that `onDanger` reads on it.
+    static let dangerFill = Color(lightHex: 0xB0472F, darkHex: 0xB54E3A)
+    /// Symbols drawn on `dangerFill`.
     static let onDanger = Color.white
-    /// The server can be reached.
+    /// The dot that says the server can be reached. Not for text: words of success are drawn in `pine`.
     static let online = Color(lightHex: 0x3FA66B, darkHex: 0x57C283)
 
     // MARK: Voice orb

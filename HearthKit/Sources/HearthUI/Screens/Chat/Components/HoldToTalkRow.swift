@@ -19,6 +19,7 @@ struct HoldToTalkRow: View {
                     .foregroundStyle(HearthColor.onPine)
                     .frame(width: HearthSize.sendButton, height: HearthSize.sendButton)
                     .background(HearthColor.pine, in: Circle())
+                    .minimumHitTarget()
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Strings.stopDictation)

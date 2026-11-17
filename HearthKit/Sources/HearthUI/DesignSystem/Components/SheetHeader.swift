@@ -12,6 +12,7 @@ struct SheetHeader: View {
         Text(title)
             .font(.hearth(.headline))
             .foregroundStyle(HearthColor.ink)
+            .accessibilityAddTraits(.isHeader)
             .frame(maxWidth: .infinity)
             .overlay(alignment: .leading) {
                 Button(action: closeAction) {
@@ -20,6 +21,7 @@ struct SheetHeader: View {
                         .foregroundStyle(HearthColor.ink)
                         .frame(width: Self.closeButtonSide, height: Self.closeButtonSide)
                         .surface(Circle())
+                        .minimumHitTarget()
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Strings.close)

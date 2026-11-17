@@ -33,21 +33,10 @@ public final class ConversationStore {
     /// copy edited elsewhere cannot undo a pin or a move. A conversation saved for the first time keeps the project
     /// it was begun in. If the write fails the list goes back to what is on disk, and the error is passed on.
     public func save(_ conversation: Conversation) async throws {
-        let previousIndex = conversations.firstIndex { $0.id == conversation.id }
-        let previous = previousIndex.map { conversations[$0] }
+        let previous = self.conversation(for: conversation.id)
         let saved = conversation.updating(isPinned: previous?.isPinned, project: previous.map { ProjectMembership($0.projectID) })
             .modified(at: SyncClock.stamp(now: clock(), after: previous?.modifiedAt))
-        conversations.removeAll { $0.id == saved.id }
-        conversations.insert(saved, at: 0)
-        do {
-            try await provider.save(saved)
-        } catch {
-            conversations.removeAll { $0.id == saved.id }
-            if let previous, let previousIndex {
-                conversations.insert(previous, at: min(previousIndex, conversations.count))
-            }
-            throw error
-        }
+        try await provider.write(saved, into: \.conversations, of: self) { others, item in [item] + others }
         report(.changed(.conversation(saved.id)), for: saved)
     }
 
@@ -84,14 +73,10 @@ public final class ConversationStore {
         }
         let previous = conversations[index]
         let changed = change(previous).modified(at: SyncClock.stamp(now: clock(), after: previous.modifiedAt))
-        conversations[index] = changed
-        do {
-            try await provider.save(changed)
-        } catch {
-            if let current = conversations.firstIndex(where: { $0.id == id }) {
-                conversations[current] = previous
-            }
-            throw error
+        try await provider.write(changed, into: \.conversations, of: self) { others, changed in
+            var list = others
+            list.insert(changed, at: min(index, list.count))
+            return list
         }
         report(.changed(.conversation(id)), for: changed)
     }
@@ -113,33 +98,13 @@ public final class ConversationStore {
     /// Sync is not told: erasing this device deletes nothing anywhere else.
     /// If that cannot be done the list is read again from what is left on disk, and the error is passed on.
     public func deleteAll() async throws {
-        do {
-            if let deleteAll = provider.deleteAll {
-                try await deleteAll()
-            } else {
-                for conversation in conversations {
-                    try await provider.delete(conversation.id)
-                }
-            }
-            conversations = []
-        } catch {
-            try? await load()
-            throw error
-        }
+        try await provider.removeAll(from: \.conversations, of: self) { try await self.load() }
     }
 
     /// Removes a conversation from the list and from disk. If it cannot be removed from disk it stays in the list.
     public func delete(_ id: Conversation.ID) async throws {
-        guard let index = conversations.firstIndex(where: { $0.id == id }) else {
-            try await provider.delete(id)
+        guard let removed = try await provider.remove(id, from: \.conversations, of: self) else {
             return
-        }
-        let removed = conversations.remove(at: index)
-        do {
-            try await provider.delete(id)
-        } catch {
-            conversations.insert(removed, at: min(index, conversations.count))
-            throw error
         }
         report(.deleted(.conversation(id), at: SyncClock.stamp(now: clock(), after: removed.modifiedAt)), for: removed)
     }

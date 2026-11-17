@@ -113,6 +113,16 @@ final class SidebarPresenter {
         viewModel.isRenaming = true
     }
 
+    /// Closes the rename alert without saving, as when the app locks.
+    func cancelRenaming() {
+        viewModel.isRenaming = false
+    }
+
+    /// Forgets every choice made in the list, as erasing everything does: every chat is listed again.
+    func reset() {
+        allChatsAction()
+    }
+
     /// Saves the title typed into the rename alert, as `Conversation.renamedTitle(from:)` has it. An empty title
     /// changes nothing.
     func commitRenameAction() async {

@@ -32,6 +32,7 @@ struct ErrorBannerSection: View {
                     .font(.hearth(.footnote).weight(.semibold))
                     .foregroundStyle(HearthColor.mute)
                     .frame(size: Self.dismissButtonSize)
+                    .minimumHitTarget()
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Strings.dismiss)

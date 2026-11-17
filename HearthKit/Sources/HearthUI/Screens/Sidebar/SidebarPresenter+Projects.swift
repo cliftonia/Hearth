@@ -14,11 +14,6 @@ extension SidebarPresenter {
         projectStore.project(for: viewModel.selectedProjectID).map { ProjectRowViewConfiguration(id: $0.id, name: $0.name) }
     }
 
-    /// Whether anything is being searched for, in which case the list offers only what matches.
-    var isSearching: Bool {
-        !viewModel.query.trimmingCharacters(in: .whitespaces).isEmpty
-    }
-
     /// Narrows the list to one project's chats.
     func selectProjectAction(_ id: Project.ID) {
         viewModel.selectedProjectID = id
@@ -27,6 +22,14 @@ extension SidebarPresenter {
     /// Goes back from a project's chats to every chat.
     func allChatsAction() {
         viewModel.selectedProjectID = nil
+    }
+
+    /// A project has been deleted: if its chats were being looked at, the list goes back to every chat, where
+    /// they now are.
+    func projectWasDeleted(_ id: Project.ID) {
+        if viewModel.selectedProjectID == id {
+            viewModel.selectedProjectID = nil
+        }
     }
 
     /// Opens the settings of the project being looked at.

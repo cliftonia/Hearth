@@ -13,5 +13,6 @@ struct OptionChip: View {
             .foregroundStyle(isOn ? HearthColor.pine : HearthColor.mute)
             .frame(size: HearthSize.optionChip)
             .surface(Capsule(), fill: isOn ? HearthColor.pineSoft : .clear, border: isOn ? .clear : HearthColor.line)
+            .minimumHitTarget()
     }
 }

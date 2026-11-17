@@ -518,6 +518,17 @@
         }
       }
     },
+    "chat.replyFinished": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply finished"
+          }
+        }
+      }
+    },
     "chat.sidebarToggle": {
       "extractionState": "manual",
       "localizations": {
@@ -536,6 +547,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Close"
+          }
+        }
+      }
+    },
+    "common.collapsed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapsed"
+          }
+        }
+      }
+    },
+    "common.expanded": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expanded"
           }
         }
       }
@@ -624,6 +657,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Release to stop"
+          }
+        }
+      }
+    },
+    "composer.modelAndEffort": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@"
           }
         }
       }
@@ -749,17 +793,6 @@
         }
       }
     },
-    "composer.thinking": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Thinking"
-          }
-        }
-      }
-    },
     "composer.thinkingHigh": {
       "extractionState": "manual",
       "localizations": {
@@ -811,6 +844,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Start voice conversation"
+          }
+        }
+      }
+    },
+    "error.announcement": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@. %2$@"
           }
         }
       }
@@ -2355,6 +2399,39 @@
         }
       }
     },
+    "picture.saveFailed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The picture could not be saved to your photos."
+          }
+        }
+      }
+    },
+    "picture.saveNotAllowed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hearth is not allowed to add to your photos. Allow it in the Settings app."
+          }
+        }
+      }
+    },
+    "picture.saveNotAllowed.mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hearth is not allowed to add to your photos. Allow it in System Settings."
+          }
+        }
+      }
+    },
     "picture.section": {
       "extractionState": "manual",
       "localizations": {
@@ -3743,6 +3820,17 @@
         }
       }
     },
+    "sidebar.statusValue": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@"
+          }
+        }
+      }
+    },
     "sidebar.today": {
       "extractionState": "manual",
       "localizations": {
@@ -3974,6 +4062,17 @@
         }
       }
     },
+    "sync.statusLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: %@"
+          }
+        }
+      }
+    },
     "sync.switch": {
       "extractionState": "manual",
       "localizations": {
@@ -4146,6 +4245,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Run this task"
+          }
+        }
+      }
+    },
+    "tasks.enabledLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run this task, %@"
           }
         }
       }
@@ -4392,6 +4502,17 @@
         }
       }
     },
+    "tasks.rowLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@, %3$@, %4$@"
+          }
+        }
+      }
+    },
     "tasks.schedule": {
       "extractionState": "manual",
       "localizations": {
@@ -4432,6 +4553,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Every %1$@ at %2$@"
+          }
+        }
+      }
+    },
+    "tasks.scheduleAndModel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@"
           }
         }
       }

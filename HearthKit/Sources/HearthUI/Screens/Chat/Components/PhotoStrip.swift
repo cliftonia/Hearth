@@ -31,6 +31,7 @@ struct PhotoStrip: View {
                                     .symbolRenderingMode(.palette)
                                     .foregroundStyle(HearthColor.onPine, HearthColor.ink.opacity(0.7))
                                     .padding(HearthSpacing.s4)
+                                    .minimumHitTarget()
                             })
                             .buttonStyle(.plain)
                             .accessibilityLabel(Strings.removePhoto)
@@ -43,7 +44,7 @@ struct PhotoStrip: View {
     /// The photos that can be decoded, each remembering its position among the attachments.
     private var photos: [Photo] {
         imagesJPEG.enumerated().compactMap { index, data in
-            UIImage(data: data).map { Photo(id: index, image: $0) }
+            DecodedImages.image(from: data).map { Photo(id: index, image: $0) }
         }
     }
 }

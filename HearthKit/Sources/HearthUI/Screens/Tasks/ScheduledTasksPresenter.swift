@@ -46,8 +46,7 @@ final class ScheduledTasksPresenter {
 
     /// Whether tasks can be added: they live on the hub, so sync must be on.
     var isSyncOn: Bool {
-        let settings = dependencies.syncStore.settings
-        return settings.isEnabled && settings.hubURL != nil
+        dependencies.syncStore.settings.isActive
     }
 
     /// What the row in the settings says: "2 active", "None", or "Needs sync".

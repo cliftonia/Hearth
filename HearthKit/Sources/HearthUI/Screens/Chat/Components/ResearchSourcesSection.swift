@@ -12,7 +12,7 @@ struct ResearchSourceViewConfiguration: Hashable, Identifiable {
     /// The sources of a report, numbered from one in the order the report cites them.
     static func list(from sources: [SearchSource]) -> [ResearchSourceViewConfiguration] {
         sources.enumerated().map { index, source in
-            let host = source.url.host()?.replacingOccurrences(of: "www.", with: "") ?? ""
+            let host = ResearchSourceSelector.site(of: source.url)
             let title = source.title.split(whereSeparator: \.isWhitespace).joined(separator: " ")
             return ResearchSourceViewConfiguration(
                 id: source.url,
@@ -37,12 +37,8 @@ struct ResearchSourcesSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: HearthSpacing.s6) {
-            Text(Strings.researchSources)
-                .font(.hearth(.caption).weight(.medium))
-                .textCase(.uppercase)
-                .foregroundStyle(HearthColor.mute)
+            SectionHeading(title: Strings.researchSources)
                 .padding(.horizontal, HearthSpacing.s4)
-                .accessibilityAddTraits(.isHeader)
             VStack(spacing: 0) {
                 ForEach(sources) { source in
                     row(source)

@@ -28,7 +28,8 @@ extension ChatPresenter {
         backgroundActivity.begin(named: "Reply")
         await stopSpeaking()
         let narration = style == .chat ? beginNarration(of: reply.id) : nil
-        await runTurn(replyID: reply.id) {
+        // A voice conversation speaks its reply, which VoiceOver would talk over.
+        await runTurn(replyID: reply.id, announcesFinish: style != .voice) {
             await self.consume(events, replyID: reply.id) { delta in
                 onDelta?(delta)
                 narration?.append(delta)
@@ -51,9 +52,15 @@ extension ChatPresenter {
     /// Called once the reply is in the conversation and the background allowance has begun, which this ends.
     ///
     /// - Parameters:
+    ///   - announcesFinish: Whether VoiceOver is told when the reply has finished.
     ///   - work: Fills the reply; it returns once the turn has finished, failed or been stopped.
     ///   - settle: Clears the turn's own passing state, once streaming has ended and before the reply is saved.
-    func runTurn(replyID: Message.ID, work: @escaping @MainActor () async -> Void, settle: @escaping @MainActor () -> Void) async {
+    func runTurn(
+        replyID: Message.ID,
+        announcesFinish: Bool = true,
+        work: @escaping @MainActor () async -> Void,
+        settle: @escaping @MainActor () -> Void
+    ) async {
         let task = Task {
             await work()
             self.viewModel.isStreaming = false
@@ -63,6 +70,9 @@ extension ChatPresenter {
         turnTask = task
         await task.value
         await notifyReplyFinished(replyID)
+        if announcesFinish {
+            announceReplyFinished(replyID)
+        }
         backgroundActivity.end()
     }
 
@@ -81,9 +91,9 @@ extension ChatPresenter {
         } catch {
             logger.error("Reply failed: \(error.localizedDescription, privacy: .public)")
             // A connection lost while the app was off screen is iOS suspending it, not the server or the VPN.
-            viewModel.error = backgroundActivity.wasBackgrounded
+            showError(backgroundActivity.wasBackgrounded
                 ? ErrorViewConfiguration(title: Strings.interruptedTitle, message: Strings.interruptedMessage)
-                : ErrorViewConfiguration(from: error)
+                : ErrorViewConfiguration(from: error))
         }
     }
 
@@ -105,7 +115,7 @@ extension ChatPresenter {
             return
         case .searchFailed:
             viewModel.searchingQuery = nil
-            viewModel.error = ErrorViewConfiguration(title: Strings.searchLabel, message: Strings.searchFailed, retryActionLabel: nil)
+            showError(ErrorViewConfiguration(title: Strings.searchLabel, message: Strings.searchFailed, retryActionLabel: nil))
             return
         case .thinking(let delta):
             updated = message.updating(thinking: message.thinking + delta)
@@ -142,7 +152,7 @@ extension ChatPresenter {
             try await dependencies.conversationStore.save(conversation)
         } catch {
             logger.error("Saving the conversation failed: \(error.localizedDescription, privacy: .public)")
-            viewModel.error = ErrorViewConfiguration(message: Strings.errorSaveFailed, retryActionLabel: nil)
+            showError(ErrorViewConfiguration(message: Strings.errorSaveFailed, retryActionLabel: nil))
         }
     }
 

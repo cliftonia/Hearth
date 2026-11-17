@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// The glowing orb at the heart of a voice conversation; it breathes faster the busier things are.
+/// The glowing orb at the heart of a voice conversation; it breathes faster the busier things are. With Reduce Motion
+/// on it holds still, and only its colour says when it is muted.
 struct VoiceOrb: View {
     /// The diameters of the orb and the two halos around it.
     private static let coreDiameter: CGFloat = 150
@@ -11,17 +12,18 @@ struct VoiceOrb: View {
     let state: VoiceStateKind
 
     @State private var isExpanded = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
             Circle()
                 .fill(HearthColor.pine.opacity(0.06))
                 .frame(width: Self.outerHaloDiameter, height: Self.outerHaloDiameter)
-                .scaleEffect(isExpanded ? 1.08 : 0.92)
+                .scaleEffect(breath(1.08, 0.92))
             Circle()
                 .fill(HearthColor.pine.opacity(0.10))
                 .frame(width: Self.innerHaloDiameter, height: Self.innerHaloDiameter)
-                .scaleEffect(isExpanded ? 1.06 : 0.95)
+                .scaleEffect(breath(1.06, 0.95))
             Circle()
                 .fill(
                     RadialGradient(
@@ -32,17 +34,25 @@ struct VoiceOrb: View {
                     )
                 )
                 .frame(width: Self.coreDiameter, height: Self.coreDiameter)
-                .scaleEffect(isExpanded ? 1.04 : 0.97)
+                .scaleEffect(breath(1.04, 0.97))
         }
         .saturation(state == .muted || state == .unavailable ? 0.15 : 1)
         .opacity(state == .muted || state == .unavailable ? 0.6 : 1)
-        .animation(.easeInOut(duration: breathDuration).repeatForever(autoreverses: true), value: isExpanded)
+        .animation(reduceMotion ? nil : .easeInOut(duration: breathDuration).repeatForever(autoreverses: true), value: isExpanded)
         .animation(.easeInOut(duration: 0.3), value: state)
         .onAppear { isExpanded = true }
         .onChange(of: state) {
             // Restart the breathing so the new pace takes hold.
             isExpanded.toggle()
         }
+    }
+
+    /// A layer's scale at the top or bottom of a breath, or at rest when motion is reduced.
+    private func breath(_ expanded: CGFloat, _ contracted: CGFloat) -> CGFloat {
+        guard !reduceMotion else {
+            return 1
+        }
+        return isExpanded ? expanded : contracted
     }
 
     /// The seconds one breath in or out takes.

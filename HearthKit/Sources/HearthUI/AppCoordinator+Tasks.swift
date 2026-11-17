@@ -29,7 +29,7 @@ extension AppCoordinator {
             return
         }
         opensSyncAfterTaskSheet = false
-        settingsPresenter.viewModel.path = [.sync]
+        settingsPresenter.showPage(.sync)
         router.isSettingsPresented = true
     }
 
@@ -45,7 +45,6 @@ extension AppCoordinator {
     /// Posts a notification for each answer the hub filed that sync has just brought in, when the switch is on and
     /// the app is not in front of the user. A tap opens the chat, as for a reply.
     func announceTaskResults(_ ids: [Conversation.ID]) async {
-        let conversationStore = chatPresenter.dependencies.conversationStore
         let conversations = ids.compactMap { conversationStore.conversation(for: $0) }
         let notices = TaskResultNotificationPlanner().notifications(
             for: conversations,
@@ -66,16 +65,9 @@ extension AppCoordinator {
     /// and runs one sync, which may bring in answers to announce. Nothing asks the chat server for its models.
     public func backgroundRefreshAction() async {
         BackgroundRefresh.schedule()
-        let chat = chatPresenter.dependencies
+        let chatPresenter = chatPresenter
         await syncScheduler.backgroundSync {
-            let logger = Logger(for: AppCoordinator.self)
-            do {
-                try await chat.conversationStore.load()
-                try await chat.projectStore.load()
-                try await chat.memoryStore.load()
-            } catch {
-                logger.error("Reading saved data for a background sync failed: \(error.localizedDescription, privacy: .public)")
-            }
+            await chatPresenter.loadSavedData()
             await self.loadTasks()
         }
     }

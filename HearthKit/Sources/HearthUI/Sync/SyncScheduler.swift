@@ -43,7 +43,7 @@ final class SyncScheduler {
         self.timing = timing
     }
 
-    private var isEnabled: Bool { store.settings.isEnabled && store.settings.hubURL != nil }
+    private var isEnabled: Bool { store.settings.isActive }
 
     /// Whether the quiet passes are running, for tests.
     var isPolling: Bool { pollTask != nil }

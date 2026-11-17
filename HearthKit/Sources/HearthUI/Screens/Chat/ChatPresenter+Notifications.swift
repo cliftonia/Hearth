@@ -27,6 +27,16 @@ extension ChatPresenter {
         }
     }
 
+    /// Tells someone using VoiceOver that a reply has finished and is there to be read. Said only while VoiceOver is
+    /// running and the app is on screen, and not for a turn that failed or came to nothing.
+    func announceReplyFinished(_ replyID: Message.ID) {
+        guard dependencies.isVoiceOverRunning(), dependencies.isOnScreen(), viewModel.error == nil,
+              viewModel.conversation.messages.contains(where: { $0.id == replyID }) else {
+            return
+        }
+        dependencies.announce(Strings.replyFinished)
+    }
+
     /// The words of a notification. A private chat's says only that a reply is ready, under the app's own name.
     static func notification(for notice: ReplyNoticeKind, conversationID: Conversation.ID) -> ReplyNotification {
         switch notice {

@@ -16,14 +16,14 @@ public struct SavedItemDataProvider<Item: Identifiable & Codable & Sendable>: Se
     public let loadAll: @Sendable () async throws -> [Item]
     public let save: @Sendable (Item) async throws -> Void
     public let delete: @Sendable (Item.ID) async throws -> Void
-    /// Removes everything saved at once, including anything that can no longer be read. Without it, each is removed in turn.
-    public let deleteAll: (@Sendable () async throws -> Void)?
+    /// Removes everything saved at once, including anything that can no longer be read.
+    public let deleteAll: @Sendable () async throws -> Void
 
     public init(
         loadAll: @escaping @Sendable () async throws -> [Item],
         save: @escaping @Sendable (Item) async throws -> Void,
         delete: @escaping @Sendable (Item.ID) async throws -> Void,
-        deleteAll: (@Sendable () async throws -> Void)? = nil
+        deleteAll: @escaping @Sendable () async throws -> Void
     ) {
         self.loadAll = loadAll
         self.save = save

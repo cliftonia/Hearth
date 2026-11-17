@@ -46,13 +46,16 @@ struct VoicePictureTests {
                 research: PresenterFixtures.research,
                 dictation: PresenterFixtures.dictation,
                 notifications: NotificationsFixture().provider,
+                photoLibrary: PresenterFixtures.photoLibrary,
                 settingsStore: PresenterFixtures.settingsStore(settings),
                 modelStore: ModelStore(fetchModels: { _ in [] }),
                 conversationStore: conversationStore,
                 memoryStore: PresenterFixtures.memoryStore(),
                 projectStore: PresenterFixtures.projectStore(),
                 isLocked: { false },
-                isOnScreen: { true }
+                isOnScreen: { true },
+                announce: { _ in },
+                isVoiceOverRunning: { false }
             ))
             subject.viewModel.selectedModel = ChatModel(id: ChatModel.ID("vision"), isCloud: true, canSee: true)
             return subject

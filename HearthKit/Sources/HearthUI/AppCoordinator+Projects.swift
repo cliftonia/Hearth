@@ -45,13 +45,11 @@ extension AppCoordinator: ProjectPresenterDelegate {
                 chatPresenter.conversationWasMoved(adopted, to: id)
             } else {
                 // Made from the chat list: the list opens the new project, ready for its first chat.
-                sidebarPresenter.viewModel.selectedProjectID = id
+                sidebarPresenter.selectProjectAction(id)
             }
         case .deleted(let id):
             // Its chats are back among all the others, so the list goes back to showing them all.
-            if sidebarPresenter.viewModel.selectedProjectID == id {
-                sidebarPresenter.viewModel.selectedProjectID = nil
-            }
+            sidebarPresenter.projectWasDeleted(id)
         }
     }
 }

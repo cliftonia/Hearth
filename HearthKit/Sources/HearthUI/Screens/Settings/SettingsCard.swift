@@ -38,10 +38,8 @@ struct SettingsCard<Content: View>: View {
                 .textCase(nil)
                 .foregroundStyle(HearthColor.mute)
                 .padding(.horizontal, HearthSpacing.s4)
-                .frame(height: header == nil ? 0 : nil)
-                .opacity(header == nil ? 0 : 1)
-                .accessibilityHidden(header == nil)
                 .accessibilityAddTraits(.isHeader)
+                .folded(header == nil)
             VStack(spacing: 0) {
                 content
             }
@@ -50,9 +48,7 @@ struct SettingsCard<Content: View>: View {
                 .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.mute)
                 .padding(.horizontal, HearthSpacing.s4)
-                .frame(height: footer == nil ? 0 : nil)
-                .opacity(footer == nil ? 0 : 1)
-                .accessibilityHidden(footer == nil)
+                .folded(footer == nil)
         }
     }
 }

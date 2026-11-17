@@ -155,7 +155,8 @@ final class SyncDevice {
         projects = ProjectStore(provider: ProjectDataProvider(
             loadAll: { Array(projectFiles.value.values) },
             save: { project in projectFiles.update { $0[project.id] = project } },
-            delete: { id in projectFiles.update { $0[id] = nil } }
+            delete: { id in projectFiles.update { $0[id] = nil } },
+            deleteAll: { projectFiles.value = [:] }
         ), clock: { clock() })
         memories = MemoryStore(provider: MemoryDataProvider(load: { memoryFile.value }, save: { memoryFile.value = $0 }), clock: { clock() })
         tasks = TaskStore(provider: Self.provider(for: taskFiles), clock: { clock() })
@@ -195,7 +196,8 @@ final class SyncDevice {
         TaskDataProvider(
             loadAll: { Array(files.value.values) },
             save: { task in files.update { $0[task.id] = task } },
-            delete: { id in files.update { $0[id] = nil } }
+            delete: { id in files.update { $0[id] = nil } },
+            deleteAll: { files.value = [:] }
         )
     }
 

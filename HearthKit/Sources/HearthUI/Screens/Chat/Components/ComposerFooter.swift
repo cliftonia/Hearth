@@ -23,6 +23,7 @@ struct ComposerFooter: View {
     @State private var isPressed = false
     @FocusState private var isFocused: Bool
     @AccessibilityFocusState private var isVoiceOverFocused: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         @Bindable var viewModel = presenter.viewModel
@@ -77,8 +78,9 @@ struct ComposerFooter: View {
         .padding(.bottom, HearthSpacing.s10)
         .cardSurface(radius: HearthRadius.composer)
         .hearthShadow(.composer)
-        // The moment a finger rests on it the composer grows a little, and stays so for as long as it is held.
-        .scaleEffect(isPressed || isHeld ? Self.heldScale : 1)
+        // The moment a finger rests on it the composer grows a little, and stays so for as long as it is held,
+        // unless motion is reduced.
+        .scaleEffect((isPressed || isHeld) && !reduceMotion ? Self.heldScale : 1)
         .padding(.horizontal, HearthSpacing.s12)
         .padding(.top, HearthSpacing.s8)
         .padding(.bottom, Self.bottomGap)
@@ -86,10 +88,10 @@ struct ComposerFooter: View {
         .haptic(.light, trigger: viewModel.isPictureMode)
         .haptic(.light, trigger: isRecordingHeld, when: { _, isRecording in isRecording })
         .haptic(.soft, trigger: isRecordingHeld, when: { wasRecording, _ in wasRecording })
-        .animation(.snappy, value: isHeld)
-        .animation(.spring(response: 0.16, dampingFraction: 0.65), value: isPressed || isHeld)
-        .animation(.snappy, value: viewModel.editingMessageID)
-        .animation(.snappy, value: isExpanded)
+        .animation(composerAnimation, value: isHeld)
+        .animation(reduceMotion ? nil : .spring(response: 0.16, dampingFraction: 0.65), value: isPressed || isHeld)
+        .animation(composerAnimation, value: viewModel.editingMessageID)
+        .animation(composerAnimation, value: isExpanded)
         // A different conversation starts with the composer at rest.
         .onChange(of: viewModel.conversation.id) {
             isFocused = false
@@ -110,6 +112,11 @@ struct ComposerFooter: View {
     }
 
     // MARK: Arrangement
+
+    /// How the composer changes shape: a quick spring, or a plain fade when motion is reduced.
+    private var composerAnimation: Animation {
+        reduceMotion ? .easeInOut(duration: 0.2) : .snappy
+    }
 
     /// Whether the composer has opened out: it holds the keyboard, or something has been typed.
     private var isExpanded: Bool {
@@ -154,11 +161,11 @@ struct ComposerFooter: View {
             .padding(.horizontal, HearthSpacing.s12)
             .frame(height: HearthSize.optionChip.height)
             .background(HearthColor.bubble, in: Capsule())
-            .contentShape(Capsule())
+            .minimumHitTarget()
         })
         .buttonStyle(.plain)
         .accessibilityLabel(viewModel.isPictureMode ? Strings.pictureModelPickerLabel : Strings.modelPickerLabel)
-        .accessibilityValue(effort.isEmpty ? name : "\(name), \(effort)")
+        .accessibilityValue(effort.isEmpty ? name : Strings.modelAndEffort(model: name, effort: effort))
     }
 
     /// Shows that the next message asks for a picture; tapping it goes back to chatting.
@@ -209,6 +216,7 @@ struct ComposerFooter: View {
                     .font(.hearth(.footnote).weight(.semibold))
                     .foregroundStyle(HearthColor.mute)
                     .frame(size: Self.cancelEditSize)
+                    .minimumHitTarget()
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Strings.cancelEdit)
@@ -276,6 +284,7 @@ private extension ComposerFooter {
                 .foregroundStyle(isDictating ? HearthColor.danger : HearthColor.mute)
                 .frame(size: HearthSize.composerControl)
                 .capsuleOutline(isDictating ? HearthColor.danger : HearthColor.line)
+                .minimumHitTarget()
         })
         .buttonStyle(.plain)
         .accessibilityLabel(isDictating ? Strings.stopDictation : Strings.dictate)
@@ -283,9 +292,14 @@ private extension ComposerFooter {
 
     /// Stops a reply that is streaming, sends a message that is written, and otherwise starts a voice conversation.
     var primaryButton: some View {
-        let viewModel = presenter.viewModel
-        let symbol = viewModel.isStreaming ? "stop.fill" : (viewModel.canSend ? "arrow.up" : "waveform")
-        let label = viewModel.isStreaming ? Strings.stopReply : (viewModel.canSend ? Strings.send : Strings.startVoice)
+        let (symbol, label) = switch presenter.primaryKind {
+        case .stop:
+            ("stop.fill", Strings.stopReply)
+        case .send:
+            ("arrow.up", Strings.send)
+        case .voice:
+            ("waveform", Strings.startVoice)
+        }
         return Button(action: primaryAction) {
             Image(systemName: symbol)
                 .font(.hearth(.footnote).weight(.bold))
@@ -293,23 +307,18 @@ private extension ComposerFooter {
                 .frame(width: HearthSize.sendButton, height: HearthSize.sendButton)
                 .background(HearthColor.pine, in: Circle())
                 .contentTransition(.symbolEffect(.replace))
+                .minimumHitTarget()
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
     }
 
     func primaryAction() {
-        let viewModel = presenter.viewModel
         sendCount += 1
-        if viewModel.isStreaming {
-            Task { await presenter.stopAction() }
-        } else if viewModel.canSend {
-            // Sending puts the keyboard away, leaving the whole screen for the reply.
+        // Sending puts the keyboard away, leaving the whole screen for the reply; so does starting to talk.
+        if presenter.primaryKind != .stop {
             isFocused = false
-            Task { await presenter.sendAction() }
-        } else {
-            isFocused = false
-            presenter.voiceAction()
         }
+        Task { await presenter.primaryAction() }
     }
 }

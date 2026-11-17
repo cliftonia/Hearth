@@ -126,7 +126,8 @@ struct ChatView: View {
             editAction: viewModel.isStreaming ? nil : { presenter.editAction(message.id) },
             retryAction: isLast ? { Task { await presenter.regenerateAction() } } : nil,
             versionAction: viewModel.isStreaming ? nil : { index in Task { await presenter.selectVersionAction(index, of: message.id) } },
-            canvasAction: { index in presenter.canvasAction(CanvasReference(messageID: message.id, index: index)) }
+            canvasAction: { index in presenter.canvasAction(CanvasReference(messageID: message.id, index: index)) },
+            savePictureAction: { await presenter.savePictureAction($0) }
         )
     }
 }

@@ -88,7 +88,7 @@ extension ChatPresenter {
             // Stopped by the user; the empty reply is removed by the caller.
         } catch {
             logger.error("Making a picture failed: \(error.localizedDescription, privacy: .public)")
-            viewModel.error = ErrorViewConfiguration(from: error)
+            showError(ErrorViewConfiguration(from: error))
         }
     }
 
@@ -132,5 +132,25 @@ extension Message {
     /// Whether this is a reply that carries a picture the app made.
     var isPicture: Bool {
         role == .assistant && !imagesJPEG.isEmpty
+    }
+}
+
+// Keeping a picture the app made.
+extension ChatPresenter {
+    /// Adds a picture from a reply to the photo library, telling the user if it could not be added.
+    ///
+    /// - Returns: Whether the picture was added, so the view can confirm it.
+    func savePictureAction(_ pictureJPEG: Data) async -> Bool {
+        do {
+            try await dependencies.photoLibrary.savePicture(pictureJPEG)
+            return true
+        } catch PhotoLibraryErrorKind.notAllowed {
+            logger.notice("Saving a picture was not allowed")
+            showError(ErrorViewConfiguration(title: Strings.picture, message: Strings.pictureSaveNotAllowed, retryActionLabel: nil))
+        } catch {
+            logger.error("Saving a picture failed: \(error.localizedDescription, privacy: .public)")
+            showError(ErrorViewConfiguration(title: Strings.picture, message: Strings.pictureSaveFailed, retryActionLabel: nil))
+        }
+        return false
     }
 }

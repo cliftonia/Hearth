@@ -69,5 +69,17 @@ extension Strings {
     static func taskRanOn(date: String, time: String) -> String {
         String(localized: "tasks.ranOn", defaultValue: "Ran \(date) at \(time)", bundle: .module)
     }
+
+    static func taskScheduleAndModel(schedule: String, model: String) -> String {
+        String(localized: "tasks.scheduleAndModel", defaultValue: "\(schedule) · \(model)", bundle: .module)
+    }
+
+    static func taskRowLabel(title: String, schedule: String, model: String, lastRun: String) -> String {
+        String(localized: "tasks.rowLabel", defaultValue: "\(title), \(schedule), \(model), \(lastRun)", bundle: .module)
+    }
+
+    static func taskEnabledLabel(title: String) -> String {
+        String(localized: "tasks.enabledLabel", defaultValue: "Run this task, \(title)", bundle: .module)
+    }
 }
 // swiftlint:enable line_length

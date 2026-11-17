@@ -103,11 +103,9 @@ struct ChatHeader: View {
         .frame(maxWidth: .infinity)
         .padding(.horizontal, HearthSpacing.s16)
         .padding(.bottom, name == nil ? 0 : HearthSpacing.s4)
-        .opacity(name == nil ? 0 : 1)
-        .frame(height: name == nil ? 0 : nil)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Strings.chatInProject(name ?? ""))
-        .accessibilityHidden(name == nil)
+        .folded(name == nil)
         .animation(.snappy, value: name)
     }
 
@@ -121,11 +119,9 @@ struct ChatHeader: View {
             .frame(maxWidth: .infinity)
             .padding(.horizontal, HearthSpacing.s16)
             .padding(.bottom, isShown ? HearthSpacing.s4 : 0)
-            .opacity(isShown ? 1 : 0)
-            .frame(height: isShown ? nil : 0)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Strings.scheduledTaskMark)
-            .accessibilityHidden(!isShown)
+            .folded(!isShown)
     }
 
     /// A new chat, and the menu of what can be done with this one, side by side in one pill.
@@ -141,7 +137,7 @@ struct ChatHeader: View {
                     .font(HearthFont.icon)
                     .foregroundStyle(HearthColor.ink)
                     .frame(width: HearthSize.iconButton, height: HearthSize.iconButton)
-                    .contentShape(Rectangle())
+                    .minimumHitTarget()
             }
             .accessibilityLabel(Strings.chatOptions)
         }

@@ -60,7 +60,7 @@ extension ChatPresenter {
     /// Adds the user's question and answers it with a researched report.
     func submitResearch(_ message: Message) async {
         guard let model = viewModel.selectedModel else {
-            viewModel.error = ErrorViewConfiguration(from: ChatError.noModelSelected)
+            showError(ErrorViewConfiguration(from: ChatError.noModelSelected))
             return
         }
         await stopDictation()
@@ -119,9 +119,9 @@ extension ChatPresenter {
         } catch {
             logger.error("Research failed: \(error.localizedDescription, privacy: .public)")
             // A connection lost while the app was off screen is iOS suspending it, not the server or the VPN.
-            viewModel.error = backgroundActivity.wasBackgrounded
+            showError(backgroundActivity.wasBackgrounded
                 ? ErrorViewConfiguration(title: Strings.interruptedTitle, message: Strings.interruptedMessage)
-                : ErrorViewConfiguration(from: error)
+                : ErrorViewConfiguration(from: error))
         }
         if !isFinished {
             tidyUnfinishedReport(reportID)

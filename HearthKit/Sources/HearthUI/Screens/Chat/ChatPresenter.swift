@@ -33,6 +33,8 @@ final class ChatPresenter {
         let research: ResearchInteractor
         let dictation: DictationProvider
         let notifications: NotificationProvider
+        /// Keeps a picture the app made in the photo library.
+        let photoLibrary: PhotoLibraryProvider
         let settingsStore: SettingsStore
         let modelStore: ModelStore
         let conversationStore: ConversationStore
@@ -42,6 +44,10 @@ final class ChatPresenter {
         let isLocked: @MainActor () -> Bool
         /// Whether the app is in front of the user at this moment, in which case a finished reply needs no notification.
         let isOnScreen: @MainActor () -> Bool
+        /// Says something aloud through VoiceOver, such as an error that has just appeared.
+        let announce: @MainActor (String) -> Void
+        /// Whether VoiceOver is running, in which case a finished reply is announced.
+        let isVoiceOverRunning: @MainActor () -> Bool
     }
 
     let viewModel = ChatViewModel()
@@ -76,23 +82,28 @@ final class ChatPresenter {
 
     /// Reads the saved conversations, projects and memories, then asks the server for its models. Run as the chat appears.
     func loadAction() async {
-        do {
-            try await dependencies.conversationStore.load()
-        } catch {
-            logger.error("Loading conversations failed: \(error.localizedDescription, privacy: .public)")
-        }
-        do {
-            try await dependencies.projectStore.load()
-        } catch {
-            logger.error("Loading projects failed: \(error.localizedDescription, privacy: .public)")
-        }
-        do {
-            try await dependencies.memoryStore.load()
-        } catch {
-            logger.error("Loading memories failed: \(error.localizedDescription, privacy: .public)")
-        }
+        await loadSavedData()
         onStoresLoaded?()
         await refreshModelsAction()
+    }
+
+    /// Reads the saved conversations, projects and memories, as the chat appears and before a background sync.
+    ///
+    /// Each is read on its own: one that cannot be read is logged and left empty, and the others are still read.
+    func loadSavedData() async {
+        let stores = dependencies
+        let loads: [(name: String, load: @MainActor () async throws -> Void)] = [
+            ("conversations", { try await stores.conversationStore.load() }),
+            ("projects", { try await stores.projectStore.load() }),
+            ("memories", { try await stores.memoryStore.load() })
+        ]
+        for (name, load) in loads {
+            do {
+                try await load()
+            } catch {
+                logger.error("Loading \(name, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
+            }
+        }
     }
 
     /// Fetches the server's models again, as after the settings change, and settles which one is chosen.
@@ -104,7 +115,7 @@ final class ChatPresenter {
             // The empty state invites the user to add a server; no error is shown for it.
         } catch {
             logger.error("Refreshing models failed: \(error.localizedDescription, privacy: .public)")
-            viewModel.error = ErrorViewConfiguration(from: error)
+            showError(ErrorViewConfiguration(from: error))
         }
         selectAvailableModel()
     }
@@ -140,7 +151,7 @@ final class ChatPresenter {
     /// Adds the user's message and streams the reply.
     func submit(_ message: Message, style: ReplyStyle = .chat, onDelta: (@MainActor (String) -> Void)? = nil) async {
         guard let model = viewModel.selectedModel else {
-            viewModel.error = ErrorViewConfiguration(from: ChatError.noModelSelected)
+            showError(ErrorViewConfiguration(from: ChatError.noModelSelected))
             return
         }
         await stopDictation()
@@ -285,6 +296,12 @@ final class ChatPresenter {
             return
         }
         viewModel.pendingImagesJPEG.remove(at: index)
+    }
+
+    /// Shows an error above the composer, and has VoiceOver read it, since it appears away from where the user is.
+    func showError(_ error: ErrorViewConfiguration) {
+        viewModel.error = error
+        dependencies.announce(Strings.errorAnnouncement(title: error.title, message: error.message))
     }
 
     // MARK: Navigation

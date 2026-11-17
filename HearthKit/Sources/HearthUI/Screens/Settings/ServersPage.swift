@@ -18,7 +18,7 @@ struct ServersPage: View {
                 addressField(Strings.imageAddress, text: $viewModel.imageAddress)
                 divider
                 testButton
-                connectionStatus(viewModel.connectionCheck)
+                CheckResultLine(outcome: CheckResultLine.OutcomeKind(viewModel.connectionCheck))
             }
         }
         .onDisappear { Task { await presenter.serverAddressesEditedAction() } }
@@ -29,73 +29,27 @@ struct ServersPage: View {
             .padding(.leading, HearthSpacing.s16)
     }
 
-    /// A server address under a small caption, typed without autocorrection.
     private func addressField(_ title: String, text: Binding<String>) -> some View {
-        VStack(alignment: .leading, spacing: HearthSpacing.s2) {
-            Text(title)
-                .font(.hearth(.caption))
-                .foregroundStyle(HearthColor.mute)
-                .accessibilityHidden(true)
-            TextField("https://", text: text)
-                .font(.hearth(.body))
-                .foregroundStyle(HearthColor.ink)
-                .keyboardType(.URL)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .accessibilityLabel(title)
-                .keepOnLeaving { Task { await presenter.serverAddressesEditedAction() } }
-        }
-        .padding(.horizontal, HearthSpacing.s16)
-        .padding(.vertical, HearthSpacing.s10)
+        AddressFieldRow(title: title, text: text) { Task { await presenter.serverAddressesEditedAction() } }
     }
 
     private var testButton: some View {
-        Button(action: { Task { await presenter.testAction() } }, label: {
-            Label(Strings.testConnection, systemImage: "network")
-                .font(.hearth(.body))
-                .foregroundStyle(HearthColor.pine)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, HearthSpacing.s16)
-                .padding(.vertical, HearthSpacing.s14)
-                .contentShape(Rectangle())
-        })
-        .buttonStyle(.plain)
-        .disabled(presenter.viewModel.connectionCheck == .checking)
-        .accessibilityLabel(Strings.testConnection)
-    }
-
-    /// The outcome of the test; nothing until one has been run. Kept in the tree and hidden when there is none.
-    private func connectionStatus(_ check: ConnectionCheckKind) -> some View {
-        let look = ConnectionLook(check)
-        let isShown = check != .idle
-        return Label(look.text, systemImage: look.systemImage)
-            .font(.hearth(.footnote))
-            .foregroundStyle(look.color)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, HearthSpacing.s16)
-            .padding(.bottom, isShown ? HearthSpacing.s12 : 0)
-            .frame(height: isShown ? nil : 0)
-            .opacity(isShown ? 1 : 0)
-            .accessibilityHidden(!isShown)
+        SettingsActionRow(title: Strings.testConnection, systemImage: "network") { Task { await presenter.testAction() } }
+            .disabled(presenter.viewModel.connectionCheck == .checking)
     }
 }
 
-/// How the outcome of a connection test is drawn.
-private struct ConnectionLook {
-    let text: String
-    let systemImage: String
-    let color: Color
-
+private extension CheckResultLine.OutcomeKind {
     init(_ check: ConnectionCheckKind) {
         switch check {
         case .idle:
-            (text, systemImage, color) = ("", "circle", HearthColor.mute)
+            self = .idle
         case .checking:
-            (text, systemImage, color) = (Strings.checking, "ellipsis", HearthColor.mute)
+            self = .checking
         case .succeeded(let modelCount):
-            (text, systemImage, color) = (Strings.testSucceeded(modelCount: modelCount), "checkmark.circle.fill", HearthColor.online)
+            self = .succeeded(Strings.testSucceeded(modelCount: modelCount))
         case .failed(let message):
-            (text, systemImage, color) = (message, "exclamationmark.triangle.fill", HearthColor.danger)
+            self = .failed(message)
         }
     }
 }

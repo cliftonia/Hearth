@@ -19,7 +19,7 @@ extension ChatPresenter {
             try await dependencies.conversationStore.setPinned(!isChatPinned, for: viewModel.conversation.id)
         } catch {
             logger.error("Pinning the chat failed: \(error.localizedDescription, privacy: .public)")
-            viewModel.error = ErrorViewConfiguration(message: Strings.errorChangeFailed, retryActionLabel: nil)
+            showError(ErrorViewConfiguration(message: Strings.errorChangeFailed, retryActionLabel: nil))
         }
     }
 
@@ -51,7 +51,7 @@ extension ChatPresenter {
             conversationWasRenamed(id, to: title)
         } catch {
             logger.error("Renaming the chat failed: \(error.localizedDescription, privacy: .public)")
-            viewModel.error = ErrorViewConfiguration(message: Strings.errorChangeFailed, retryActionLabel: nil)
+            showError(ErrorViewConfiguration(message: Strings.errorChangeFailed, retryActionLabel: nil))
         }
     }
 
@@ -92,7 +92,7 @@ extension ChatPresenter {
             await newChatAction()
         } catch {
             logger.error("Deleting the chat failed: \(error.localizedDescription, privacy: .public)")
-            viewModel.error = ErrorViewConfiguration(message: Strings.errorChangeFailed, retryActionLabel: nil)
+            showError(ErrorViewConfiguration(message: Strings.errorChangeFailed, retryActionLabel: nil))
         }
     }
 }

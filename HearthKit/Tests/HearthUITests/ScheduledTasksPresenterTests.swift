@@ -32,7 +32,8 @@ struct ScheduledTasksPresenterTests {
             taskStore = TaskStore(provider: TaskDataProvider(
                 loadAll: { tasks },
                 save: { saved.save($0) },
-                delete: { saved.delete($0) }
+                delete: { saved.delete($0) },
+                deleteAll: {}
             ), clock: { ScheduledTasksPresenterTests.now })
         }
 

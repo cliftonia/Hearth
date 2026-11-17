@@ -9,11 +9,11 @@ enum PresenterFixtures {
     struct Unreachable: Error {}
 
     static func conversationStore(_ stored: [Conversation] = []) -> ConversationStore {
-        ConversationStore(provider: ConversationDataProvider(loadAll: { stored }, save: { _ in }, delete: { _ in }))
+        ConversationStore(provider: ConversationDataProvider(loadAll: { stored }, save: { _ in }, delete: { _ in }, deleteAll: {}))
     }
 
     static func projectStore() -> ProjectStore {
-        ProjectStore(provider: ProjectDataProvider(loadAll: { [] }, save: { _ in }, delete: { _ in }))
+        ProjectStore(provider: ProjectDataProvider(loadAll: { [] }, save: { _ in }, delete: { _ in }, deleteAll: {}))
     }
 
     static func memoryStore() -> MemoryStore {
@@ -21,7 +21,7 @@ enum PresenterFixtures {
     }
 
     static func taskStore(_ stored: [ScheduledTask] = []) -> TaskStore {
-        TaskStore(provider: TaskDataProvider(loadAll: { stored }, save: { _ in }, delete: { _ in }))
+        TaskStore(provider: TaskDataProvider(loadAll: { stored }, save: { _ in }, delete: { _ in }, deleteAll: {}))
     }
 
     static func profileStore() -> ProfileStore {
@@ -73,6 +73,11 @@ enum PresenterFixtures {
             complete: { _, _ in "" }
         )
         return ResearchInteractor(chat: provider, search: SearchDataProvider { _, _ in [] })
+    }
+
+    /// A photo library that takes every picture.
+    static var photoLibrary: PhotoLibraryProvider {
+        PhotoLibraryProvider { _ in }
     }
 
     static var dictation: DictationProvider {

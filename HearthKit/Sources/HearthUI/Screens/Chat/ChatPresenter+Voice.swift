@@ -42,7 +42,7 @@ extension ChatPresenter {
     /// - Returns: What is heard, or `nil` if listening did not begin.
     private func beginListening(isStillWanted: () -> Bool) async -> AsyncStream<DictationUpdate>? {
         guard await dependencies.dictation.requestAuthorization() else {
-            viewModel.error = ErrorViewConfiguration(message: Strings.errorDictationDenied, retryActionLabel: nil)
+            showError(ErrorViewConfiguration(message: Strings.errorDictationDenied, retryActionLabel: nil))
             return nil
         }
         guard isStillWanted() else {
@@ -61,7 +61,7 @@ extension ChatPresenter {
             return updates
         } catch {
             logger.error("Dictation could not start: \(error.localizedDescription, privacy: .public)")
-            viewModel.error = ErrorViewConfiguration(message: Strings.errorDictationUnavailable, retryActionLabel: nil)
+            showError(ErrorViewConfiguration(message: Strings.errorDictationUnavailable, retryActionLabel: nil))
             return nil
         }
     }
@@ -145,7 +145,7 @@ extension ChatPresenter {
                 // Stopped by the user.
             } catch {
                 self.logger.error("Reading aloud failed: \(error.localizedDescription, privacy: .public)")
-                self.viewModel.error = ErrorViewConfiguration(from: error)
+                self.showError(ErrorViewConfiguration(from: error))
             }
         }
         speakTask = task
@@ -172,7 +172,7 @@ extension ChatPresenter {
                 // Stopped by the user.
             } catch {
                 self.logger.error("Reading aloud failed: \(error.localizedDescription, privacy: .public)")
-                self.viewModel.error = ErrorViewConfiguration(from: error)
+                self.showError(ErrorViewConfiguration(from: error))
             }
             if self.viewModel.speakingMessageID == replyID {
                 self.viewModel.speakingMessageID = nil

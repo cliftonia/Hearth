@@ -7,11 +7,13 @@ struct PictureSection: View {
     private static let maximumSide: CGFloat = 420
 
     let pictureJPEG: Data
+    /// Adds the picture to the photo library, answering whether it was added. A failure is reported by the presenter.
+    let saveAction: () async -> Bool
 
     @State private var savedCount = 0
 
     var body: some View {
-        if let image = UIImage(data: pictureJPEG) {
+        if let image = DecodedImages.image(from: pictureJPEG) {
             VStack(alignment: .leading, spacing: HearthSpacing.s8) {
                 Image(uiImage: image)
                     .resizable()
@@ -21,7 +23,7 @@ struct PictureSection: View {
                     .accessibilityLabel(Strings.picture)
                     .contextMenu { menu(for: image) }
                 HStack(spacing: HearthSpacing.s4) {
-                    Button(action: { save(image) }, label: {
+                    Button(action: save, label: {
                         Label(Strings.pictureSave, systemImage: "square.and.arrow.down")
                             .font(.hearth(.footnote).weight(.medium))
                             .foregroundStyle(HearthColor.ink)
@@ -47,7 +49,7 @@ struct PictureSection: View {
 
     @ViewBuilder
     private func menu(for image: UIImage) -> some View {
-        Button(action: { save(image) }, label: {
+        Button(action: save, label: {
             Label(Strings.pictureSave, systemImage: "square.and.arrow.down")
         })
         Button(action: {
@@ -58,9 +60,12 @@ struct PictureSection: View {
         })
     }
 
-    /// Adds the picture to the photo library. iOS asks for leave the first time.
-    private func save(_ image: UIImage) {
-        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
-        savedCount += 1
+    /// Adds the picture to the photo library, and confirms it only once it is there. iOS asks for leave the first time.
+    private func save() {
+        Task {
+            if await saveAction() {
+                savedCount += 1
+            }
+        }
     }
 }

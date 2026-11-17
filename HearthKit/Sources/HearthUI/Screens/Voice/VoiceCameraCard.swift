@@ -22,6 +22,7 @@ struct VoiceCameraCard: View {
                         .foregroundStyle(HearthColor.ink)
                         .frame(width: HearthSize.iconButton, height: HearthSize.iconButton)
                         .surface(Circle(), fill: HearthColor.card.opacity(0.9))
+                        .minimumHitTarget()
                 })
                 .buttonStyle(.plain)
                 .accessibilityLabel(Strings.cameraFlip)

@@ -30,6 +30,8 @@ struct MessageSection: View {
     let versionAction: ((Int) -> Void)?
     /// Opens the piece of work at the given place among this reply's pieces in the canvas.
     let canvasAction: (Int) -> Void
+    /// Adds a picture to the photo library, answering whether it was added.
+    let savePictureAction: (Data) async -> Bool
 
     @State private var copyCount = 0
 
@@ -89,7 +91,7 @@ struct MessageSection: View {
                     .foregroundStyle(HearthColor.mute)
             }
             if let pictureJPEG = message.imagesJPEG.first {
-                PictureSection(pictureJPEG: pictureJPEG)
+                PictureSection(pictureJPEG: pictureJPEG) { await savePictureAction(pictureJPEG) }
             }
             if let searchingQuery, isStreaming {
                 Label(Strings.searching(for: searchingQuery), systemImage: "globe")
@@ -163,7 +165,7 @@ struct MessageSection: View {
                 .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.mute)
                 .frame(size: HearthSize.messageAction)
-                .contentShape(Rectangle())
+                .minimumHitTarget()
         }
         .accessibilityLabel(Strings.share)
         if let speakAction {
@@ -204,7 +206,7 @@ struct MessageSection: View {
                 .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.mute)
                 .frame(size: HearthSize.messageAction)
-                .contentShape(Rectangle())
+                .minimumHitTarget()
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -222,6 +224,7 @@ private struct ThinkingSection: View {
     let isActive: Bool
 
     @State private var isExpanded = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: HearthSpacing.s8) {
@@ -231,7 +234,7 @@ private struct ThinkingSection: View {
                         .fill(HearthColor.pine)
                         .frame(width: Self.dotDiameter, height: Self.dotDiameter)
                         .opacity(isActive ? 0.35 : 1)
-                        .animation(isActive ? .easeInOut(duration: 0.7).repeatForever(autoreverses: true) : .default, value: isActive)
+                        .animation(isActive && !reduceMotion ? .easeInOut(duration: 0.7).repeatForever(autoreverses: true) : .default, value: isActive)
                     Text(title)
                         .font(.hearth(.footnote))
                         .foregroundStyle(HearthColor.mute)
@@ -245,7 +248,7 @@ private struct ThinkingSection: View {
             })
             .buttonStyle(.plain)
             .accessibilityLabel(title)
-            .accessibilityAddTraits(isExpanded ? .isSelected : [])
+            .accessibilityValue(isExpanded ? Strings.expanded : Strings.collapsed)
             if isExpanded {
                 Text(thinking.trimmingCharacters(in: .whitespacesAndNewlines))
                     .font(.hearth(.footnote))
@@ -271,16 +274,17 @@ private struct ThinkingSection: View {
     }
 }
 
-/// A pulsing dot shown until the first of a reply arrives.
+/// A pulsing dot shown until the first of a reply arrives. With Reduce Motion on it holds still.
 private struct WritingIndicator: View {
     @State private var isPulsing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Circle()
             .fill(HearthColor.pine)
             .frame(width: HearthSize.statusDot, height: HearthSize.statusDot)
-            .scaleEffect(isPulsing ? 1.25 : 0.75)
-            .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: isPulsing)
+            .scaleEffect(reduceMotion ? 1 : (isPulsing ? 1.25 : 0.75))
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: isPulsing)
             .onAppear { isPulsing = true }
             .accessibilityLabel(Strings.writing)
     }
@@ -295,7 +299,8 @@ private struct SourcesSection: View {
             HStack(spacing: HearthSpacing.s6) {
                 ForEach(sources) { source in
                     let number = (sources.firstIndex(of: source) ?? 0) + 1
-                    let host = source.url.host()?.replacingOccurrences(of: "www.", with: "") ?? source.title
+                    let site = ResearchSourceSelector.site(of: source.url)
+                    let host = site.isEmpty ? source.title : site
                     Link(destination: source.url) {
                         Text("\(number)  \(host)")
                             .font(.hearth(.caption))

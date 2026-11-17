@@ -183,6 +183,11 @@ final class SettingsPresenter {
         viewModel.path = []
     }
 
+    /// Opens the sheet on the given page the next time it is shown, in place of the main list.
+    func showPage(_ page: SettingsPageKind) {
+        viewModel.path = [page]
+    }
+
     /// Keeps what was being typed and acts on any server address that changed.
     func finishEditingAction() async {
         keepAction()

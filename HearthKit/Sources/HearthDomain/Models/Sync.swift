@@ -133,6 +133,9 @@ public struct SyncSettings: Codable, Sendable, Hashable {
 
     /// The hub's address in usable form; `nil` when it is blank or not an address. A bare host is taken to be HTTPS.
     public var hubURL: URL? { ServerSettings.url(from: hubAddress) }
+
+    /// Whether sync runs: it is switched on and has a usable hub address.
+    public var isActive: Bool { isEnabled && hubURL != nil }
 }
 
 /// Why the last sync did not finish, in terms the status line can put in plain words.

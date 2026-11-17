@@ -56,7 +56,7 @@ struct CanvasView: View {
                     .font(HearthFont.icon)
                     .foregroundStyle(HearthColor.ink)
                     .frame(width: HearthSize.iconButton, height: HearthSize.iconButton)
-                    .contentShape(Rectangle())
+                    .minimumHitTarget()
             }
             .accessibilityLabel(Strings.canvasShare)
             IconButton(systemImage: "xmark", label: Strings.canvasClose, action: presenter.closeAction)

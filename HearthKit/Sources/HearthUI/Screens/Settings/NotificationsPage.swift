@@ -21,15 +21,11 @@ struct NotificationsPage: View {
                     .padding(.leading, HearthSpacing.s16)
                 SettingsSwitchRow(title: Strings.notifyTasks, detail: Strings.notifyTasksDetail, isOn: $viewModel.isTaskNotificationsEnabled)
                     .onChange(of: viewModel.isTaskNotificationsEnabled) { Task { await presenter.taskNotificationsAction() } }
-                // A switch for each kind of notification still to come goes here, as a row of this card beneath a
-                // `Hairline`: finished research, once Hearth can do it. None is shown until it does something.
+                // A finished report is a reply like any other, so the first switch covers research too. A new kind of
+                // notification gets its own switch here, as a row of this card beneath a `Hairline`.
             }
             deniedNotice
-                .opacity(isDenied ? 1 : 0)
-                .frame(height: isDenied ? nil : 0, alignment: .top)
-                .clipped()
-                .allowsHitTesting(isDenied)
-                .accessibilityHidden(!isDenied)
+                .folded(!isDenied)
         }
         .animation(.snappy, value: isDenied)
         .task { await presenter.refreshNotificationPermissionAction() }

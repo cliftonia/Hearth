@@ -17,11 +17,7 @@ struct ScheduledTasksPage: View {
             // card while sync is on.
             VStack(alignment: .leading, spacing: isSyncOn ? 0 : HearthSpacing.s24) {
                 syncNotice
-                    .opacity(isSyncOn ? 0 : 1)
-                    .frame(height: isSyncOn ? 0 : nil, alignment: .top)
-                    .clipped()
-                    .allowsHitTesting(!isSyncOn)
-                    .accessibilityHidden(isSyncOn)
+                    .folded(isSyncOn)
                 tasksCard(rows: rows, isSyncOn: isSyncOn)
             }
         }
@@ -47,9 +43,7 @@ struct ScheduledTasksPage: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, HearthSpacing.s16)
                 .padding(.vertical, rows.isEmpty ? HearthSpacing.s14 : 0)
-                .frame(height: rows.isEmpty ? nil : 0)
-                .opacity(rows.isEmpty ? 1 : 0)
-                .accessibilityHidden(!rows.isEmpty)
+                .folded(!rows.isEmpty)
             Hairline()
                 .padding(.leading, HearthSpacing.s16)
                 .opacity(rows.isEmpty ? 1 : 0)
@@ -96,7 +90,7 @@ private struct TaskRow: View {
                         .font(.hearth(.body))
                         .foregroundStyle(HearthColor.ink)
                         .lineLimit(2)
-                    Text("\(row.scheduleText) · \(row.modelName)")
+                    Text(Strings.taskScheduleAndModel(schedule: row.scheduleText, model: row.modelName))
                         .font(.hearth(.footnote))
                         .foregroundStyle(HearthColor.mute)
                     Text(row.lastRunText)
@@ -108,12 +102,12 @@ private struct TaskRow: View {
             })
             .buttonStyle(.plain)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(row.title), \(row.scheduleText), \(row.modelName), \(row.lastRunText)")
+            .accessibilityLabel(Strings.taskRowLabel(title: row.title, schedule: row.scheduleText, model: row.modelName, lastRun: row.lastRunText))
             .accessibilityHint(Strings.editTask)
             Toggle(Strings.taskEnabled, isOn: $isOn)
                 .labelsHidden()
                 .tint(HearthColor.pine)
-                .accessibilityLabel("\(Strings.taskEnabled), \(row.title)")
+                .accessibilityLabel(Strings.taskEnabledLabel(title: row.title))
         }
         .padding(.horizontal, HearthSpacing.s16)
         .padding(.vertical, HearthSpacing.s12)

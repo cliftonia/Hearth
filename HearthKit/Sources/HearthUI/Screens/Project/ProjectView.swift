@@ -1,6 +1,5 @@
 import HearthDomain
 import SwiftUI
-import UniformTypeIdentifiers
 
 /// The project sheet: its name, its instructions, its reference files and, for one that exists, a way to delete it.
 struct ProjectView: View {
@@ -66,13 +65,8 @@ struct ProjectView: View {
         .alert(Strings.projectSaveFailed, isPresented: $viewModel.isShowingSaveFailure) {
             Button(Strings.ok, role: .cancel) {}
         }
-        .fileImporter(isPresented: $isFileImporterPresented, allowedContentTypes: [.pdf, .text], allowsMultipleSelection: true) { result in
-            // Cancelling the picker reports a failure; there is nothing to add either way.
-            let urls = (try? result.get()) ?? []
-            Task {
-                let documents = await DocumentLoader.documents(from: urls)
-                presenter.addDocumentsAction(documents, unreadableCount: urls.count - documents.count)
-            }
+        .documentImporter(isPresented: $isFileImporterPresented) { documents, unreadableCount in
+            presenter.addDocumentsAction(documents, unreadableCount: unreadableCount)
         }
     }
 
@@ -86,9 +80,7 @@ struct ProjectView: View {
             }
             Text(Strings.projectNoFiles)
                 .foregroundStyle(HearthColor.mute)
-                .opacity(documents.isEmpty ? 1 : 0)
-                .frame(height: documents.isEmpty ? nil : 0)
-                .accessibilityHidden(!documents.isEmpty)
+                .folded(!documents.isEmpty)
                 .listRowSeparator(.hidden)
             Button(action: { isFileImporterPresented = true }, label: {
                 Label(Strings.projectAddFiles, systemImage: "plus")
@@ -117,7 +109,7 @@ struct ProjectView: View {
                     .font(.hearth(.footnote).weight(.semibold))
                     .foregroundStyle(HearthColor.mute)
                     .frame(width: Self.removeButtonSide, height: Self.removeButtonSide)
-                    .contentShape(Rectangle())
+                    .minimumHitTarget()
             })
             // Without this the whole row would be the button, as a form makes of a row with one button in it.
             .buttonStyle(.borderless)

@@ -14,6 +14,7 @@ public struct AppDependencies {
     let camera: CameraProvider
     let authentication: AuthenticationProvider
     let notifications: NotificationProvider
+    let photoLibrary: PhotoLibraryProvider
     /// Lists the models at a server address, for testing a connection without touching the model store.
     let fetchModels: @Sendable (URL) async throws -> [ChatModel]
     let settingsStore: SettingsStore
@@ -65,6 +66,7 @@ public struct AppDependencies {
             camera: makeCamera(),
             authentication: .live(),
             notifications: notifications,
+            photoLibrary: .live(),
             fetchModels: chatProvider.fetchModels,
             settingsStore: settingsStore,
             modelStore: ModelStore(fetchModels: chatProvider.fetchModels),

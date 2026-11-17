@@ -85,9 +85,7 @@ struct VoicePage: View {
             Label(Strings.voiceSampleFailed, systemImage: "exclamationmark.triangle.fill")
                 .font(.hearth(.footnote))
                 .foregroundStyle(HearthColor.danger)
-                .opacity(preview == .failed ? 1 : 0)
-                .frame(height: preview == .failed ? nil : 0)
-                .accessibilityHidden(preview != .failed)
+                .folded(preview != .failed)
         }
         .padding(.horizontal, HearthSpacing.s16)
         .padding(.vertical, HearthSpacing.s14)

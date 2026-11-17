@@ -39,16 +39,21 @@ Each colour has a light and a dark value and follows the appearance by itself.
 | `line` | `#DDE2DC` | `#2A3330` | Borders and dividers |
 | `scrim` | black | black | The veil over the chat while the drawer is open |
 | `ink` | `#18211E` | `#E9EEEA` | Body text and primary symbols |
-| `mute` | `#6C7772` | `#8B9691` | Secondary text, placeholders, quiet symbols |
+| `mute` | `#5F6A65` | `#8B9691` | Secondary text, placeholders, quiet symbols |
 | `pine` | `#2C6B5A` | `#6FC2A8` | The brand colour: the tint, primary buttons, anything switched on |
 | `pineSoft` | `#DCEAE4` | `#1F3A32` | The fill behind something switched on |
 | `onPine` | `#FFFFFF` | `#0E1211` | Text and symbols drawn on pine |
-| `danger` | `#C8553D` | `#E0705A` | Errors, recording, buttons that end or destroy |
-| `onDanger` | white | white | Symbols drawn on danger |
-| `online` | `#3FA66B` | `#57C283` | The server can be reached |
+| `danger` | `#B0472F` | `#E0705A` | Errors, recording, buttons that end or destroy, as text or a symbol |
+| `dangerFill` | `#B0472F` | `#B54E3A` | The fill of a button that ends something, under `onDanger` |
+| `onDanger` | white | white | Symbols drawn on `dangerFill` |
+| `online` | `#3FA66B` | `#57C283` | The dot that says the server can be reached; never text, where success is `pine` |
 | `orb` | `#9FE0CB`, `#2C6B5A`, `#1B4A3D` | `#9FE0CB`, `#3E8A75`, `#1B4A3D` | The voice orb's gradient |
 
 A new colour is made with `Color(lightHex:darkHex:)`, and only inside `HearthColor`.
+
+Text colours reach at least 4.5:1 against the surfaces they are drawn on (WCAG AA). In light, `mute` is 5.12:1 on
+`paper` and 4.65:1 on `bubble`; `danger` is 5.05:1 on `paper` and 4.59:1 on `bubble`; white on `dangerFill` is 5.54:1.
+In dark, `danger` is 5.72:1 on `paper` and white on `dangerFill` is 5.10:1. Check a new text colour before adding it.
 
 ### Type: `HearthFont`
 
@@ -96,6 +101,7 @@ Rounded rectangles are always drawn with `style: .continuous`. Pills and round b
 | `messageAction` | 34 × 30 | Copy, share, read aloud, try again |
 | `floatingButton` | 48 | Settings and New chat over the chat list |
 | `voiceButton` | 60 | The camera, mute and end in a voice conversation |
+| `minimumHitTarget` | 44 | The least a control may be touched across, through `.minimumHitTarget()` |
 | `statusDot` | 10 | The connection dot; the writing indicator |
 | `readingWidth` | 780 | The widest a line of chat grows |
 | `sidebarWidth` | 320 | The chat list beside the chat |
@@ -132,6 +138,9 @@ Apply one with `.hearthShadow(.composer)`.
 | `.capsuleOutline(_:)` | A capsule's border with nothing behind it | Quiet controls such as attach and dictate |
 | `.glassSurface(_:tint:)` | The system's interactive glass in the given shape on iOS 26 and later; before that a frosted fill, a hairline edge and the floating shadow | The glass buttons, and the pill holding New chat and the chat's menu |
 | `.hearthShadow(_:)` | One of the shadows above | Lifting a surface off the paper |
+| `.minimumHitTarget()` | Grows the touchable area of a control to at least 44 points a side without moving or redrawing it | Every icon control drawn smaller than 44 points; put it last on the label |
+| `.folded(_:)` | Keeps a view in place but folds it to nothing: unseen, untouchable and unread | A line that comes and goes, such as a check's result or an empty note, without an `if` |
+| `SectionHeading(title:kerning:)` | Small capitals in the muted colour, read as a heading | The caption above a group of rows; the caller pads it |
 
 Order matters where a surface also casts a shadow: apply the surface first, then the shadow.
 

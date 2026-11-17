@@ -27,6 +27,10 @@ extension Strings {
     static let syncFailedTokenRefused = String(localized: "sync.failed.tokenRefused", defaultValue: "The hub did not accept the access key.", bundle: .module)
     static let syncFailedUnreadable = String(localized: "sync.failed.unreadable", defaultValue: "The hub's answer could not be read. Is this the address of a Hearth Hub?", bundle: .module)
 
+    static func syncStatusLabel(_ status: String) -> String {
+        String(localized: "sync.statusLabel", defaultValue: "Status: \(status)", bundle: .module)
+    }
+
     static func syncLastSynced(when: String) -> String {
         String(localized: "sync.lastSynced", defaultValue: "Last synced \(when).", bundle: .module)
     }
