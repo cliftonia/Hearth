@@ -65,17 +65,27 @@ public final class NotificationService: NSObject, Sendable {
 }
 
 extension NotificationService: UNUserNotificationCenterDelegate {
+    // The completion-handler forms are used on purpose: the system calls these on the main thread and expects its
+    // handler back there. The async forms hand it back from a background thread, which UIKit stops the app for when
+    // a tap brings the app back from the background.
+
     /// A notification that arrives just as the app comes back on screen is still shown, since it was earned off screen.
     public func userNotificationCenter(
         _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification
-    ) async -> UNNotificationPresentationOptions {
-        [.banner, .list, .sound]
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .list, .sound])
     }
 
-    public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+    public func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
         if let subject = response.notification.request.content.userInfo[Self.subjectKey] as? String {
             tapContinuation.yield(subject)
         }
+        completionHandler()
     }
 }
