@@ -98,7 +98,6 @@ struct SettingsServersSyncSection: View {
         Section {
             SettingsStatusRow(title: Strings.servers, status: presenter.serversStatus) { openAction(.servers) }
             SettingsStatusRow(title: Strings.sync, status: presenter.syncRowStatus) { openAction(.sync) }
-            // A "Cloud providers" row, leading to the providers of cloud models, will go here.
         } header: {
             SettingsSectionHeader(title: Strings.settingsServersSync)
         }

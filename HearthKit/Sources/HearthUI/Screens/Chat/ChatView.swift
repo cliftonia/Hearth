@@ -1,7 +1,7 @@
 import HearthDomain
 import SwiftUI
 
-/// The chat screen: the header, the conversation or its empty state, any error, and the composer.
+/// The chat screen: the conversation or its empty state under a floating header, any error, and the composer.
 struct ChatView: View {
     private static let followUpsID = "followUps"
     private static let messageSpacing: CGFloat = 22
@@ -13,7 +13,6 @@ struct ChatView: View {
     var body: some View {
         let viewModel = presenter.viewModel
         VStack(spacing: 0) {
-            ChatHeader(presenter: presenter)
             // Both stay in the tree with one of them hidden, rather than being swapped, so neither is rebuilt as a chat begins.
             ZStack {
                 messageList(viewModel: viewModel)
@@ -31,10 +30,17 @@ struct ChatView: View {
             // It may shrink to nothing, so a tall keyboard squeezes this and never pushes the composer beneath itself.
             .frame(minHeight: 0, maxHeight: .infinity)
             .frame(maxWidth: .infinity)
-            .clipped()
+            // Clipped at the foot, so nothing spills onto the composer, but open at the head, so the conversation can
+            // scroll on beneath the header and the status bar.
+            .mask(alignment: .bottom) {
+                Rectangle()
+                    .padding(.top, -HearthSize.scrollUnderReach)
+            }
             // A tap anywhere in the conversation puts the keyboard away, without taking the tap from what was tapped.
             .contentShape(Rectangle())
             .simultaneousGesture(TapGesture().onEnded { Keyboard.dismiss() })
+            // The header floats over the conversation, which scrolls on beneath it.
+            .floatingTopBar { ChatHeader(presenter: presenter) }
             if let error = viewModel.error {
                 ErrorBannerSection(
                     configuration: error,
