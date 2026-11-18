@@ -4,14 +4,18 @@ import Foundation
 public enum PageError: Error, Sendable, Equatable {
     /// The address answered with something other than a web page, such as a file or an image.
     case notHTML
+    /// The address answered with something other than a picture where a site's icon was asked for.
+    case notAnImage
     /// The address is not a page on the public web, so it is not read.
     case addressNotAllowed
 }
 
-/// Fetches a public web page so that its text can be read. Nothing is kept: no cookies, no cache.
+/// Fetches a public web page so that its text can be read, or a site's icon. Nothing is kept: no cookies, no cache.
 public struct PageService: Sendable {
     /// Pages are cut off here; what a reader needs is near the top, and some pages never end.
     private static let maximumBytes = 1_000_000
+    /// An icon larger than this is not one worth drawing in a small circle, so it is refused.
+    private static let maximumIconBytes = 300_000
 
     private let session: URLSession
 
@@ -21,24 +25,55 @@ public struct PageService: Sendable {
 
     /// The page's markup, up to the size limit. Fails unless the address, every redirect and every connection is public.
     public func fetchHTML(url: URL) async throws -> String {
+        let data = try await fetch(url: url, accept: "text/html,application/xhtml+xml", maximumBytes: Self.maximumBytes) { contentType in
+            guard contentType.contains("html") else {
+                throw PageError.notHTML
+            }
+        }
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    /// The icon a site keeps at its root, as the site serves it. Fails unless the site is on the public web, answers
+    /// with a picture, and the picture is small.
+    public func fetchIcon(host: String) async throws -> Data {
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = host
+        components.path = "/favicon.ico"
+        guard let url = components.url else {
+            throw PageError.addressNotAllowed
+        }
+        let data = try await fetch(url: url, accept: "image/*", maximumBytes: Self.maximumIconBytes + 1) { contentType in
+            // Some sites send their icon as plain bytes without naming it a picture.
+            guard contentType.hasPrefix("image/") || contentType.contains("octet-stream") else {
+                throw PageError.notAnImage
+            }
+        }
+        guard !data.isEmpty, data.count <= Self.maximumIconBytes else {
+            throw PageError.notAnImage
+        }
+        return data
+    }
+
+    /// What a public address answers with, up to a size limit. `checkContentType` is given the kind of content the
+    /// answer says it is, in lower case, and throws to refuse it before any of it is read.
+    private func fetch(url: URL, accept: String, maximumBytes: Int, checkContentType: (String) throws -> Void) async throws -> Data {
         guard PageAddressPolicy.isAllowed(url) else {
             throw PageError.addressNotAllowed
         }
         var request = URLRequest(url: url)
-        request.setValue("text/html,application/xhtml+xml", forHTTPHeaderField: "Accept")
+        request.setValue(accept, forHTTPHeaderField: "Accept")
         let fetchGuard = PageFetchGuard()
         // A refused redirect leaves the redirect response itself, which fails the status check below.
         let (bytes, response) = try await session.bytes(for: request, delegate: fetchGuard)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             throw HTTPError.invalidResponse
         }
-        guard http.value(forHTTPHeaderField: "Content-Type")?.lowercased().contains("html") == true else {
-            throw PageError.notHTML
-        }
+        try checkContentType(http.value(forHTTPHeaderField: "Content-Type")?.lowercased() ?? "")
         var data = Data()
         for try await byte in bytes {
             data.append(byte)
-            if data.count >= Self.maximumBytes {
+            if data.count >= maximumBytes {
                 break
             }
         }
@@ -48,7 +83,7 @@ public struct PageService: Sendable {
         guard await fetchGuard.connectedOnlyToPublicAddresses() else {
             throw PageError.addressNotAllowed
         }
-        return String(decoding: data, as: UTF8.self)
+        return data
     }
 }
 

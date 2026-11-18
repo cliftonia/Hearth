@@ -21,7 +21,7 @@ struct EmptyChatSection: View {
     private func content(hasMark: Bool, hasDetail: Bool, padding: CGFloat) -> some View {
         VStack(spacing: HearthSpacing.s16) {
             if hasMark {
-                HearthMark(sideLength: 56)
+                HearthMark(sideLength: 40)
             }
             Text(isServerConfigured ? greeting : Strings.connectTitle)
                 .font(HearthFont.display)

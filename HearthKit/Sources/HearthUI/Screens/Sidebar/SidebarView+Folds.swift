@@ -14,10 +14,10 @@ extension SidebarView {
         let isSearching = !presenter.viewModel.query.trimmingCharacters(in: .whitespaces).isEmpty
         return Button(action: { toggleFold(kind) }, label: {
             HStack(spacing: HearthSpacing.s6) {
-                SectionHeading(title: title, kerning: Self.headingKerning)
+                SectionHeading(title: title, isQuiet: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text(count, format: .number)
-                    .font(.hearth(.caption).weight(.medium))
+                    .font(.hearth(.footnote))
                     .foregroundStyle(HearthColor.mute)
                     .opacity(isFolded ? 1 : 0)
                     .accessibilityHidden(true)

@@ -7,6 +7,9 @@ import Observation
 final class SidebarViewModel {
     /// The words typed into the search field.
     var query = ""
+    /// Whether the search field has been opened with its button. Kept here, not in the view, so that it outlasts the
+    /// view being built afresh as the keyboard rises. The field also shows while it holds words.
+    var isSearchOpen = false
     /// The project whose chats alone are listed; `nil` lists every chat.
     var selectedProjectID: Project.ID?
     /// Whether the rename alert is showing.

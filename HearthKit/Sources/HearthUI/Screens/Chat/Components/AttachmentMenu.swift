@@ -3,8 +3,8 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 /// The plus button: photos from the library or the camera for models that can see, files for any model,
-/// the switch that makes the next message ask for a picture, a scheduled task asking what is being written, and a
-/// new project.
+/// the switches that make the next message ask for a picture and have replies read aloud, a scheduled task asking
+/// what is being written, and a new project.
 struct AttachmentMenu: View {
     private static let maximumPhotoCount = 4
 
@@ -39,6 +39,13 @@ struct AttachmentMenu: View {
                     Label(Strings.pictureMode, systemImage: isPictureMode ? "checkmark" : "paintbrush")
                 }
                 .accessibilityAddTraits(isPictureMode ? .isSelected : [])
+            }
+            if presenter.isSpeechAvailable {
+                let isReadingAloud = presenter.isAutoReadEnabled
+                Button(action: { Task { await presenter.toggleAutoReadAction() } }, label: {
+                    Label(Strings.readRepliesAloud, systemImage: isReadingAloud ? "checkmark" : "speaker.wave.2")
+                })
+                .accessibilityAddTraits(isReadingAloud ? .isSelected : [])
             }
             Button(action: presenter.scheduleTaskAction) {
                 Label(Strings.scheduleTask, systemImage: "calendar.badge.clock")

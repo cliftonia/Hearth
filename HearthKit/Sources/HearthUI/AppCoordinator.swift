@@ -29,6 +29,8 @@ public final class AppCoordinator {
     /// Read for the chats whose answers a scheduled task filed.
     let conversationStore: ConversationStore
     let notifications: NotificationProvider
+    /// Read by the root view, which hands the sites' icons down to the replies' sources.
+    let siteIcons: SiteIconProvider
     /// A voice conversation asked for while locked, begun once the owner is in.
     var isVoicePending = false
     /// Settings are to open on the sync page once the task sheet over the chat has gone.
@@ -72,6 +74,7 @@ public final class AppCoordinator {
         ))
         self.tasksPresenter = Self.makeTasksPresenter(dependencies: dependencies)
         (syncScheduler, taskStore, notifications) = (dependencies.syncScheduler, dependencies.taskStore, dependencies.notifications)
+        siteIcons = dependencies.siteIcons
         self.conversationStore = dependencies.conversationStore
         connect(dependencies)
     }

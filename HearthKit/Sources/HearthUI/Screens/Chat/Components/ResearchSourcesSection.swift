@@ -27,8 +27,8 @@ struct ResearchSourceViewConfiguration: Hashable, Identifiable {
 
 /// The pages a report was written from, under the report: each with its number, title and site, and each a link.
 ///
-/// It is the full-length form of the pills under an ordinary reply that searched the web, drawn from the same
-/// tokens; a report has more sources, and each is cited by number, so the titles are worth the room.
+/// An ordinary reply that searched the web lists its pages more briefly, in `ReplySourcesSection`; a report has
+/// more sources, and each is cited by number, so the numbers are worth the room.
 struct ResearchSourcesSection: View {
     /// Wide enough for a two-digit number, so that the titles line up.
     private static let numberWidth: CGFloat = 22

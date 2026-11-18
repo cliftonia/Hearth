@@ -8,7 +8,7 @@ enum HearthFont {
     /// The app's name beside its mark.
     static let brand = Font.hearth(.title2, design: .serif).weight(.bold)
     /// The one large line on an otherwise empty screen.
-    static let display = Font.hearth(.title, design: .serif).weight(.semibold)
+    static let display = Font.hearth(.title, design: .serif)
     /// The caption of a voice conversation.
     static let spoken = Font.hearth(.title3, design: .serif)
     /// The contents of a code block.

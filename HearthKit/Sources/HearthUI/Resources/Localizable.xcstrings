@@ -2025,17 +2025,6 @@
         }
       }
     },
-    "message.source": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Source %1$lld: %2$@"
-          }
-        }
-      }
-    },
     "message.speak": {
       "extractionState": "manual",
       "localizations": {
@@ -4051,6 +4040,17 @@
         }
       }
     },
+    "sidebar.search.close": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close search"
+          }
+        }
+      }
+    },
     "sidebar.settings": {
       "extractionState": "manual",
       "localizations": {
@@ -4102,6 +4102,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yesterday"
+          }
+        }
+      }
+    },
+    "sources.count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld sources"
+          }
+        }
+      }
+    },
+    "sources.count.one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 source"
+          }
+        }
+      }
+    },
+    "sources.heading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sources:"
           }
         }
       }

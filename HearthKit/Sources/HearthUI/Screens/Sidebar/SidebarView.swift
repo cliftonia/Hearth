@@ -1,10 +1,11 @@
 import HearthDomain
 import SwiftUI
 
-/// The chat list: the brand, a search field, the projects, the chats grouped by day, and Settings and New chat
-/// floating at the foot.
+/// The chat list: the brand beside the search button, the projects, the chats grouped by day, and Settings and New
+/// chat floating at the foot.
 ///
-/// The projects, and the heading of a project whose chats are being looked at, are drawn in `SidebarView+Projects`.
+/// The projects, and the heading of a project whose chats are being looked at, are drawn in `SidebarView+Projects`;
+/// the search field and its button in `SidebarView+Search`.
 struct SidebarView: View {
     /// The gap beneath the settings and new chat buttons, the same as beneath the composer.
     #if targetEnvironment(macCatalyst)
@@ -12,12 +13,10 @@ struct SidebarView: View {
     #else
     private static let footerBottomGap = HearthSpacing.s10
     #endif
-    /// The vertical padding that gives the search field and each chat their height.
-    static let rowVerticalPadding: CGFloat = 9
+    /// The vertical padding that gives each chat and each project its height.
+    static let rowVerticalPadding: CGFloat = 11
     /// Room for the last chat to be scrolled clear of the floating controls, which grow with the text.
     @ScaledMetric(relativeTo: .subheadline) private var listBottomClearance: CGFloat = 74
-    /// The headings above the groups are spaced out a little, to read as labels.
-    static let headingKerning: CGFloat = 0.6
     /// How far down the floating controls the list has faded out completely.
     private static let fadeEnd = UnitPoint(x: 0.5, y: 0.4)
 
@@ -29,7 +28,7 @@ struct SidebarView: View {
     @AppStorage("sidebarFoldedSections") var foldedSections = ""
     /// The column a project row's symbol sits in, which grows with the text so the symbol never runs into the name.
     @ScaledMetric(relativeTo: .footnote) var rowSymbolWidth: CGFloat = 20
-    @FocusState private var isSearchFocused: Bool
+    @FocusState var isSearchFocused: Bool
 
     /// How many lines a chat's or a project's name may take: one, and up to three at the accessibility sizes, where
     /// one line would hold only a word or two.
@@ -46,11 +45,14 @@ struct SidebarView: View {
                 Text(Strings.brand)
                     .font(HearthFont.brand)
                     .foregroundStyle(HearthColor.ink)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                searchButton(isOpen: $viewModel.isSearchOpen)
             }
-            .padding(.horizontal, HearthSpacing.s18)
-            .padding(.top, HearthSpacing.s8)
-            .padding(.bottom, HearthSpacing.s14)
-            searchField(text: $viewModel.query)
+            .padding(.leading, HearthSpacing.s18)
+            .padding(.trailing, HearthSpacing.s14)
+            .padding(.top, HearthSpacing.s4)
+            .padding(.bottom, HearthSpacing.s8)
+            searchField(text: $viewModel.query, isOpen: $viewModel.isSearchOpen)
             conversationList(groups: groups)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .overlay(alignment: .bottom) { floatingControls }
@@ -58,6 +60,7 @@ struct SidebarView: View {
         .background(HearthColor.paper.ignoresSafeArea())
         // Find on the keyboard, or Search Chats in the menu bar, puts the cursor in the search field.
         .onChange(of: viewModel.searchFocusRequestCount) {
+            viewModel.isSearchOpen = true
             isSearchFocused = true
         }
         .alert(Strings.renameChat, isPresented: $viewModel.isRenaming) {
@@ -85,25 +88,7 @@ struct SidebarView: View {
         }
     }
 
-    // MARK: Search and list
-
-    private func searchField(text: Binding<String>) -> some View {
-        HStack(spacing: HearthSpacing.s8) {
-            Image(systemName: "magnifyingglass")
-                .font(.hearth(.footnote))
-                .foregroundStyle(HearthColor.mute)
-                .accessibilityHidden(true)
-            TextField(Strings.searchChats, text: text)
-                .font(.hearth(.subheadline))
-                .foregroundStyle(HearthColor.ink)
-                .autocorrectionDisabled()
-                .focused($isSearchFocused)
-        }
-        .padding(.horizontal, HearthSpacing.s12)
-        .padding(.vertical, Self.rowVerticalPadding)
-        .cardSurface()
-        .padding(.horizontal, HearthSpacing.s14)
-    }
+    // MARK: The list
 
     private func conversationList(groups: [SidebarGroupViewConfiguration]) -> some View {
         ScrollView {
@@ -138,34 +123,33 @@ struct SidebarView: View {
         .scrollDismissesKeyboard(.immediately)
     }
 
-    /// The small capitals above a group of rows, set in from the list's edge.
+    /// The words above a group of rows, set in from the list's edge.
     func heading(_ title: String) -> some View {
-        SectionHeading(title: title, kerning: Self.headingKerning)
+        SectionHeading(title: title, isQuiet: true)
             .padding(.horizontal, HearthSpacing.s18)
             .padding(.top, HearthSpacing.s14)
             .padding(.bottom, HearthSpacing.s4)
     }
 
-    /// One chat. A long press offers to pin or rename it, file it in a project, share it or delete it.
+    /// One chat, behind the symbol that says what kind it is. A long press offers to pin or rename it, file it in a
+    /// project, share it or delete it.
     private func conversationRow(_ row: SidebarRowViewConfiguration) -> some View {
         let isSelected = row.id == presenter.selectedID
         // Among a project's own chats the mark would say nothing, so it shows only where every chat is listed.
         let hasProjectMark = row.isInProject && presenter.selectedProject == nil
         return Button(action: { presenter.selectAction(row.id) }, label: {
-            HStack(spacing: HearthSpacing.s6) {
-                VStack(alignment: .leading, spacing: HearthSpacing.s2) {
-                    Text(row.title)
-                        .font(.hearth(.subheadline))
-                        .foregroundStyle(HearthColor.ink)
-                        .lineLimit(titleLineLimit)
-                    Label(row.isFromTask ? Strings.scheduledTaskMark : "", systemImage: "clock")
-                        .font(.hearth(.caption2))
-                        .foregroundStyle(HearthColor.mute)
-                        .lineLimit(titleLineLimit)
-                        .folded(!row.isFromTask)
-                        .accessibilityHidden(true)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: HearthSpacing.s8) {
+                // A clock marks the answer a scheduled task filed; every other chat has a speech bubble.
+                Image(systemName: row.isFromTask ? "clock" : "bubble.left")
+                    .font(.hearth(.footnote))
+                    .foregroundStyle(HearthColor.mute)
+                    .frame(width: rowSymbolWidth)
+                    .accessibilityHidden(true)
+                Text(row.title)
+                    .font(.hearth(.body))
+                    .foregroundStyle(HearthColor.ink)
+                    .lineLimit(titleLineLimit)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 Image(systemName: "folder")
                     .font(.hearth(.caption2))
                     .foregroundStyle(HearthColor.mute)

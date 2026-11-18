@@ -3,7 +3,8 @@ import SwiftUI
 
 /// Where a message is written: text, attachments, the reply's options, dictation and send.
 ///
-/// At rest it is a single row. It opens out, showing its options, while a message is being written.
+/// At rest it is a single row. It opens out, showing the model and web search, while a message is being written.
+/// Reading replies aloud is switched in the plus menu.
 struct ComposerFooter: View {
     private static let pendingPhotoSide: CGFloat = 64
     private static let cancelEditSize = CGSize(width: 28, height: 24)
@@ -120,16 +121,6 @@ struct ComposerFooter: View {
         isFocused || !presenter.viewModel.draft.isEmpty
     }
 
-    /// The switches that shape a reply: web search and reading aloud. How hard to think is chosen with the model.
-    @ViewBuilder var optionChips: some View {
-        if presenter.isSearchToggleVisible {
-            searchToggle
-        }
-        if presenter.isSpeechAvailable {
-            readAloudToggle
-        }
-    }
-
     /// The model the message goes to and the effort chosen for it, or the picture model while pictures are being made.
     /// Tapping it opens the sheet where both are chosen.
     var modelChip: some View {
@@ -244,19 +235,6 @@ struct ComposerFooter: View {
         .accessibilityAddTraits(isOn ? .isSelected : [])
         .largeContentLabel(Strings.searchLabel, systemImage: "globe")
     }
-
-    /// When on, every reply is read aloud as soon as it is finished.
-    private var readAloudToggle: some View {
-        let isOn = presenter.isAutoReadEnabled
-        return Button(action: { Task { await presenter.toggleAutoReadAction() } }, label: {
-            OptionChip(systemImage: isOn ? "speaker.wave.2.fill" : "speaker.wave.2", isOn: isOn)
-        })
-        .buttonStyle(.plain)
-        .accessibilityLabel(Strings.readRepliesAloud)
-        .accessibilityAddTraits(isOn ? .isSelected : [])
-        .largeContentLabel(Strings.readRepliesAloud, systemImage: "speaker.wave.2")
-    }
-
 }
 
 // MARK: Dictation and send
@@ -354,8 +332,9 @@ private extension ComposerFooter {
 
     // MARK: Arrangement at large sizes
 
-    /// Attach and the reply's options, beside the field at rest and beneath it while writing. At the accessibility
-    /// text sizes the model chip takes a row of its own above the rest, so that it is not squeezed to nothing.
+    /// The plus menu, and while writing the model and web search: beside the field at rest and beneath it while
+    /// writing. At the accessibility text sizes the model chip takes a row of its own above the rest, so that it is
+    /// not squeezed to nothing.
     var leadingControls: some View {
         let viewModel = presenter.viewModel
         let isChipOnOwnRow = dynamicTypeSize.isAccessibilitySize && isExpanded
@@ -371,8 +350,8 @@ private extension ComposerFooter {
                 if isExpanded, !isChipOnOwnRow {
                     modelChip
                 }
-                if isExpanded, !viewModel.isPictureMode {
-                    optionChips
+                if isExpanded, presenter.isSearchToggleVisible, !viewModel.isPictureMode {
+                    searchToggle
                 }
             }
         }

@@ -12,6 +12,8 @@ extension Strings {
     static let researchChecking = String(localized: "research.checking", defaultValue: "Checking for gaps", bundle: .module)
     static let researchWriting = String(localized: "research.writing", defaultValue: "Writing", bundle: .module)
     static let researchSources = String(localized: "research.sources", defaultValue: "Sources", bundle: .module)
+    static let sourcesHeading = String(localized: "sources.heading", defaultValue: "Sources:", bundle: .module)
+    static let sourcesCountOne = String(localized: "sources.count.one", defaultValue: "1 source", bundle: .module)
     static let errorResearchNotConfigured = String(localized: "error.researchNotConfigured", defaultValue: "Add a search address in Settings to research a question.", bundle: .module)
     static let errorResearchSearchFailed = String(localized: "error.researchSearchFailed", defaultValue: "The web could not be searched, so nothing was researched.", bundle: .module)
     static let errorResearchNothingFound = String(localized: "error.researchNothingFound", defaultValue: "The searches found no pages to read, so no report was written.", bundle: .module)
@@ -28,6 +30,10 @@ extension Strings {
 
     static func researchTakingNotes(number: Int, total: Int) -> String {
         String(localized: "research.takingNotes", defaultValue: "Taking notes \(number) of \(total)", bundle: .module)
+    }
+
+    static func sourcesCount(_ total: Int) -> String {
+        String(localized: "sources.count", defaultValue: "\(total) sources", bundle: .module)
     }
 
     static func researchSource(number: Int, title: String, host: String) -> String {

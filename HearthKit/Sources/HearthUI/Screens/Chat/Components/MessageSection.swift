@@ -112,8 +112,9 @@ struct MessageSection: View {
             if !message.sources.isEmpty, message.isResearch, !isStreaming {
                 ResearchSourcesSection(sources: ResearchSourceViewConfiguration.list(from: message.sources))
             }
-            if !message.sources.isEmpty, !message.isResearch {
-                SourcesSection(sources: message.sources)
+            // An ordinary reply that searched the web lists its first few pages; the button beside its actions opens them all.
+            if !message.sources.isEmpty, !message.isResearch, !isStreaming {
+                ReplySourcesSection(sources: ResearchSourceViewConfiguration.list(from: message.sources))
             }
             // The actions keep their place while a reply streams, so the text above does not jump when it ends.
             actions
@@ -140,7 +141,7 @@ struct MessageSection: View {
         copyCount += 1
     }
 
-    /// The row of buttons under a finished reply.
+    /// The row of buttons under a finished reply, ending in the way to its sources where it has any.
     private var actions: some View {
         HStack(spacing: HearthSpacing.s4) {
             // A picture has its own ways to be kept, and its note is not worth copying or reading out.
@@ -152,6 +153,10 @@ struct MessageSection: View {
             }
             if let versionAction, message.versionCount > 1 {
                 versionStepper(versionAction)
+            }
+            if !message.sources.isEmpty {
+                ReplySourcesButton(sources: ResearchSourceViewConfiguration.list(from: message.sources))
+                    .padding(.leading, HearthSpacing.s8)
             }
         }
         .haptic(.success, trigger: copyCount)
@@ -298,32 +303,5 @@ private struct WritingIndicator: View {
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: isPulsing)
             .onAppear { isPulsing = true }
             .accessibilityLabel(Strings.writing)
-    }
-}
-
-/// The web pages a reply was written from, each a link.
-private struct SourcesSection: View {
-    let sources: [SearchSource]
-
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: HearthSpacing.s6) {
-                ForEach(sources) { source in
-                    let number = (sources.firstIndex(of: source) ?? 0) + 1
-                    let site = ResearchSourceSelector.site(of: source.url)
-                    let host = site.isEmpty ? source.title : site
-                    Link(destination: source.url) {
-                        Text("\(number)  \(host)")
-                            .font(.hearth(.caption))
-                            .foregroundStyle(HearthColor.mute)
-                            .padding(.horizontal, HearthSpacing.s10)
-                            .padding(.vertical, HearthSpacing.s6)
-                            .capsuleSurface()
-                    }
-                    .accessibilityLabel(Strings.source(number: number, host: host))
-                    .accessibilityHint(source.title)
-                }
-            }
-        }
     }
 }

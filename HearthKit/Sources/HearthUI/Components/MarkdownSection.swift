@@ -5,7 +5,7 @@ import UIKit
 /// A reply laid out from Markdown: headings, paragraphs, lists, quotes and code, its text open to selection.
 struct MarkdownSection: View {
     private static let quoteBarWidth: CGFloat = 3
-    static let paragraphLineSpacing: CGFloat = 3
+    static let paragraphLineSpacing: CGFloat = 6
 
     let markdown: String
 

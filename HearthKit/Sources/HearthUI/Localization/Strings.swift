@@ -128,6 +128,7 @@ enum Strings {
     static let errorSaveFailed = String(localized: "error.saveFailed", defaultValue: "This chat could not be saved.", bundle: .module)
 
     static let searchChats = String(localized: "sidebar.search", defaultValue: "Search chats", bundle: .module)
+    static let closeSearch = String(localized: "sidebar.search.close", defaultValue: "Close search", bundle: .module)
     static let today = String(localized: "sidebar.today", defaultValue: "Today", bundle: .module)
     static let yesterday = String(localized: "sidebar.yesterday", defaultValue: "Yesterday", bundle: .module)
     static let previousWeek = String(localized: "sidebar.previousWeek", defaultValue: "Previous 7 days", bundle: .module)
@@ -264,10 +265,6 @@ enum Strings {
 
     static func serverStatusValue(host: String, detail: String) -> String {
         String(localized: "sidebar.statusValue", defaultValue: "\(host), \(detail)", bundle: .module)
-    }
-
-    static func source(number: Int, host: String) -> String {
-        String(localized: "message.source", defaultValue: "Source \(number): \(host)", bundle: .module)
     }
 }
 
