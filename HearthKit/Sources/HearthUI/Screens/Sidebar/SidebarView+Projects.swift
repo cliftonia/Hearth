@@ -18,11 +18,13 @@ extension SidebarView {
     @ViewBuilder private var projectList: some View {
         let projects = presenter.projects
         if !projects.isEmpty {
-            heading(Strings.projects)
+            foldingHeading(Strings.projects, kind: .projects, count: projects.count)
         }
-        ForEach(projects) { project in
-            projectRow(title: project.name, systemImage: "folder", tint: HearthColor.ink, symbolTint: HearthColor.mute) {
-                presenter.selectProjectAction(project.id)
+        if !isFolded(.projects) {
+            ForEach(projects) { project in
+                projectRow(title: project.name, systemImage: "folder", tint: HearthColor.ink, symbolTint: HearthColor.mute) {
+                    presenter.selectProjectAction(project.id)
+                }
             }
         }
     }

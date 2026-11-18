@@ -17,13 +17,16 @@ struct SidebarView: View {
     /// Room for the last chat to be scrolled clear of the floating controls, which grow with the text.
     @ScaledMetric(relativeTo: .subheadline) private var listBottomClearance: CGFloat = 74
     /// The headings above the groups are spaced out a little, to read as labels.
-    private static let headingKerning: CGFloat = 0.6
+    static let headingKerning: CGFloat = 0.6
     /// How far down the floating controls the list has faded out completely.
     private static let fadeEnd = UnitPoint(x: 0.5, y: 0.4)
 
     let presenter: SidebarPresenter
 
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
+    /// The sections folded away beneath their headings, as `SidebarFolds` writes them, kept between launches.
+    @AppStorage("sidebarFoldedSections") var foldedSections = ""
     /// The column a project row's symbol sits in, which grows with the text so the symbol never runs into the name.
     @ScaledMetric(relativeTo: .footnote) var rowSymbolWidth: CGFloat = 20
     @FocusState private var isSearchFocused: Bool
@@ -107,12 +110,19 @@ struct SidebarView: View {
             LazyVStack(alignment: .leading, spacing: HearthSpacing.s2) {
                 projectsSection
                 ForEach(groups) { group in
-                    heading(group.title)
-                    ForEach(group.rows) { row in
-                        // Keyed by everything it shows, so a row changed by another device while it moves between
-                        // groups is drawn afresh rather than kept as it was.
-                        conversationRow(row)
-                            .id(row)
+                    if let fold = group.id.foldKind {
+                        foldingHeading(group.title, kind: fold, count: group.rows.count)
+                    } else {
+                        heading(group.title)
+                    }
+                    // Left out rather than folded, as folded rows would still be spaced apart in the stack.
+                    if !(group.id.foldKind.map(isFolded) ?? false) {
+                        ForEach(group.rows) { row in
+                            // Keyed by everything it shows, so a row changed by another device while it moves between
+                            // groups is drawn afresh rather than kept as it was.
+                            conversationRow(row)
+                                .id(row)
+                        }
                     }
                 }
                 // The note keeps its place in the list when hidden, beneath the projects, which are always there.
