@@ -13,10 +13,6 @@ import Foundation
 /// many does no harm, and missing one would. So the words also change in the page's own text, where one stands alone
 /// in a sentence about shadow roots.
 public enum CanvasShadowRootTransformer {
-    /// The attributes that make, or describe, a declarative shadow root, as the parser reads them in any case.
-    public static let attributeNames = [
-        "shadowrootmode", "shadowroot", "shadowrootdelegatesfocus", "shadowrootclonable", "shadowrootserializable"
-    ]
     /// What each is renamed to begin with: a data attribute, which nothing reads.
     public static let inertPrefix = "data-hearth-"
 

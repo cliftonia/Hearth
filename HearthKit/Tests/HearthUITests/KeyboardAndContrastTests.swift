@@ -4,6 +4,7 @@ import Testing
 import UIKit
 
 /// Return from a hardware keyboard in the composer, and the colours drawn while Increase Contrast is on.
+@MainActor
 struct KeyboardAndContrastTests {
     @Test(arguments: [
         (modifiers: EventModifiers(), canSend: true, isStreaming: false, outcome: ComposerReturnKey.OutcomeKind.send),

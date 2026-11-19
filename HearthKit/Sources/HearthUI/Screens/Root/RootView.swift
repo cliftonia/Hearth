@@ -13,7 +13,7 @@ struct RootView: View {
         let lock = coordinator.lockPresenter.viewModel
         let isCovered = lock.isLocked || lock.isObscured
         layout(isSidebarOpen: $router.isSidebarOpen)
-        .environment(\.siteIconLoader, coordinator.siteIcons.load)
+        .environment(\.siteIcons, coordinator.siteIcons)
         // This overlay covers the chat from the first frame; the lock window covers everything presented above it.
         .overlay {
             if isCovered {

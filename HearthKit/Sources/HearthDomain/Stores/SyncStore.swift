@@ -32,10 +32,24 @@ public final class SyncStore {
     public init(provider: SyncStoreProvider, defaultHubAddress: String = "", clock: @escaping @MainActor () -> Date = { Date() }) {
         self.provider = provider
         self.clock = clock
-        let saved = provider.loadSettings().flatMap { try? JSONDecoder().decode(SyncSettings.self, from: $0) }
+        let saved: SyncSettings? = Self.decoded(provider.loadSettings(), named: "sync settings")
         self.settings = saved ?? SyncSettings(hubAddress: defaultHubAddress)
         self.hasToken = ((try? provider.readToken()) ?? nil) != nil
-        self.journal = provider.loadJournal().flatMap { try? JSONDecoder().decode(SyncJournal.self, from: $0) } ?? SyncJournal()
+        self.journal = Self.decoded(provider.loadJournal(), named: "sync journal") ?? SyncJournal()
+    }
+
+    /// What was saved, read back; `nil` when nothing was saved, or when it cannot be read, which is logged, since
+    /// the store then starts afresh.
+    private static func decoded<Value: Decodable>(_ data: Data?, named name: String) -> Value? {
+        guard let data else {
+            return nil
+        }
+        do {
+            return try JSONDecoder().decode(Value.self, from: data)
+        } catch {
+            Logger(for: SyncStore.self).error("The saved \(name, privacy: .public) could not be read; starting afresh")
+            return nil
+        }
     }
 
     // MARK: Settings

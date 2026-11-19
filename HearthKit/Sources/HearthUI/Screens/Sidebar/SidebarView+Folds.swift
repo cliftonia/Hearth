@@ -4,14 +4,14 @@ import SwiftUI
 extension SidebarView {
     /// Whether a section's rows are hidden. Nothing is hidden while searching, so a match is never folded out of sight.
     func isFolded(_ kind: SidebarFoldKind) -> Bool {
-        presenter.viewModel.query.trimmingCharacters(in: .whitespaces).isEmpty && SidebarFolds(storedValue: foldedSections).isFolded(kind)
+        presenter.viewModel.isFolded(kind, in: SidebarFolds(storedValue: foldedSections))
     }
 
     /// A heading that folds its section away when tapped, or opens it again. While folded it says how many rows it
     /// hides. It cannot be tapped while searching, when every section is open.
     func foldingHeading(_ title: String, kind: SidebarFoldKind, count: Int) -> some View {
         let isFolded = isFolded(kind)
-        let isSearching = !presenter.viewModel.query.trimmingCharacters(in: .whitespaces).isEmpty
+        let isSearching = presenter.viewModel.isSearching
         return Button(action: { toggleFold(kind) }, label: {
             HStack(spacing: HearthSpacing.s6) {
                 SectionHeading(title: title, isQuiet: true)
@@ -37,7 +37,7 @@ extension SidebarView {
         .buttonStyle(.plain)
         .disabled(isSearching)
         .accessibilityLabel(title)
-        .accessibilityValue(isFolded ? "\(Strings.collapsed), \(count.formatted())" : Strings.expanded)
+        .accessibilityValue(isFolded ? Strings.collapsedHiding(count) : Strings.expanded)
         .accessibilityAddTraits(.isHeader)
     }
 

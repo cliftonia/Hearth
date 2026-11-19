@@ -13,6 +13,12 @@ public enum ImageModelKind: String, Codable, Sendable, CaseIterable {
     public static func preferred(among models: [ImageModelKind]) -> ImageModelKind? {
         models.contains(.krea2Turbo) ? .krea2Turbo : models.first
     }
+
+    /// The model a new picture is made with: the chosen one if the server offers it, otherwise the preferred one of
+    /// those it does; `nil` when it offers none.
+    public static func resolved(chosen: ImageModelKind?, among models: [ImageModelKind]) -> ImageModelKind? {
+        chosen.flatMap { models.contains($0) ? $0 : nil } ?? preferred(among: models)
+    }
 }
 
 /// What the picture server can do.

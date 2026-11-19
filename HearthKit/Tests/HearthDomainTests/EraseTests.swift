@@ -58,7 +58,7 @@ struct EraseTests {
             try await memories.load()
             try await profile.load()
             let stores = EraseInteractor.Stores(conversations: conversations, projects: projects, memories: memories, profile: profile, settings: settings)
-            return EraseInteractor(stores: stores) { await self.countRemovedNotifications() }
+            return EraseInteractor(stores: stores, removeNotifications: { await self.countRemovedNotifications() })
         }
 
         private func setConversationFiles(_ files: [Conversation]) { conversationFiles = files }
@@ -150,7 +150,7 @@ struct EraseTests {
         let stores = EraseInteractor.Stores(
             conversations: device.conversations, projects: device.projects, memories: device.memories, profile: profile, settings: settings
         )
-        let subject = EraseInteractor(stores: stores) { await device.sync.reset() }
+        let subject = EraseInteractor(stores: stores, stopSync: { await device.sync.reset() })
 
         try await subject.eraseAll()
 

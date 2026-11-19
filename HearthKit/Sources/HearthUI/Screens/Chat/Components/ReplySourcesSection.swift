@@ -7,7 +7,7 @@ struct ReplySourcesSection: View {
     /// A reply lists only its first few pages; the button beside its actions opens them all.
     static let listedCount = 8
 
-    let sources: [ResearchSourceViewConfiguration]
+    let sources: [SourceViewConfiguration]
 
     var body: some View {
         VStack(alignment: .leading, spacing: HearthSpacing.s10) {
@@ -44,7 +44,7 @@ struct ReplySourcesButton: View {
     /// How far each mark lies over the one before it.
     private static let markOverlap: CGFloat = -6
 
-    let sources: [ResearchSourceViewConfiguration]
+    let sources: [SourceViewConfiguration]
 
     @State private var isPresented = false
 
@@ -80,7 +80,7 @@ struct ReplySourcesButton: View {
 
 /// Every page a reply was written from: its mark, its title and its site, each a link.
 private struct ReplySourcesSheet: View {
-    let sources: [ResearchSourceViewConfiguration]
+    let sources: [SourceViewConfiguration]
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -107,7 +107,7 @@ private struct ReplySourcesSheet: View {
         .presentationDragIndicator(.visible)
     }
 
-    private func row(_ source: ResearchSourceViewConfiguration) -> some View {
+    private func row(_ source: SourceViewConfiguration) -> some View {
         Link(destination: source.id) {
             HStack(alignment: .top, spacing: HearthSpacing.s10) {
                 SourceMark(host: source.host, address: source.id)
@@ -144,7 +144,7 @@ private struct SourceMark: View {
     let address: URL
 
     @State private var icon: UIImage?
-    @Environment(\.siteIconLoader) private var loadIcon
+    @Environment(\.siteIcons) private var siteIcons
 
     var body: some View {
         ZStack {
@@ -162,7 +162,7 @@ private struct SourceMark: View {
         .background(icon == nil ? HearthColor.bubble : HearthColor.card, in: Circle())
         .clipShape(Circle())
         .task(id: address.host()) {
-            guard let name = address.host(), let data = await loadIcon(name) else {
+            guard let name = address.host(), let data = await siteIcons.load(name) else {
                 return
             }
             icon = UIImage(data: data)
@@ -171,6 +171,6 @@ private struct SourceMark: View {
 }
 
 extension EnvironmentValues {
-    /// Fetches the icon of the site with the given host name; `nil` when it has none. Asks for nothing by default.
-    @Entry var siteIconLoader: @Sendable (String) async -> Data? = { _ in nil }
+    /// Where the icons of the sources' sites come from. Asks for nothing by default.
+    @Entry var siteIcons: SiteIconProvider = .none
 }

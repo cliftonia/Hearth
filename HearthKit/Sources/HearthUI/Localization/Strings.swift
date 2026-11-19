@@ -124,6 +124,9 @@ enum Strings {
     static let errorPictureTimedOut = String(localized: "error.pictureTimedOut", defaultValue: "The picture took too long and was stopped.", bundle: .module)
     static let expanded = String(localized: "common.expanded", defaultValue: "Expanded", bundle: .module)
     static let collapsed = String(localized: "common.collapsed", defaultValue: "Collapsed", bundle: .module)
+    static func collapsedHiding(_ total: Int) -> String {
+        String(localized: "common.collapsedHiding", defaultValue: "Collapsed, \(total)", bundle: .module)
+    }
     static let replyFinished = String(localized: "chat.replyFinished", defaultValue: "Reply finished", bundle: .module)
     static let errorSaveFailed = String(localized: "error.saveFailed", defaultValue: "This chat could not be saved.", bundle: .module)
 
@@ -136,7 +139,6 @@ enum Strings {
     static let pinned = String(localized: "sidebar.pinned", defaultValue: "Pinned", bundle: .module)
     static let pin = String(localized: "sidebar.pin", defaultValue: "Pin", bundle: .module)
     static let unpin = String(localized: "sidebar.unpin", defaultValue: "Unpin", bundle: .module)
-    static let rename = String(localized: "sidebar.rename", defaultValue: "Rename", bundle: .module)
     static let renameChat = String(localized: "sidebar.renameChat", defaultValue: "Rename chat", bundle: .module)
     static let chatTitle = String(localized: "sidebar.chatTitle", defaultValue: "Title", bundle: .module)
     static let save = String(localized: "sidebar.save", defaultValue: "Save", bundle: .module)

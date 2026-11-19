@@ -125,9 +125,12 @@ final class SidebarPresenter {
         viewModel.isRenaming = false
     }
 
-    /// Forgets every choice made in the list, as erasing everything does: every chat is listed again.
+    /// Forgets every choice made in the list, as erasing everything does: every chat is listed again, and nothing
+    /// is being searched for. The sections folded are the view's to forget, with the rest of what the device keeps.
     func reset() {
         allChatsAction()
+        viewModel.query = ""
+        viewModel.isSearchOpen = false
     }
 
     /// Saves the title typed into the rename alert, as `Conversation.renamedTitle(from:)` has it. An empty title

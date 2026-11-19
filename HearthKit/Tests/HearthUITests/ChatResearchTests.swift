@@ -21,9 +21,9 @@ struct ChatResearchTests {
     /// The chat presenter with a scripted model, search and web behind its research.
     @MainActor
     final class Fixture {
-        static let model = ChatModel(id: ChatModel.ID("gemma4:latest"), canThink: true, canUseTools: true)
-        static let html = "<html><body><p>" + String(repeating: "Heat pumps move heat. ", count: 20) + "</p></body></html>"
-        static let sources = (1...3).map { number in
+        nonisolated static let model = ChatModel(id: ChatModel.ID("gemma4:latest"), canThink: true, canUseTools: true)
+        nonisolated static let html = "<html><body><p>" + String(repeating: "Heat pumps move heat. ", count: 20) + "</p></body></html>"
+        nonisolated static let sources = (1...3).map { number in
             SearchSource(title: "Page \(number)", url: URL(string: "https://site\(number).example/page") ?? URL(filePath: "/"), snippet: "")
         }
 
@@ -300,7 +300,7 @@ struct ChatResearchTests {
     }
 
     @Test func `a report's sources are listed by the numbers it cites them by`() {
-        let list = ResearchSourceViewConfiguration.list(from: [
+        let list = SourceViewConfiguration.list(from: [
             SearchSource(title: "  Heat pumps\n explained ", url: URL(string: "https://www.site1.example/a") ?? URL(filePath: "/"), snippet: ""),
             SearchSource(title: "", url: URL(string: "https://site2.example/b") ?? URL(filePath: "/"), snippet: "")
         ])

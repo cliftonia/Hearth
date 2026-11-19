@@ -25,8 +25,8 @@ struct SidebarView: View {
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) var reduceMotion
     /// The sections folded away beneath their headings, as `SidebarFolds` writes them, kept between launches.
-    @AppStorage("sidebarFoldedSections") var foldedSections = ""
-    /// The column a project row's symbol sits in, which grows with the text so the symbol never runs into the name.
+    @AppStorage(SidebarFolds.storageKey) var foldedSections = ""
+    /// The column a row's leading symbol sits in, which grows with the text so the symbol never runs into the name.
     @ScaledMetric(relativeTo: .footnote) var rowSymbolWidth: CGFloat = 20
     @FocusState var isSearchFocused: Bool
 
@@ -46,13 +46,13 @@ struct SidebarView: View {
                     .font(HearthFont.brand)
                     .foregroundStyle(HearthColor.ink)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                searchButton(isOpen: $viewModel.isSearchOpen)
+                searchButton
             }
             .padding(.leading, HearthSpacing.s18)
             .padding(.trailing, HearthSpacing.s14)
             .padding(.top, HearthSpacing.s4)
             .padding(.bottom, HearthSpacing.s8)
-            searchField(text: $viewModel.query, isOpen: $viewModel.isSearchOpen)
+            searchField(text: $viewModel.query)
             conversationList(groups: groups)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .overlay(alignment: .bottom) { floatingControls }
@@ -91,7 +91,10 @@ struct SidebarView: View {
     // MARK: The list
 
     private func conversationList(groups: [SidebarGroupViewConfiguration]) -> some View {
-        ScrollView {
+        // Read once for the whole list. Among a project's own chats the project mark would say nothing, so it
+        // shows only where every chat is listed.
+        let isListingEveryChat = presenter.selectedProject == nil
+        return ScrollView {
             LazyVStack(alignment: .leading, spacing: HearthSpacing.s2) {
                 projectsSection
                 ForEach(groups) { group in
@@ -105,13 +108,13 @@ struct SidebarView: View {
                         ForEach(group.rows) { row in
                             // Keyed by everything it shows, so a row changed by another device while it moves between
                             // groups is drawn afresh rather than kept as it was.
-                            conversationRow(row)
+                            conversationRow(row, hasProjectMark: row.isInProject && isListingEveryChat)
                                 .id(row)
                         }
                     }
                 }
-                // The note keeps its place in the list when hidden, beneath the projects, which are always there.
-                Text(presenter.selectedProject == nil ? Strings.noChats : Strings.noProjectChats)
+                // The note keeps its place in the list when hidden, beneath whatever projects are listed.
+                Text(isListingEveryChat ? Strings.noChats : Strings.noProjectChats)
                     .font(.hearth(.subheadline))
                     .foregroundStyle(HearthColor.mute)
                     .frame(maxWidth: .infinity)
@@ -133,10 +136,8 @@ struct SidebarView: View {
 
     /// One chat, behind the symbol that says what kind it is. A long press offers to pin or rename it, file it in a
     /// project, share it or delete it.
-    private func conversationRow(_ row: SidebarRowViewConfiguration) -> some View {
+    private func conversationRow(_ row: SidebarRowViewConfiguration, hasProjectMark: Bool) -> some View {
         let isSelected = row.id == presenter.selectedID
-        // Among a project's own chats the mark would say nothing, so it shows only where every chat is listed.
-        let hasProjectMark = row.isInProject && presenter.selectedProject == nil
         return Button(action: { presenter.selectAction(row.id) }, label: {
             HStack(spacing: HearthSpacing.s8) {
                 // A clock marks the answer a scheduled task filed; every other chat has a speech bubble.

@@ -738,6 +738,17 @@
         }
       }
     },
+    "common.collapsedHiding": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapsed, %lld"
+          }
+        }
+      }
+    },
     "common.expanded": {
       "extractionState": "manual",
       "localizations": {
@@ -3981,17 +3992,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Previous 7 days"
-          }
-        }
-      }
-    },
-    "sidebar.rename": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rename"
           }
         }
       }

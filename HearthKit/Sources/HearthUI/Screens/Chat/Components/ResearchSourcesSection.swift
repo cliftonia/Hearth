@@ -1,20 +1,20 @@
 import HearthDomain
 import SwiftUI
 
-/// One source of a report as it is listed: the number the report cites it by, its title and its site.
-struct ResearchSourceViewConfiguration: Hashable, Identifiable {
+/// One source of a reply or a report as it is listed: the number it is cited by, its title and its site.
+struct SourceViewConfiguration: Hashable, Identifiable {
     let id: URL
     let number: Int
     let title: String
     let host: String
     let isLast: Bool
 
-    /// The sources of a report, numbered from one in the order the report cites them.
-    static func list(from sources: [SearchSource]) -> [ResearchSourceViewConfiguration] {
+    /// The sources, numbered from one in the order they are cited.
+    static func list(from sources: [SearchSource]) -> [SourceViewConfiguration] {
         sources.enumerated().map { index, source in
             let host = ResearchSourceSelector.site(of: source.url)
             let title = source.title.split(whereSeparator: \.isWhitespace).joined(separator: " ")
-            return ResearchSourceViewConfiguration(
+            return SourceViewConfiguration(
                 id: source.url,
                 number: index + 1,
                 title: title.isEmpty ? host : title,
@@ -33,7 +33,7 @@ struct ResearchSourcesSection: View {
     /// Wide enough for a two-digit number, so that the titles line up.
     private static let numberWidth: CGFloat = 22
 
-    let sources: [ResearchSourceViewConfiguration]
+    let sources: [SourceViewConfiguration]
 
     var body: some View {
         VStack(alignment: .leading, spacing: HearthSpacing.s6) {
@@ -51,7 +51,7 @@ struct ResearchSourcesSection: View {
         }
     }
 
-    private func row(_ source: ResearchSourceViewConfiguration) -> some View {
+    private func row(_ source: SourceViewConfiguration) -> some View {
         Link(destination: source.id) {
             HStack(alignment: .firstTextBaseline, spacing: HearthSpacing.s8) {
                 Text(verbatim: "\(source.number)")

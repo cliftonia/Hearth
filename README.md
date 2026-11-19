@@ -185,7 +185,8 @@ components.
 - **Never synced**: private chats, settings, server addresses, your profile and photo, and the access key, which stays
   in the Keychain.
 - **Web pages are read by the device.** The top results of a search are fetched by your phone, so those sites see its
-  address. Turn this off in Settings → Web search to send snippets only.
+  address, and each source's site is asked for its small icon to show beside the source. Turn this off in
+  Settings → Web search to send snippets only and fetch neither.
 - **Untrusted text is fenced.** Search results and pages are marked to the model as material, not instructions, and
   a page in the canvas cannot load anything from the network or open links.
 - **Memory is cautious**: at most 50 short memories, and nothing is remembered in a chat that holds web results, a

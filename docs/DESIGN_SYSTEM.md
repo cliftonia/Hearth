@@ -17,7 +17,8 @@ the values and `Components/` holds the few pieces built from them that are used 
    `.hearth(.footnote)`), so it follows Dynamic Type on iPhone and iPad. On a Mac it is set a quarter larger than
    the style's standard size, grown or shrunk in proportion to the system's preferred size for the style
    (`Font.macPointSize`), so it follows the text size chosen for the app in the Mac's settings wherever the system
-   passes it on. `HearthFont` is for the serif and monospaced faces only. Never set a fixed
+   passes it on. `HearthFont` holds the serif and monospaced faces and the few styles that differ on a Mac; each is built
+   afresh when asked for, so it follows the text size too. Never set a fixed
    point size.
 6. **Reach for a component before drawing a pattern again.** If the same shape appears a second time,
    it moves into `DesignSystem/Components`.
@@ -78,7 +79,8 @@ In dark, `danger` is 5.72:1 on `paper` and white on `dangerFill` is 5.10:1. Chec
 | Token | Face | For |
 |---|---|---|
 | `brand` | Serif, title 2, bold | The app's name beside its mark |
-| `display` | Serif, title, semibold | The one large line on an empty screen |
+| `display` | Serif, title (large title on a Mac) | The one large line on an empty screen |
+| `listRow` | System, body (subheadline on a Mac) | The name of a chat or a project in the chat list |
 | `spoken` | Serif, title 3 | The caption of a voice conversation |
 | `math` | Serif, title 3 | A formula on a line of its own |
 | `heading(level:)` | Serif, title 2 / title 3 / headline | Markdown headings |
@@ -130,6 +132,7 @@ Rounded rectangles are always drawn with `style: .continuous`. Pills and round b
 | `readingWidth` | 780 | The widest a line of chat grows |
 | `sidebarWidth` | 320 | The chat list beside the chat |
 | `drawerMaximumWidth` | 340 | The widest the drawer opens |
+| `scrollUnderReach` | 200 | How far above its own top the conversation may draw, to pass beneath the floating header |
 
 A size that is a `CGSize` is applied with `.frame(size:)`.
 
@@ -158,12 +161,13 @@ Apply one with `.hearthShadow(.composer)`.
 | `Haptics.play(_:)`, `.haptic(_:trigger:when:)` | The one place a haptic is played from | Every haptic; see below |
 | `.surface(_:fill:border:)` | A filled shape with a hairline border inside its edge | Any bordered shape; the modifiers below are built on it |
 | `.cardSurface(radius:border:)` | A card-coloured rounded rectangle with a border | Code blocks, tables, the search field, the composer, the error banner |
-| `.capsuleSurface(fill:)` | A bordered pill | The model picker, attached files |
+| `.capsuleSurface(fill:)` | A bordered pill | Attached files, the caption of a voice conversation |
 | `.capsuleOutline(_:)` | A capsule's border with nothing behind it | Quiet controls such as attach and dictate |
 | `.glassSurface(_:tint:)` | The system's interactive glass in the given shape on iOS 26 and later; before that a frosted fill, a hairline edge and the floating shadow | The glass buttons, and the pill holding New chat and the chat's menu |
 | `.hearthShadow(_:)` | One of the shadows above | Lifting a surface off the paper |
 | `.hoverHighlight(_:)` | The system's highlight under an iPad's pointer, a faint wash of ink on a Mac, in the given shape | Every control drawn with the plain button style: the round buttons, the chips, menu labels, the composer's controls, the rows of the chat list and the settings. Put it after `.minimumHitTarget()` |
 | `.minimumHitTarget()` | Grows the touchable area of a control to at least 44 points a side without moving or redrawing it | Every icon control drawn smaller than 44 points; put it last on the label |
+| `.floatingTopBar(_:)` | Floats a bar over the top of a view, with the system's scroll edge blur on iOS 26 and a fade into the paper before it | The chat's header, which the conversation scrolls beneath |
 | `.folded(_:)` | Keeps a view in place but folds it to nothing: unseen, untouchable and unread | A line that comes and goes, such as a check's result or an empty note, without an `if` |
 | `.iconGlyphSize()` | Caps a symbol at the largest standard text size | The symbol of every icon control drawn in a fixed frame |
 | `.largeContentLabel(_:systemImage:)` | Shows the control's name and symbol in the large content viewer | Every icon-only control |
@@ -175,11 +179,11 @@ Order matters where a surface also casts a shadow: apply the surface first, then
 ```swift
 HStack(spacing: HearthSpacing.s8) {
     Image(systemName: "magnifyingglass")
-        .font(.footnote)
+        .font(.hearth(.footnote))
         .foregroundStyle(HearthColor.mute)
         .accessibilityHidden(true)
     TextField(Strings.searchChats, text: $query)
-        .font(.subheadline)
+        .font(.hearth(.body))
         .foregroundStyle(HearthColor.ink)
 }
 .padding(.horizontal, HearthSpacing.s12)

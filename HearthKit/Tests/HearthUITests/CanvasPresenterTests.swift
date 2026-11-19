@@ -186,6 +186,7 @@ extension CanvasPresenterTests.Fixture: CanvasPresenterDelegate {
 }
 
 /// How a wide screen is shared between the chat list, the chat and the canvas.
+@MainActor
 struct CanvasLayoutTests {
     private func columns(_ width: CGFloat, isPinned: Bool = true, isOpen: Bool = true) -> CanvasLayout.Columns {
         CanvasLayout.columns(totalWidth: width, isSidebarPinned: isPinned, isCanvasOpen: isOpen, sidebarWidth: 320)

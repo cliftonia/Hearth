@@ -94,7 +94,9 @@ struct EditorChangesTests {
     }
 
     @Test func `undoing a change by hand leaves nothing to ask about`() {
-        let subject = makeProjectSubject(delegate: ProjectDelegate())
+        // Held here, as the presenter holds its delegate weakly.
+        let delegate = ProjectDelegate()
+        let subject = makeProjectSubject(delegate: delegate)
         subject.viewModel.name = "Garden"
         subject.viewModel.name = ""
 

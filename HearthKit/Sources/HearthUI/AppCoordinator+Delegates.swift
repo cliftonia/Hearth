@@ -102,6 +102,7 @@ extension AppCoordinator: SettingsPresenterDelegate {
         router.isSettingsPresented = false
         router.isSidebarOpen = false
         router.isSidebarPinned = true
+        router.forgetSidebarFolds()
         sidebarPresenter.reset()
         Task { await chatPresenter.resetAction() }
     }

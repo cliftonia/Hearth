@@ -10,6 +10,29 @@ final class SidebarViewModel {
     /// Whether the search field has been opened with its button. Kept here, not in the view, so that it outlasts the
     /// view being built afresh as the keyboard rises. The field also shows while it holds words.
     var isSearchOpen = false
+    /// Whether anything is being searched for. Spaces alone are not a search.
+    var isSearching: Bool {
+        !query.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+    /// Whether the search field shows: it has been opened, or it holds words.
+    var isSearchShowing: Bool {
+        isSearchOpen || !query.isEmpty
+    }
+
+    /// Opens the search field, or closes it and forgets what was searched for.
+    func toggleSearch() {
+        let wasShowing = isSearchShowing
+        if wasShowing {
+            query = ""
+        }
+        isSearchOpen = !wasShowing
+    }
+
+    /// Whether a section's rows are hidden, given the sections folded. Nothing is hidden while searching, so a match
+    /// is never folded out of sight.
+    func isFolded(_ kind: SidebarFoldKind, in folds: SidebarFolds) -> Bool {
+        !isSearching && folds.isFolded(kind)
+    }
     /// The project whose chats alone are listed; `nil` lists every chat.
     var selectedProjectID: Project.ID?
     /// Whether the rename alert is showing.

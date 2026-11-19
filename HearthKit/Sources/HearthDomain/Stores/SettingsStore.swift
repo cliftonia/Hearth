@@ -1,5 +1,7 @@
 import Foundation
+import HearthCore
 import Observation
+import os
 
 /// The user's settings, shared by every screen and kept between launches.
 @MainActor
@@ -18,7 +20,15 @@ public final class SettingsStore {
     ///   - save: Writes the settings.
     ///   - clear: Removes the saved settings, so that the next launch finds none.
     public init(defaults: ServerSettings, load: () -> Data?, save: @escaping (Data) -> Void, clear: @escaping () -> Void = {}) {
-        let saved = load().flatMap { try? JSONDecoder().decode(ServerSettings.self, from: $0) }
+        let saved = load().flatMap { data -> ServerSettings? in
+            do {
+                return try JSONDecoder().decode(ServerSettings.self, from: data)
+            } catch {
+                // Nothing of the settings is logged, only that they could not be read.
+                Logger(for: SettingsStore.self).error("The saved settings could not be read; starting from the defaults")
+                return nil
+            }
+        }
         // Settings saved before the user chose a model, or before pictures existed, take what the app was built to start with.
         self.settings = saved.map { saved in
             saved.updating(

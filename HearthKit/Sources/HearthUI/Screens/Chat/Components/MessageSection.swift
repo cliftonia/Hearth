@@ -72,7 +72,9 @@ struct MessageSection: View {
     // MARK: The assistant's reply
 
     private var assistantReply: some View {
-        VStack(alignment: .leading, spacing: HearthSpacing.s12) {
+        // Listed under the reply and again behind the button beside its actions, so they are numbered once.
+        let sources = SourceViewConfiguration.list(from: message.sources)
+        return VStack(alignment: .leading, spacing: HearthSpacing.s12) {
             if !message.thinking.isEmpty {
                 ThinkingSection(thinking: message.thinking, seconds: message.thinkingSeconds, isActive: isStreaming && message.text.isEmpty)
             }
@@ -109,15 +111,15 @@ struct MessageSection: View {
                     .foregroundStyle(HearthColor.mute)
             }
             // A report lists its sources in full once it is finished, when their numbers are settled.
-            if !message.sources.isEmpty, message.isResearch, !isStreaming {
-                ResearchSourcesSection(sources: ResearchSourceViewConfiguration.list(from: message.sources))
+            if !sources.isEmpty, message.isResearch, !isStreaming {
+                ResearchSourcesSection(sources: sources)
             }
             // An ordinary reply that searched the web lists its first few pages; the button beside its actions opens them all.
-            if !message.sources.isEmpty, !message.isResearch, !isStreaming {
-                ReplySourcesSection(sources: ResearchSourceViewConfiguration.list(from: message.sources))
+            if !sources.isEmpty, !message.isResearch, !isStreaming {
+                ReplySourcesSection(sources: sources)
             }
             // The actions keep their place while a reply streams, so the text above does not jump when it ends.
-            actions
+            actions(sources: sources)
                 .opacity(isStreaming || message.text.isEmpty ? 0 : 1)
                 .accessibilityHidden(isStreaming || message.text.isEmpty)
         }
@@ -142,7 +144,7 @@ struct MessageSection: View {
     }
 
     /// The row of buttons under a finished reply, ending in the way to its sources where it has any.
-    private var actions: some View {
+    private func actions(sources: [SourceViewConfiguration]) -> some View {
         HStack(spacing: HearthSpacing.s4) {
             // A picture has its own ways to be kept, and its note is not worth copying or reading out.
             if message.imagesJPEG.isEmpty {
@@ -154,8 +156,8 @@ struct MessageSection: View {
             if let versionAction, message.versionCount > 1 {
                 versionStepper(versionAction)
             }
-            if !message.sources.isEmpty {
-                ReplySourcesButton(sources: ResearchSourceViewConfiguration.list(from: message.sources))
+            if !sources.isEmpty {
+                ReplySourcesButton(sources: sources)
                     .padding(.leading, HearthSpacing.s8)
             }
         }

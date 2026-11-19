@@ -52,8 +52,7 @@ public final class ImageInteractor: Sendable {
     private func model(for request: ImageRequest, settings: ServerSettings, capabilities: ImageCapabilities) throws -> ImageModelKind {
         switch request {
         case .create:
-            let chosen = settings.imageModel.flatMap { capabilities.models.contains($0) ? $0 : nil }
-            guard let model = chosen ?? ImageModelKind.preferred(among: capabilities.models) else {
+            guard let model = ImageModelKind.resolved(chosen: settings.imageModel, among: capabilities.models) else {
                 throw ImageError.noModel
             }
             return model

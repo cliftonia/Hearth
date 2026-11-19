@@ -21,7 +21,7 @@ public struct MathTransformer: Sendable {
             #"(?<![\\$\w])\$(?!\s)([^$\n]*[\\^_={][^$\n]*?)(?<!\s)\$(?!\d)"#
         ]
         for pattern in patterns {
-            guard let regex = try? NSRegularExpression(pattern: pattern) else {
+            guard let regex = Self.regex(pattern) else {
                 continue
             }
             let range = NSRange(result.startIndex..., in: result)
@@ -58,9 +58,25 @@ public struct MathTransformer: Sendable {
 
     // MARK: Helpers
 
+    /// The patterns already compiled. A reply is read through again for every word that streams in, so each pattern
+    /// is compiled once and kept. `NSCache` may be used from any thread at once, which the compiler cannot see.
+    private nonisolated(unsafe) static let compiled = NSCache<NSString, NSRegularExpression>()
+
+    /// The pattern compiled, from the cache where it has been before; `nil` if it is not a pattern.
+    private static func regex(_ pattern: String) -> NSRegularExpression? {
+        if let kept = compiled.object(forKey: pattern as NSString) {
+            return kept
+        }
+        guard let regex = try? NSRegularExpression(pattern: pattern) else {
+            return nil
+        }
+        compiled.setObject(regex, forKey: pattern as NSString)
+        return regex
+    }
+
     /// Replaces every match of the pattern with what the closure makes of its groups; group 0 is the whole match.
     private func replacing(_ pattern: String, in text: String, passes: Int = 1, with replacement: ([String]) -> String) -> String {
-        guard let regex = try? NSRegularExpression(pattern: pattern) else {
+        guard let regex = Self.regex(pattern) else {
             return text
         }
         var result = text

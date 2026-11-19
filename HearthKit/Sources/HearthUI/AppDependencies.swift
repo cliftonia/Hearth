@@ -52,12 +52,9 @@ public struct AppDependencies {
             conversations: conversationStore, projects: projectStore, memories: memoryStore, tasks: taskStore, sync: syncStore
         )
         let (sync, syncScheduler) = makeSync(stores: syncStores, provider: sources.sync, hooks: syncHooks)
-        let stores = EraseInteractor.Stores(
-            conversations: conversationStore,
-            projects: projectStore,
-            memories: memoryStore,
-            profile: profileStore,
-            settings: settingsStore
+        let siteIcons = makeSiteIcons(settingsStore: settingsStore)
+        let erased = EraseInteractor.Stores(
+            conversations: conversationStore, projects: projectStore, memories: memoryStore, profile: profileStore, settings: settingsStore
         )
         return AppDependencies(
             chat: ChatInteractor(chat: chatProvider, search: .live()),
@@ -68,7 +65,8 @@ public struct AppDependencies {
             camera: makeCamera(),
             authentication: .live(),
             notifications: notifications,
-            photoLibrary: .live(), siteIcons: .live(),
+            photoLibrary: .live(),
+            siteIcons: siteIcons,
             fetchModels: chatProvider.fetchModels,
             settingsStore: settingsStore,
             modelStore: ModelStore(fetchModels: chatProvider.fetchModels),
@@ -78,15 +76,34 @@ public struct AppDependencies {
             taskStore: taskStore,
             projects: ProjectInteractor(projectStore: projectStore, conversationStore: conversationStore),
             profileStore: profileStore,
-            eraser: EraseInteractor(stores: stores, removeNotifications: notifications.removeAll) {
-                await syncScheduler.stopAndReset()
-                await forgetTasks(taskStore)
-            },
+            eraser: makeEraser(stores: erased, notifications: notifications, syncScheduler: syncScheduler, taskStore: taskStore, siteIcons: siteIcons),
             syncStore: syncStore,
             sync: sync,
             syncScheduler: syncScheduler,
             syncHooks: syncHooks
         )
+    }
+
+    /// Erases the stores and everything kept beside them: the notifications shown, the schedule of syncs, this
+    /// device's copy of the tasks, and the icons of sources' sites.
+    private static func makeEraser(
+        stores: EraseInteractor.Stores,
+        notifications: NotificationProvider,
+        syncScheduler: SyncScheduler,
+        taskStore: TaskStore,
+        siteIcons: SiteIconProvider
+    ) -> EraseInteractor {
+        EraseInteractor(stores: stores, removeNotifications: notifications.removeAll) {
+            await syncScheduler.stopAndReset()
+            await forgetTasks(taskStore)
+            await siteIcons.clear()
+        }
+    }
+
+    /// The icons of sources' sites, asked for only while the pages of a search may be read: fetching one tells the
+    /// site that this device read about it.
+    private static func makeSiteIcons(settingsStore: SettingsStore) -> SiteIconProvider {
+        SiteIconProvider.live().onlyWhen { await settingsStore.settings.isPageReadingEnabled }
     }
 
     /// Sync against the hub, and what decides when it runs. Each store tells sync of the changes made on this

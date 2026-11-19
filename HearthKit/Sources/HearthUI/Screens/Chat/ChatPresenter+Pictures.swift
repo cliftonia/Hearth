@@ -26,9 +26,10 @@ extension ChatPresenter {
         }
     }
 
-    /// The model new pictures are made with: the one chosen if the server has it, otherwise the first it offers.
+    /// The model new pictures are made with: the one chosen if the server has it, otherwise the preferred one of those
+    /// it offers.
     var selectedPictureModel: ImageModelKind? {
-        settings.imageModel.flatMap { viewModel.pictureModels.contains($0) ? $0 : nil } ?? ImageModelKind.preferred(among: viewModel.pictureModels)
+        ImageModelKind.resolved(chosen: settings.imageModel, among: viewModel.pictureModels)
     }
 
     /// Chooses the model new pictures are made with, and remembers it.

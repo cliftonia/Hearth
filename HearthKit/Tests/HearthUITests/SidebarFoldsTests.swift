@@ -41,4 +41,44 @@ struct SidebarFoldsTests {
         #expect(SidebarGroupKind.scheduledTasks.foldKind == .scheduledTasks)
         #expect([SidebarGroupKind.today, .yesterday, .previousWeek, .earlier].allSatisfy { $0.foldKind == nil })
     }
+
+    // MARK: Searching
+
+    @Test @MainActor func `a folded section is open while searching, and spaces alone are not a search`() {
+        let subject = SidebarViewModel()
+        var folds = SidebarFolds(storedValue: "")
+        folds.toggle(.pinned)
+
+        #expect(subject.isFolded(.pinned, in: folds))
+
+        subject.query = "   "
+        #expect(!subject.isSearching)
+        #expect(subject.isFolded(.pinned, in: folds))
+
+        subject.query = "tomatoes"
+        #expect(subject.isSearching)
+        #expect(!subject.isFolded(.pinned, in: folds))
+    }
+
+    @Test @MainActor func `the search button opens the field, and closing it forgets what was searched for`() {
+        let subject = SidebarViewModel()
+
+        subject.toggleSearch()
+        #expect(subject.isSearchShowing)
+
+        subject.query = "tomatoes"
+        subject.toggleSearch()
+        #expect(!subject.isSearchShowing)
+        #expect(subject.query.isEmpty)
+    }
+
+    @Test @MainActor func `a field left holding words is closed, not opened, by its button`() {
+        let subject = SidebarViewModel()
+        subject.query = "tomatoes"
+
+        subject.toggleSearch()
+
+        #expect(!subject.isSearchOpen)
+        #expect(subject.query.isEmpty)
+    }
 }

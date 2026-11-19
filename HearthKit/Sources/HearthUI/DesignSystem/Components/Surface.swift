@@ -14,7 +14,7 @@ extension View {
         surface(RoundedRectangle(cornerRadius: radius, style: .continuous), border: border)
     }
 
-    /// A pill: the model picker, a source, an attached file.
+    /// A pill: an attached file, the caption of a voice conversation.
     func capsuleSurface(fill: Color = HearthColor.card) -> some View {
         surface(Capsule(), fill: fill)
     }

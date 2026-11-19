@@ -9,6 +9,9 @@ enum SidebarFoldKind: String, CaseIterable, Sendable {
 
 /// Which sections of the chat list are folded, kept as a short line of text so that it lasts between launches.
 struct SidebarFolds: Hashable, Sendable {
+    /// Where the folds are kept among the device's preferences.
+    static let storageKey = "sidebarFoldedSections"
+
     private(set) var kinds: Set<SidebarFoldKind>
 
     /// Reads the folds back from their stored text. Words it does not know, as a later version might write, are

@@ -97,7 +97,7 @@ HearthKit/Sources/HearthUI/
                                 +Notifications, +Sync, +Voice, +Canvas), ChatViewModel
       Components/               The header, a message, the composer and the other sections of the chat
       Attachments/              The camera, and loading photos and files
-    Sidebar/                    SidebarView (+Projects, +Menu), SidebarPresenter (+Projects), SidebarViewModel, its configurations, ConversationGrouper
+    Sidebar/                    SidebarView (+Projects, +Menu, +Search, +Folds), SidebarPresenter (+Projects), SidebarViewModel, SidebarFolds, its configurations, ConversationGrouper
     Project/                    ProjectView, ProjectPresenter, ProjectViewModel: the sheet that makes or edits a project
     ProjectPicker/              ProjectPickerView, ProjectPickerPresenter, ProjectPickerViewModel: the sheet that files a chat
     Settings/                   SettingsView (the list), SettingsSections, SettingsPresenter (+Servers, +Status, +Profile,
@@ -210,7 +210,12 @@ any other: it runs with the chat's selected model, streams into a reply, and is 
   a version. A report stopped part of the way is kept as far as it got, tidied in the same way. The sources close
   memory for the rest of the conversation, as any web search does, and research itself reads no memories.
 - **On screen**, `ChatPresenter+Research` shows each step as a line under the reply (`ChatViewModel.researchStatus`)
-  and `ResearchSourcesSection` lists the sources under a finished report by number, title and site. The logs hold
+  and `ResearchSourcesSection` lists the sources under a finished report by number, title and site. An ordinary reply that searched lists
+  its first few sources as links (`ReplySourcesSection`), and every reply with sources has a button beside its
+  actions that opens them all in a sheet. Each source's mark is its site's icon, which `SiteIconProvider` fetches
+  from the site once (`PageService.fetchIcon`, under the same public-address rules as a page) and keeps among the
+  caches; it is asked for only while page reading is on, erased with everything else, and until it comes the mark
+  is the site's first letter. The logs hold
   counts only: never the question, a page's text or an address.
 
 ## The canvas

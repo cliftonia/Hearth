@@ -38,6 +38,11 @@ final class AppRouter {
 
     /// Whether the settings open in a window of their own, as on a Mac, rather than as a sheet over the chat.
     let usesSettingsWindow: Bool
+
+    /// Opens every folded section of the chat list again, as erasing everything does.
+    func forgetSidebarFolds() {
+        defaults.removeObject(forKey: SidebarFolds.storageKey)
+    }
     /// Whether the settings window is open. Its scene keeps this current, so that asking for the settings again
     /// brings it forward rather than opening another.
     var isSettingsWindowShown = false
