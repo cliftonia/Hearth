@@ -133,6 +133,12 @@ struct ChatResearchTests {
         #expect(subject.effortChoice == .thinking(.high))
     }
 
+    @Test func `the effort row names the level, behind deep research while that is on`() {
+        #expect(ModelPickerSheet.effortTitle(level: "Medium", canThink: true, isResearching: false) == "Medium")
+        #expect(ModelPickerSheet.effortTitle(level: "Medium", canThink: true, isResearching: true) == Strings.researchWithLevel("Medium"))
+        #expect(ModelPickerSheet.effortTitle(level: Strings.effortStandard, canThink: false, isResearching: true) == Strings.research)
+    }
+
     @Test func `a model that cannot think has nothing to choose, and can still research`() {
         let subject = Fixture().makeTestSubject()
         subject.viewModel.selectedModel = ChatModel(id: ChatModel.ID("plain:latest"))

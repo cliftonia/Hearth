@@ -26,17 +26,11 @@ struct ModelPickerSheet: View {
                 .padding(.bottom, HearthSpacing.s16)
             }
             // The effort stays in view below the list, however many models the server has.
-            // A model that does not think has nothing to choose here.
-            if !isPictureMode, presenter.effortChoices.count > 1 {
+            // A model that does not think, on a phone with no search address, has nothing to choose here.
+            if !isPictureMode, presenter.effortChoices.count > 1 || presenter.isSearchAvailable {
                 effortRow
                     .padding(.horizontal, HearthSpacing.s16)
                     .padding(.top, HearthSpacing.s8)
-                    .padding(.bottom, HearthSpacing.s8)
-            }
-            // The same switch as behind the plus button: thrown in either place, it shows in both.
-            if !isPictureMode, presenter.isSearchAvailable {
-                researchRow
-                    .padding(.horizontal, HearthSpacing.s16)
                     .padding(.bottom, HearthSpacing.s16)
             }
         }
@@ -104,30 +98,24 @@ struct ModelPickerSheet: View {
         isChosen ? "checkmark" : nil
     }
 
-    /// Whether the next messages of this chat are researched on the web. Apart from the effort, which a report is
-    /// thought about at like any reply.
-    private var researchRow: some View {
-        ActionSwitch(isOn: presenter.isResearchChosen, toggleAction: presenter.toggleResearchAction) {
-            VStack(alignment: .leading, spacing: HearthSpacing.s2) {
-                Text(Strings.researchSwitch)
-                    .font(.hearth(.body))
-                    .foregroundStyle(HearthColor.ink)
-                Text(Strings.researchDetail)
-                    .font(.hearth(.footnote))
-                    .foregroundStyle(HearthColor.mute)
-            }
+    /// What the effort row shows as chosen: the thinking level, behind deep research while that is on. A model that
+    /// does not think has no level worth naming beside it.
+    nonisolated static func effortTitle(level: String, canThink: Bool, isResearching: Bool) -> String {
+        guard isResearching else {
+            return level
         }
-        .padding(.horizontal, HearthSpacing.s16)
-        .padding(.vertical, HearthSpacing.s12)
-        .cardSurface(radius: HearthRadius.bubble)
+        return canThink ? Strings.researchWithLevel(level) : Strings.research
     }
 
-    /// The effort that goes into a reply: how hard the chosen model thinks before it. A menu, since the choices are
-    /// few. Research has a switch of its own behind the plus button, and is thought about at the level chosen here.
+    /// The effort that goes into a reply: how hard the chosen model thinks before it, and, apart from that, whether
+    /// the question is researched on the web. A menu, since the choices are few. The thinking levels are one choice
+    /// among themselves; deep research is ticked or not beside them, the same switch as behind the plus button, so
+    /// a report is thought about at whichever level is chosen.
     private var effortRow: some View {
         let canThink = presenter.viewModel.selectedModel?.canThink == true
         let chosen = EffortChoiceKind.thinking(presenter.thinkingLevel)
-        let title = chosen.title(canThink: canThink)
+        let isResearching = presenter.isResearchChosen
+        let title = Self.effortTitle(level: chosen.title(canThink: canThink), canThink: canThink, isResearching: isResearching)
         return Menu {
             ForEach(presenter.effortChoices, id: \.self) { option in
                 Button(action: { presenter.selectEffortAction(option) }, label: {
@@ -138,6 +126,18 @@ struct ModelPickerSheet: View {
                         Text(option.title(canThink: canThink))
                     }
                 })
+            }
+            if presenter.isSearchAvailable {
+                Divider()
+                Button(action: presenter.toggleResearchAction) {
+                    if let symbol = Self.menuSymbol(isChosen: isResearching) {
+                        Label(Strings.research, systemImage: symbol)
+                    } else {
+                        Text(Strings.research)
+                    }
+                    Text(Strings.researchDetail)
+                }
+                .accessibilityAddTraits(isResearching ? .isSelected : [])
             }
         } label: {
             // At the accessibility sizes the choice goes beneath the word Effort, where it has the width to be read.
@@ -152,7 +152,7 @@ struct ModelPickerSheet: View {
                 HStack(spacing: HearthSpacing.s8) {
                     Text(title)
                         .font(.hearth(.body))
-                        .foregroundStyle(HearthColor.mute)
+                        .foregroundStyle(isResearching ? HearthColor.pine : HearthColor.mute)
                         .lineLimit(2)
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.hearth(.footnote))

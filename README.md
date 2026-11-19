@@ -31,7 +31,7 @@ and run scheduled tasks. Nothing goes through anyone else's service unless you p
 - **Streamed Markdown**: headings, lists, quotes, tables, maths, and coloured code blocks that copy and open full size
 - **Web search** through your SearXNG. A model that can call tools searches when it needs to, reads the top pages
   and cites them; the sources show under the reply
-- **Deep research**: switch Research on under the + button or in the model sheet, ask a question, and the chat's model plans searches, reads a dozen
+- **Deep research**: switch Research on under the + button, or tick it in the model sheet's Effort menu, ask a question, and the chat's model plans searches, reads a dozen
   pages, takes notes and writes a report with numbered sources. The steps show while it works
 - **Canvas**: a web page, an SVG drawing, a Markdown document or a long piece of code in a reply opens in its own
   panel, beside the chat on an iPad or a Mac, as a sheet on a phone. Pages run their own scripts but cannot reach
