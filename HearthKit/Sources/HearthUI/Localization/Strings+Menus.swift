@@ -7,6 +7,7 @@ extension Strings {
     static let moveToProjectEllipsis = String(localized: "project.moveEllipsis", defaultValue: "Move to project…", bundle: .module)
     /// The composer's + button, which holds files and photos, pictures, a scheduled task and a new project.
     static let addToChat = String(localized: "composer.addTitle", defaultValue: "Add to chat", bundle: .module)
+    static let picturePhoto = String(localized: "picture.addPhoto", defaultValue: "Add a photo to change", bundle: .module)
     static let photos = String(localized: "composer.photos", defaultValue: "Photos", bundle: .module)
     static func recentPhoto(number: Int, total: Int) -> String {
         String(localized: "composer.recentPhoto", defaultValue: "Recent photo \(number) of \(total)", bundle: .module)

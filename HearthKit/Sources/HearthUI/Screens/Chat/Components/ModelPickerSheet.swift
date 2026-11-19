@@ -31,6 +31,12 @@ struct ModelPickerSheet: View {
                 effortRow
                     .padding(.horizontal, HearthSpacing.s16)
                     .padding(.top, HearthSpacing.s8)
+                    .padding(.bottom, HearthSpacing.s8)
+            }
+            // The same switch as behind the plus button: thrown in either place, it shows in both.
+            if !isPictureMode, presenter.isSearchAvailable {
+                researchRow
+                    .padding(.horizontal, HearthSpacing.s16)
                     .padding(.bottom, HearthSpacing.s16)
             }
         }
@@ -96,6 +102,24 @@ struct ModelPickerSheet: View {
     /// The mark beside an option in the effort menu: a tick for the chosen one, and nothing for the rest.
     nonisolated static func menuSymbol(isChosen: Bool) -> String? {
         isChosen ? "checkmark" : nil
+    }
+
+    /// Whether the next messages of this chat are researched on the web. Apart from the effort, which a report is
+    /// thought about at like any reply.
+    private var researchRow: some View {
+        ActionSwitch(isOn: presenter.isResearchChosen, toggleAction: presenter.toggleResearchAction) {
+            VStack(alignment: .leading, spacing: HearthSpacing.s2) {
+                Text(Strings.researchSwitch)
+                    .font(.hearth(.body))
+                    .foregroundStyle(HearthColor.ink)
+                Text(Strings.researchDetail)
+                    .font(.hearth(.footnote))
+                    .foregroundStyle(HearthColor.mute)
+            }
+        }
+        .padding(.horizontal, HearthSpacing.s16)
+        .padding(.vertical, HearthSpacing.s12)
+        .cardSurface(radius: HearthRadius.bubble)
     }
 
     /// The effort that goes into a reply: how hard the chosen model thinks before it. A menu, since the choices are

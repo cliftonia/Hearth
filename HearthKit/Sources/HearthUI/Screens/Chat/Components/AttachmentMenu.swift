@@ -60,16 +60,13 @@ enum AttachmentChoiceKind: Identifiable, Hashable {
 }
 
 /// The plus button: photos from the library or the camera for models that can see, files for any model,
-/// the switches that have the next message researched or answered with a picture and have replies read aloud, a scheduled task asking
+/// the switches that have the next message researched and have replies read aloud, picture mode, a scheduled task asking
 /// what is being written, and a new project.
 ///
 /// On a phone or a tablet it opens a sheet from the foot of the screen; on a Mac, a menu at the pointer.
 struct AttachmentMenu: View {
-    private static let maximumPhotoCount = 4
-
     let presenter: ChatPresenter
 
-    @State private var pickedItems: [PhotosPickerItem] = []
     @State private var isPhotoPickerPresented = false
     @State private var isCameraPresented = false
     @State private var isFileImporterPresented = false
@@ -84,15 +81,7 @@ struct AttachmentMenu: View {
             .fixedSize()
             .accessibilityLabel(Strings.addMenu)
             .largeContentLabel(Strings.addMenu, systemImage: "plus")
-            .photosPicker(isPresented: $isPhotoPickerPresented, selection: $pickedItems, maxSelectionCount: Self.maximumPhotoCount, matching: .images)
-            .onChange(of: pickedItems) {
-                let items = pickedItems
-                guard !items.isEmpty else {
-                    return
-                }
-                pickedItems = []
-                Task { presenter.addImagesAction(await PhotoLoader.jpegData(from: items)) }
-            }
+            .photoAttaching(isPresented: $isPhotoPickerPresented, presenter: presenter)
             .fullScreenCover(isPresented: $isCameraPresented) {
                 CameraPicker { imageData in
                     presenter.addImagesAction([imageData])
@@ -113,13 +102,14 @@ struct AttachmentMenu: View {
 
     /// The switches: what the next message asks for, and how replies are given.
     private var switches: [AttachmentChoiceKind] {
-        (presenter.isSearchAvailable ? [.research] : [])
-            + (presenter.isPictureAvailable ? [.pictureMode] : [])
-            + (presenter.isSpeechAvailable ? [.readAloud] : [])
+        (presenter.isSearchAvailable ? [.research] : []) + (presenter.isSpeechAvailable ? [.readAloud] : [])
     }
 
-    /// The things to make.
-    private var makers: [AttachmentChoiceKind] { [.scheduleTask, .newProject] }
+    /// The things to make. A picture is one of them: choosing it closes the sheet with the composer ready for
+    /// what the picture should show, and a photo to change is added from the composer itself.
+    private var makers: [AttachmentChoiceKind] {
+        (presenter.isPictureAvailable ? [.pictureMode] : []) + [.scheduleTask, .newProject]
+    }
 
     private func isEnabled(_ choice: AttachmentChoiceKind) -> Bool {
         switch choice {

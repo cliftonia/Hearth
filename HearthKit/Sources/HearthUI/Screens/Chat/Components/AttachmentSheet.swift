@@ -3,8 +3,8 @@ import SwiftUI
 import UIKit
 
 /// What the plus button opens on a phone or a tablet: a heading with the way out and the photo library either side
-/// of it, then cards of rows. The first card holds the things to add, the second the things to make, and the last
-/// the switches, which are thrown where they stand without closing the sheet.
+/// of it, the latest photos, then cards of rows. The first card holds the things to add, the second the things to
+/// make, and the last the switches, which are thrown where they stand without closing the sheet.
 struct AttachmentSheet: View {
     private static let closeButtonSide: CGFloat = 36
 
@@ -137,47 +137,33 @@ struct AttachmentSheet: View {
     /// A row that does something and closes the sheet.
     private func row(_ choice: AttachmentChoiceKind) -> some View {
         let isEnabled = isEnabled(choice)
+        let isOn = isOn(choice)
         return Button(action: { chooseAction(choice) }, label: {
-            label(choice)
-                .padding(.horizontal, HearthSpacing.s16)
-                .padding(.vertical, HearthSpacing.s16)
-                .contentShape(Rectangle())
+            HStack(spacing: HearthSpacing.s12) {
+                label(choice)
+                // A row that is on, such as picture mode, says so with a tick; tapping it again turns it off.
+                Image(systemName: "checkmark")
+                    .font(.hearth(.footnote).weight(.semibold))
+                    .foregroundStyle(HearthColor.pine)
+                    .opacity(isOn ? 1 : 0)
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, HearthSpacing.s16)
+            .padding(.vertical, HearthSpacing.s16)
+            .contentShape(Rectangle())
         })
         .buttonStyle(.plain)
         .disabled(!isEnabled)
         .opacity(isEnabled ? 1 : 0.4)
         .accessibilityLabel(choice.title)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 
     /// A row with a switch, thrown by a tap anywhere on the row.
     private func switchRow(_ choice: AttachmentChoiceKind) -> some View {
-        AttachmentSwitch(isOn: isOn(choice), toggleAction: { toggleAction(choice) }, label: { label(choice) })
+        ActionSwitch(isOn: isOn(choice), toggleAction: { toggleAction(choice) }, label: { label(choice) })
             .padding(.horizontal, HearthSpacing.s16)
             .padding(.vertical, HearthSpacing.s12)
-    }
-}
-
-/// A switch that shows what it is told is so, and asks for a change when it is thrown.
-///
-/// The switch keeps its own position while it moves and is set right again by whatever it is told, so a change
-/// that is refused, or one made elsewhere, is shown as it is.
-private struct AttachmentSwitch<Label: View>: View {
-    let isOn: Bool
-    let toggleAction: () -> Void
-    @ViewBuilder let label: () -> Label
-
-    @State private var position = false
-
-    var body: some View {
-        Toggle(isOn: $position, label: label)
-            .tint(HearthColor.pine)
-            .onAppear { position = isOn }
-            .onChange(of: isOn) { position = isOn }
-            .onChange(of: position) {
-                if position != isOn {
-                    toggleAction()
-                }
-            }
     }
 }
 

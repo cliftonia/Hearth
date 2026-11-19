@@ -189,9 +189,10 @@ A `Conversation` points at its project through `projectID`; the project knows no
 Research answers one question with a report written from pages the app searched for and read. It is a turn like
 any other: it runs with the chat's selected model, streams into a reply, and is saved in the conversation.
 
-- **Switched on, beside the effort.** Research is a switch behind the + button (`AttachmentChoiceKind.research`),
-  shown where there is a search address. The model sheet's Effort menu lists the thinking levels only, and is
-  left out for a model that cannot think. The two are independent: research is never a thinking level and is
+- **Switched on, beside the effort.** Research is a switch behind the + button (`AttachmentChoiceKind.research`)
+  and again in the model sheet under Effort, shown where there is a search address; both are the one
+  `isResearchMode`, so throwing either shows in the other. The model sheet's Effort menu lists the thinking levels
+  only, and is left out for a model that cannot think. The two are independent: research is never a thinking level and is
   never sent to the model as one, and while it is on the model thinks at the level chosen, so a report can be
   thought about as hard or as lightly as any reply. `EffortChoiceKind` names what the next message is given,
   `.thinking(ThinkingLevelKind)` or `.research`, for the composer's chip. A thinking level is saved for every chat

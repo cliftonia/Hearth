@@ -346,6 +346,7 @@ private extension ComposerFooter {
                 AttachmentMenu(presenter: presenter)
                 if viewModel.isPictureMode {
                     pictureModeChip
+                    PicturePhotoButton(presenter: presenter)
                 }
                 if isExpanded, !isChipOnOwnRow {
                     modelChip

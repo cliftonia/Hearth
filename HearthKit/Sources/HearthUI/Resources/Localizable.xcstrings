@@ -2388,6 +2388,17 @@
         }
       }
     },
+    "picture.addPhoto": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a photo to change"
+          }
+        }
+      }
+    },
     "picture.blurb.juggernaut": {
       "extractionState": "manual",
       "localizations": {
@@ -3242,6 +3253,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Checking for gaps"
+          }
+        }
+      }
+    },
+    "research.detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searches, reads the pages and writes a sourced report"
           }
         }
       }
