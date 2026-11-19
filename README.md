@@ -203,3 +203,7 @@ components.
   stays on the device.
 - **A reply keeps streaming briefly in the background**, as long as iOS allows.
 - The app icon is drawn by `python3 Tools/make_icon.py` (needs Pillow).
+
+## Licence
+
+[MIT](LICENSE).
