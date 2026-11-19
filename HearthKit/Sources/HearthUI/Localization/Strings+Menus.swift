@@ -8,6 +8,10 @@ extension Strings {
     /// The composer's + button, which holds files and photos, pictures, a scheduled task and a new project.
     static let addToChat = String(localized: "composer.addTitle", defaultValue: "Add to chat", bundle: .module)
     static let photos = String(localized: "composer.photos", defaultValue: "Photos", bundle: .module)
+    static func recentPhoto(number: Int, total: Int) -> String {
+        String(localized: "composer.recentPhoto", defaultValue: "Recent photo \(number) of \(total)", bundle: .module)
+    }
+
     static let addMenu = String(localized: "composer.add", defaultValue: "Add", bundle: .module)
 
     static func newChatIn(project name: String) -> String {

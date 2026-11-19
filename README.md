@@ -31,7 +31,7 @@ and run scheduled tasks. Nothing goes through anyone else's service unless you p
 - **Streamed Markdown**: headings, lists, quotes, tables, maths, and coloured code blocks that copy and open full size
 - **Web search** through your SearXNG. A model that can call tools searches when it needs to, reads the top pages
   and cites them; the sources show under the reply
-- **Deep research**: choose it as the effort, ask a question, and the chat's model plans searches, reads a dozen
+- **Deep research**: switch Research on under the + button, ask a question, and the chat's model plans searches, reads a dozen
   pages, takes notes and writes a report with numbered sources. The steps show while it works
 - **Canvas**: a web page, an SVG drawing, a Markdown document or a long piece of code in a reply opens in its own
   panel, beside the chat on an iPad or a Mac, as a sheet on a phone. Pages run their own scripts but cannot reach
@@ -84,7 +84,7 @@ and run scheduled tasks. Nothing goes through anyone else's service unless you p
 
 | | | |
 |:---:|:---:|:---:|
-| <img src="docs/screenshots/models.png" width="240" alt="The model sheet with gemma4 on your server and two cloud models"><br>Models on your server and in the cloud | <img src="docs/screenshots/plus-menu.png" width="240" alt="The + sheet: photos, take photo and choose file, schedule a task and new project, then switches for make a picture and read replies aloud"><br>The + sheet | <img src="docs/screenshots/canvas.png" width="240" alt="A tip calculator page running in the canvas"><br>A page in the canvas |
+| <img src="docs/screenshots/models.png" width="240" alt="The model sheet with gemma4 on your server and two cloud models"><br>Models on your server and in the cloud | <img src="docs/screenshots/plus-menu.png" width="240" alt="The + sheet: your latest photos, camera and add files, schedule a task and new project, then switches for research, make a picture and read replies aloud"><br>The + sheet | <img src="docs/screenshots/canvas.png" width="240" alt="A tip calculator page running in the canvas"><br>A page in the canvas |
 | <img src="docs/screenshots/voice.png" width="240" alt="A voice conversation, listening"><br>Voice conversation | <img src="docs/screenshots/project.png" width="240" alt="The chat list showing one project's chats"><br>A project's chats | <img src="docs/screenshots/project-editor.png" width="240" alt="A project's name, instructions and reference files"><br>A project's instructions |
 | <img src="docs/screenshots/settings.png" width="240" alt="Settings: profile, memory, follow-ups, web search, scheduled tasks, voice and pictures"><br>Settings | <img src="docs/screenshots/settings-bottom.png" width="240" alt="Settings: notifications, theme, vibration, the lock, servers, sync and erase"><br>More settings | <img src="docs/screenshots/memory.png" width="240" alt="The memory page with four saved memories"><br>Memory |
 | <img src="docs/screenshots/servers.png" width="240" alt="Server addresses with a successful connection test"><br>Servers | <img src="docs/screenshots/sync.png" width="240" alt="Sync with a hub address, a saved access key and sync on"><br>Sync with your hub | <img src="docs/screenshots/tasks.png" width="240" alt="Two scheduled tasks with their schedules and last runs"><br>Scheduled tasks |
@@ -188,6 +188,8 @@ components.
 - **Web pages are read by the device.** The top results of a search are fetched by your phone, so those sites see its
   address, and each source's site is asked for its small icon to show beside the source. Turn this off in
   Settings → Web search to send snippets only and fetch neither.
+- **Photos stay on the device until you send one.** The + sheet shows your latest photos only if you allow it; say
+  no and the Photos button still opens the system's own picker, which shows the app nothing but what you pick.
 - **Untrusted text is fenced.** Search results and pages are marked to the model as material, not instructions, and
   a page in the canvas cannot load anything from the network or open links.
 - **Memory is cautious**: at most 50 short memories, and nothing is remembered in a chat that holds web results, a

@@ -109,13 +109,13 @@ struct ChatResearchTests {
 
     // MARK: Choosing
 
-    @Test func `research is chosen as an effort of its own, and leaves the saved thinking level alone`() {
+    @Test func `research is switched on beside the thinking level, which goes on being chosen`() {
         let fixture = Fixture()
         let subject = fixture.makeTestSubject()
 
-        #expect(subject.effortChoices == [.thinking(.off), .thinking(.low), .thinking(.medium), .thinking(.high), .research])
+        #expect(subject.effortChoices == [.thinking(.off), .thinking(.low), .thinking(.medium), .thinking(.high)])
         #expect(subject.effortChoice == .thinking(.low))
-        subject.selectEffortAction(.research)
+        subject.toggleResearchAction()
 
         #expect(subject.effortChoice == .research)
         #expect(subject.isResearchChosen)
@@ -124,32 +124,44 @@ struct ChatResearchTests {
 
         subject.selectEffortAction(.thinking(.high))
 
-        #expect(subject.effortChoice == .thinking(.high))
-        #expect(!subject.isResearchChosen)
+        #expect(subject.isResearchChosen)
         #expect(fixture.settingsStore.settings.thinkingLevel == .high)
+
+        subject.toggleResearchAction()
+
+        #expect(!subject.isResearchChosen)
+        #expect(subject.effortChoice == .thinking(.high))
     }
 
-    @Test func `a model that cannot think is still offered research, beside one ordinary choice`() {
+    @Test func `a model that cannot think has nothing to choose, and can still research`() {
         let subject = Fixture().makeTestSubject()
         subject.viewModel.selectedModel = ChatModel(id: ChatModel.ID("plain:latest"))
 
-        #expect(subject.effortChoices == [.thinking(.low), .research])
+        #expect(subject.effortChoices == [.thinking(.low)])
         #expect(subject.effortChipTitle.isEmpty)
         #expect(EffortChoiceKind.thinking(.low).title(canThink: false) == Strings.effortStandard)
-        subject.selectEffortAction(.research)
+        subject.toggleResearchAction()
 
         #expect(subject.effortChipTitle == Strings.research)
     }
 
-    @Test func `without a search address research is listed but cannot be chosen`() {
+    @Test func `without a search address research cannot be switched on`() {
         let subject = Fixture(searchAddress: "").makeTestSubject()
 
-        #expect(subject.effortChoices.contains(.research))
-        #expect(!subject.isEffortChoiceAvailable(.research))
-        #expect(subject.isEffortChoiceAvailable(.thinking(.high)))
-        subject.selectEffortAction(.research)
+        subject.toggleResearchAction()
 
+        #expect(!subject.isResearchChosen)
         #expect(subject.effortChoice == .thinking(.low))
+    }
+
+    @Test func `switching research on takes the place of picture mode`() {
+        let subject = Fixture().makeTestSubject()
+        subject.viewModel.isPictureMode = true
+
+        subject.toggleResearchAction()
+
+        #expect(subject.isResearchChosen)
+        #expect(!subject.viewModel.isPictureMode)
     }
 
     @Test func `the choice stays with its chat: a new chat, or another chat, starts without it`() async {
@@ -158,11 +170,11 @@ struct ChatResearchTests {
         let other = Conversation(title: "Other", messages: [Message(role: .user, text: "Hello")])
         try? await fixture.conversationStore.save(other)
 
-        subject.selectEffortAction(.research)
+        subject.toggleResearchAction()
         await subject.newChatAction()
         #expect(subject.effortChoice == .thinking(.low))
 
-        subject.selectEffortAction(.research)
+        subject.toggleResearchAction()
         await subject.selectConversationAction(other.id)
         #expect(subject.effortChoice == .thinking(.low))
     }
@@ -170,7 +182,7 @@ struct ChatResearchTests {
     @Test func `a message asks for a picture or for research, never both`() {
         let subject = Fixture().makeTestSubject()
 
-        subject.selectEffortAction(.research)
+        subject.toggleResearchAction()
         subject.togglePictureModeAction()
 
         #expect(subject.viewModel.isPictureMode)
@@ -183,7 +195,7 @@ struct ChatResearchTests {
     @Test func `a researched question is answered with a report that is kept with its sources and its mark`() async throws {
         let fixture = Fixture()
         let subject = fixture.makeTestSubject()
-        subject.selectEffortAction(.research)
+        subject.toggleResearchAction()
         subject.viewModel.draft = "How do heat pumps work?"
 
         await subject.sendAction()
@@ -207,11 +219,11 @@ struct ChatResearchTests {
     @Test func `with research switched off again, the next question in the chat is an ordinary one`() async throws {
         let fixture = Fixture()
         let subject = fixture.makeTestSubject()
-        subject.selectEffortAction(.research)
+        subject.toggleResearchAction()
         subject.viewModel.draft = "How do heat pumps work?"
         await subject.sendAction()
 
-        subject.selectEffortAction(.thinking(.low))
+        subject.toggleResearchAction()
         subject.viewModel.draft = "Thanks. And in summer?"
         await subject.sendAction()
 
@@ -225,10 +237,10 @@ struct ChatResearchTests {
     @Test func `trying a report again researches again, even with research no longer chosen`() async throws {
         let fixture = Fixture()
         let subject = fixture.makeTestSubject()
-        subject.selectEffortAction(.research)
+        subject.toggleResearchAction()
         subject.viewModel.draft = "How do heat pumps work?"
         await subject.sendAction()
-        subject.selectEffortAction(.thinking(.low))
+        subject.toggleResearchAction()
 
         await subject.regenerateAction()
 
@@ -245,7 +257,7 @@ struct ChatResearchTests {
         fixture.page = { _ in throw URLError(.badServerResponse) }
         let subject = fixture.makeTestSubject()
         await subject.refreshModelsAction()
-        subject.selectEffortAction(.research)
+        subject.toggleResearchAction()
         subject.viewModel.draft = "How do heat pumps work?"
 
         await subject.sendAction()
@@ -269,7 +281,7 @@ struct ChatResearchTests {
             return Fixture.html
         }
         let subject = fixture.makeTestSubject()
-        subject.selectEffortAction(.research)
+        subject.toggleResearchAction()
         subject.viewModel.draft = "How do heat pumps work?"
         let clock = ContinuousClock()
         let startedAt = clock.now

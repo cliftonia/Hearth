@@ -299,6 +299,19 @@ final class ChatPresenter {
         viewModel.pendingImagesJPEG.append(contentsOf: imagesJPEG)
     }
 
+    /// The latest photos in the library, for the plus sheet to offer; none without leave to read the library.
+    func recentPhotos() async -> [RecentPhoto] {
+        await dependencies.photoLibrary.recentPhotos()
+    }
+
+    /// Adds one of the latest photos to the message, shrunk as any attached photo is.
+    func addRecentPhotoAction(_ id: RecentPhoto.ID) async {
+        guard let data = await dependencies.photoLibrary.photoData(id), let jpeg = PhotoLoader.downscaledJPEG(from: data) else {
+            return
+        }
+        addImagesAction([jpeg])
+    }
+
     func removeImageAction(at index: Int) {
         guard viewModel.pendingImagesJPEG.indices.contains(index) else {
             return

@@ -32,8 +32,8 @@ enum Strings {
 
     static let composerPlaceholder = String(localized: "composer.placeholder", defaultValue: "Message", bundle: .module)
     static let attach = String(localized: "composer.attach", defaultValue: "Attach", bundle: .module)
-    static let chooseFile = String(localized: "composer.chooseFile", defaultValue: "Choose file", bundle: .module)
-    static let takePhoto = String(localized: "composer.takePhoto", defaultValue: "Take photo", bundle: .module)
+    static let chooseFile = String(localized: "composer.chooseFile", defaultValue: "Add files", bundle: .module)
+    static let takePhoto = String(localized: "composer.takePhoto", defaultValue: "Camera", bundle: .module)
     static let photoLibrary = String(localized: "composer.photoLibrary", defaultValue: "Photo library", bundle: .module)
     static let removeFile = String(localized: "composer.removeFile", defaultValue: "Remove file", bundle: .module)
     static let filesUnreadable = String(localized: "composer.filesUnreadable", defaultValue: "Some files could not be read. PDFs and text files are supported.", bundle: .module)

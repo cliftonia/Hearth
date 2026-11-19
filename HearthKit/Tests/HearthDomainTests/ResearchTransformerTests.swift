@@ -230,10 +230,10 @@ struct ResearchPromptTests {
     }
 
     @Test(arguments: [
-        (true, [EffortChoiceKind.thinking(.off), .thinking(.low), .thinking(.medium), .thinking(.high), .research]),
-        (false, [EffortChoiceKind.thinking(.low), .research])
+        (true, [EffortChoiceKind.thinking(.off), .thinking(.low), .thinking(.medium), .thinking(.high)]),
+        (false, [EffortChoiceKind.thinking(.low)])
     ])
-    func `research is offered after the thinking levels, and to a model that cannot think too`(canThink: Bool, expected: [EffortChoiceKind]) {
+    func `the thinking levels are offered to a model that thinks, and one ordinary choice to one that does not`(canThink: Bool, expected: [EffortChoiceKind]) {
         #expect(EffortChoiceKind.choices(canThink: canThink, savedLevel: .low) == expected)
     }
 

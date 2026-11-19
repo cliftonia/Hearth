@@ -1,7 +1,7 @@
 import Foundation
 import HearthDomain
 
-// Deep research: choosing it as the effort, running it, and keeping the report it writes.
+// Deep research: switching it on, running it, and keeping the report it writes.
 extension ChatPresenter {
     // MARK: Choosing
 
@@ -10,7 +10,7 @@ extension ChatPresenter {
         viewModel.isResearchMode && isSearchAvailable && !viewModel.isPictureMode
     }
 
-    /// What is chosen in the effort menu: research, or the thinking level saved in the settings.
+    /// What the next message will be given: research, or thought at the level saved in the settings.
     var effortChoice: EffortChoiceKind {
         isResearchChosen ? .research : .thinking(thinkingLevel)
     }
@@ -31,27 +31,29 @@ extension ChatPresenter {
         }
     }
 
-    /// Whether a choice can be made now. Research cannot without a search address.
-    func isEffortChoiceAvailable(_ choice: EffortChoiceKind) -> Bool {
-        switch choice {
-        case .thinking:
-            true
-        case .research:
-            isSearchAvailable
-        }
-    }
-
-    /// Chooses how the next replies are made. A thinking level is saved for every chat; research is kept for
-    /// this chat only, and leaves the saved level as it was for the model to think at.
+    /// Chooses how hard the model thinks, for every chat. Research, if it is switched on, stays on: its report is
+    /// thought about at the level chosen here.
     func selectEffortAction(_ choice: EffortChoiceKind) {
         switch choice {
         case .thinking(let level):
-            viewModel.isResearchMode = false
             if level != thinkingLevel {
                 selectThinkingLevelAction(level)
             }
         case .research:
-            viewModel.isResearchMode = isSearchAvailable
+            setResearch(true)
+        }
+    }
+
+    /// Switches research on or off for this chat. It needs a search address, and takes the place of picture mode.
+    func toggleResearchAction() {
+        setResearch(!isResearchChosen)
+    }
+
+    private func setResearch(_ isOn: Bool) {
+        viewModel.isResearchMode = isOn && isSearchAvailable
+        // A message asks for a picture or for research, never both.
+        if viewModel.isResearchMode {
+            viewModel.isPictureMode = false
         }
     }
 

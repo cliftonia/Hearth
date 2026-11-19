@@ -26,7 +26,8 @@ struct ModelPickerSheet: View {
                 .padding(.bottom, HearthSpacing.s16)
             }
             // The effort stays in view below the list, however many models the server has.
-            if !isPictureMode {
+            // A model that does not think has nothing to choose here.
+            if !isPictureMode, presenter.effortChoices.count > 1 {
                 effortRow
                     .padding(.horizontal, HearthSpacing.s16)
                     .padding(.top, HearthSpacing.s8)
@@ -97,16 +98,14 @@ struct ModelPickerSheet: View {
         isChosen ? "checkmark" : nil
     }
 
-    /// The effort that goes into a reply: how hard the chosen model thinks before it, for a model that thinks, and
-    /// deep research for any model. A menu, since the choices are few. Research is listed but cannot be chosen
-    /// until there is a search address, and says so.
+    /// The effort that goes into a reply: how hard the chosen model thinks before it. A menu, since the choices are
+    /// few. Research has a switch of its own behind the plus button, and is thought about at the level chosen here.
     private var effortRow: some View {
         let canThink = presenter.viewModel.selectedModel?.canThink == true
-        let chosen = presenter.effortChoice
+        let chosen = EffortChoiceKind.thinking(presenter.thinkingLevel)
         let title = chosen.title(canThink: canThink)
         return Menu {
             ForEach(presenter.effortChoices, id: \.self) { option in
-                let isAvailable = presenter.isEffortChoiceAvailable(option)
                 Button(action: { presenter.selectEffortAction(option) }, label: {
                     // A symbol with no name is a fault in the system's symbol set, so an option not chosen has text alone.
                     if let symbol = Self.menuSymbol(isChosen: option == chosen) {
@@ -114,11 +113,7 @@ struct ModelPickerSheet: View {
                     } else {
                         Text(option.title(canThink: canThink))
                     }
-                    if option == .research {
-                        Text(isAvailable ? Strings.researchDetail : Strings.researchNeedsSearch)
-                    }
                 })
-                .disabled(!isAvailable)
             }
         } label: {
             // At the accessibility sizes the choice goes beneath the word Effort, where it has the width to be read.
@@ -133,7 +128,7 @@ struct ModelPickerSheet: View {
                 HStack(spacing: HearthSpacing.s8) {
                     Text(title)
                         .font(.hearth(.body))
-                        .foregroundStyle(chosen == .research ? HearthColor.pine : HearthColor.mute)
+                        .foregroundStyle(HearthColor.mute)
                         .lineLimit(2)
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.hearth(.footnote))

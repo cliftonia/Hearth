@@ -1,4 +1,6 @@
+import HearthDomain
 import SwiftUI
+import UIKit
 
 /// What the plus button opens on a phone or a tablet: a heading with the way out and the photo library either side
 /// of it, then cards of rows. The first card holds the things to add, the second the things to make, and the last
@@ -16,6 +18,12 @@ struct AttachmentSheet: View {
     let chooseAction: (AttachmentChoiceKind) -> Void
     /// Run with a switch that was thrown; the sheet stays open.
     let toggleAction: (AttachmentChoiceKind) -> Void
+    /// The latest photos in the library, asked for as the sheet opens; none without leave to read it.
+    let loadRecentPhotos: () async -> [RecentPhoto]
+    /// Run with one of the latest photos that was tapped; the sheet is then closed by whoever opened it.
+    let choosePhotoAction: (RecentPhoto.ID) -> Void
+
+    @State private var recentPhotos: [RecentPhoto] = []
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -26,13 +34,17 @@ struct AttachmentSheet: View {
             header
             ScrollView {
                 VStack(spacing: HearthSpacing.s16) {
+                    RecentPhotoStrip(photos: recentPhotos, chooseAction: choosePhotoAction)
+                        .folded(recentPhotos.isEmpty)
+                    // The cards keep clear of the sheet's edges; the photos above them run right to the edges.
                     ForEach(groups, id: \.self) { group in
                         card(group) { row($0) }
+                            .padding(.horizontal, HearthSpacing.s16)
                     }
                     card(switches) { switchRow($0) }
+                        .padding(.horizontal, HearthSpacing.s16)
                         .folded(switches.isEmpty)
                 }
-                .padding(.horizontal, HearthSpacing.s16)
                 .padding(.bottom, HearthSpacing.s24)
             }
             .scrollBounceBehavior(.basedOnSize)
@@ -40,6 +52,13 @@ struct AttachmentSheet: View {
         .background(HearthColor.paper.ignoresSafeArea())
         .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.medium, .large])
         .presentationDragIndicator(.visible)
+        .task {
+            // Photos are offered only where they can be added, so the library is not asked for otherwise.
+            if isEnabled(.photoLibrary) {
+                recentPhotos = await loadRecentPhotos()
+            }
+        }
+        .animation(.snappy, value: recentPhotos)
     }
 
     // MARK: The heading
@@ -159,5 +178,40 @@ private struct AttachmentSwitch<Label: View>: View {
                     toggleAction()
                 }
             }
+    }
+}
+
+/// The latest photos side by side, running off the sheet's edge, each added to the message by a tap.
+private struct RecentPhotoStrip: View {
+    let photos: [RecentPhoto]
+    let chooseAction: (RecentPhoto.ID) -> Void
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: HearthSpacing.s8) {
+                ForEach(photos.enumerated().map { Numbered(number: $0.offset + 1, photo: $0.element) }) { entry in
+                    Button(action: { chooseAction(entry.photo.id) }, label: {
+                        Image(uiImage: UIImage(data: entry.photo.thumbnailJPEG) ?? UIImage())
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: PhotoLibraryProvider.recentPhotoSide, height: PhotoLibraryProvider.recentPhotoSide)
+                            .clipShape(RoundedRectangle(cornerRadius: HearthRadius.card, style: .continuous))
+                            .contentShape(Rectangle())
+                    })
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Strings.recentPhoto(number: entry.number, total: photos.count))
+                }
+            }
+            // The first photo lines up with the cards beneath; the rest run off the sheet's edge.
+            .padding(.horizontal, HearthSpacing.s16)
+        }
+    }
+
+    /// A photo and its place in the strip, which is how VoiceOver tells one from the next.
+    private struct Numbered: Identifiable {
+        let number: Int
+        let photo: RecentPhoto
+
+        var id: RecentPhoto.ID { photo.id }
     }
 }

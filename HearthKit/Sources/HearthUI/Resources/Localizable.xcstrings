@@ -821,7 +821,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose file"
+            "value": "Add files"
           }
         }
       }
@@ -936,6 +936,17 @@
         }
       }
     },
+    "composer.recentPhoto": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent photo %1$lld of %2$lld"
+          }
+        }
+      }
+    },
     "composer.removeFile": {
       "extractionState": "manual",
       "localizations": {
@@ -1008,7 +1019,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Take photo"
+            "value": "Camera"
           }
         }
       }
@@ -3235,17 +3246,6 @@
         }
       }
     },
-    "research.detail": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Searches, reads the pages and writes a sourced report"
-          }
-        }
-      }
-    },
     "research.effortStandard": {
       "extractionState": "manual",
       "localizations": {
@@ -3253,17 +3253,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Standard"
-          }
-        }
-      }
-    },
-    "research.needsSearch": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a search address in Settings"
           }
         }
       }
@@ -3330,6 +3319,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sources"
+          }
+        }
+      }
+    },
+    "research.switch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Research"
           }
         }
       }

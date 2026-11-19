@@ -1,3 +1,4 @@
+import HearthDomain
 import PhotosUI
 import SwiftUI
 import UniformTypeIdentifiers
@@ -7,6 +8,7 @@ enum AttachmentChoiceKind: Identifiable, Hashable {
     case file
     case camera
     case photoLibrary
+    case research
     case pictureMode
     case readAloud
     case scheduleTask
@@ -22,6 +24,8 @@ enum AttachmentChoiceKind: Identifiable, Hashable {
             Strings.takePhoto
         case .photoLibrary:
             Strings.photoLibrary
+        case .research:
+            Strings.researchSwitch
         case .pictureMode:
             Strings.pictureMode
         case .readAloud:
@@ -41,6 +45,8 @@ enum AttachmentChoiceKind: Identifiable, Hashable {
             "camera"
         case .photoLibrary:
             "photo.on.rectangle"
+        case .research:
+            "text.magnifyingglass"
         case .pictureMode:
             "paintbrush"
         case .readAloud:
@@ -54,7 +60,7 @@ enum AttachmentChoiceKind: Identifiable, Hashable {
 }
 
 /// The plus button: photos from the library or the camera for models that can see, files for any model,
-/// the switches that make the next message ask for a picture and have replies read aloud, a scheduled task asking
+/// the switches that have the next message researched or answered with a picture and have replies read aloud, a scheduled task asking
 /// what is being written, and a new project.
 ///
 /// On a phone or a tablet it opens a sheet from the foot of the screen; on a Mac, a menu at the pointer.
@@ -70,6 +76,8 @@ struct AttachmentMenu: View {
     @State private var isSheetPresented = false
     /// What was chosen in the sheet, done once the sheet has gone: a picker cannot open while it is still closing.
     @State private var chosen: AttachmentChoiceKind?
+    /// One of the latest photos chosen in the sheet, added once the sheet has gone.
+    @State private var chosenPhoto: RecentPhoto.ID?
 
     var body: some View {
         opener
@@ -105,7 +113,9 @@ struct AttachmentMenu: View {
 
     /// The switches: what the next message asks for, and how replies are given.
     private var switches: [AttachmentChoiceKind] {
-        (presenter.isPictureAvailable ? [.pictureMode] : []) + (presenter.isSpeechAvailable ? [.readAloud] : [])
+        (presenter.isSearchAvailable ? [.research] : [])
+            + (presenter.isPictureAvailable ? [.pictureMode] : [])
+            + (presenter.isSpeechAvailable ? [.readAloud] : [])
     }
 
     /// The things to make.
@@ -115,13 +125,15 @@ struct AttachmentMenu: View {
         switch choice {
         case .camera, .photoLibrary:
             canSee
-        case .file, .pictureMode, .readAloud, .scheduleTask, .newProject:
+        case .file, .research, .pictureMode, .readAloud, .scheduleTask, .newProject:
             true
         }
     }
 
     private func isOn(_ choice: AttachmentChoiceKind) -> Bool {
         switch choice {
+        case .research:
+            presenter.isResearchChosen
         case .pictureMode:
             presenter.viewModel.isPictureMode
         case .readAloud:
@@ -139,6 +151,8 @@ struct AttachmentMenu: View {
             isCameraPresented = true
         case .photoLibrary:
             isPhotoPickerPresented = true
+        case .research:
+            presenter.toggleResearchAction()
         case .pictureMode:
             presenter.togglePictureModeAction()
         case .readAloud:
@@ -202,12 +216,21 @@ struct AttachmentMenu: View {
                         chosen = choice
                         isSheetPresented = false
                     },
-                    toggleAction: perform
+                    toggleAction: perform,
+                    loadRecentPhotos: presenter.recentPhotos,
+                    choosePhotoAction: { id in
+                        chosenPhoto = id
+                        isSheetPresented = false
+                    }
                 )
             }
     }
 
     private func performChosen() {
+        if let id = chosenPhoto {
+            chosenPhoto = nil
+            Task { await presenter.addRecentPhotoAction(id) }
+        }
         guard let choice = chosen else {
             return
         }

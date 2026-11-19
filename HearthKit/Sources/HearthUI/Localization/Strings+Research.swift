@@ -4,8 +4,7 @@ import Foundation
 // swiftlint:disable line_length
 extension Strings {
     static let research = String(localized: "research.title", defaultValue: "Deep research", bundle: .module)
-    static let researchDetail = String(localized: "research.detail", defaultValue: "Searches, reads the pages and writes a sourced report", bundle: .module)
-    static let researchNeedsSearch = String(localized: "research.needsSearch", defaultValue: "Add a search address in Settings", bundle: .module)
+    static let researchSwitch = String(localized: "research.switch", defaultValue: "Research", bundle: .module)
     static let effortStandard = String(localized: "research.effortStandard", defaultValue: "Standard", bundle: .module)
     static let researchPlaceholder = String(localized: "research.placeholder", defaultValue: "Ask a question to research", bundle: .module)
     static let researchPlanning = String(localized: "research.planning", defaultValue: "Planning", bundle: .module)

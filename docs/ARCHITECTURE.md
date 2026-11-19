@@ -189,13 +189,20 @@ A `Conversation` points at its project through `projectID`; the project knows no
 Research answers one question with a report written from pages the app searched for and read. It is a turn like
 any other: it runs with the chat's selected model, streams into a reply, and is saved in the conversation.
 
-- **Chosen as an effort.** The model sheet's Effort menu lists the thinking levels and then Deep research.
-  `EffortChoiceKind` is that choice: `.thinking(ThinkingLevelKind)` or `.research`. Research is never a thinking
-  level and is never sent to the model as one; while it is chosen the model thinks at the level saved in the
-  settings. A thinking level is saved for every chat (`ServerSettings.thinkingLevel`); research is only
-  `ChatViewModel.isResearchMode`, which belongs to the open chat, is not saved, and is cleared by a new chat, by
-  opening another chat and by picture mode. A model that cannot think is offered one ordinary choice and research.
-  Without a search address research is listed, disabled, with a line saying why.
+- **Switched on, beside the effort.** Research is a switch behind the + button (`AttachmentChoiceKind.research`),
+  shown where there is a search address. The model sheet's Effort menu lists the thinking levels only, and is
+  left out for a model that cannot think. The two are independent: research is never a thinking level and is
+  never sent to the model as one, and while it is on the model thinks at the level chosen, so a report can be
+  thought about as hard or as lightly as any reply. `EffortChoiceKind` names what the next message is given,
+  `.thinking(ThinkingLevelKind)` or `.research`, for the composer's chip. A thinking level is saved for every chat
+  (`ServerSettings.thinkingLevel`); research is only `ChatViewModel.isResearchMode`, which belongs to the open
+  chat, is not saved, and is cleared by a new chat, by opening another chat and by picture mode, as switching it
+  on clears picture mode.
+- **The + sheet's latest photos.** On a phone or a tablet the sheet shows the dozen latest photos above its rows,
+  through `PhotoLibraryProvider.recentPhotos`. That needs leave to read the library, which the system asks for the
+  first time the sheet opens for a model that can see; without it the strip is simply absent and the Photos
+  button still opens the system's picker, which needs no leave. Only small copies are made for the strip, and a
+  photo is read in full only when it is tapped.
 - **The run** is `ResearchInteractor.run`, a stream of events, built on the same `ChatDataProvider` and
   `SearchDataProvider` as a reply, so requests go to the same model through the same service and pages are read
   through `PageService` and its `PageAddressPolicy`. In order: plan (one request), search each query, choose the
