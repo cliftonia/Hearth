@@ -31,11 +31,13 @@ extension ChatPresenter {
         }
     }
 
-    /// Chooses how hard the model thinks, for every chat. Research, if it is switched on, stays on: its report is
-    /// thought about at the level chosen here.
+    /// Chooses what the next replies are given, one thing at a time: a thinking level, which is saved for every
+    /// chat and switches research off, or research, which is kept for this chat only and leaves the saved level as
+    /// it was for the report to be thought about at.
     func selectEffortAction(_ choice: EffortChoiceKind) {
         switch choice {
         case .thinking(let level):
+            setResearch(false)
             if level != thinkingLevel {
                 selectThinkingLevelAction(level)
             }

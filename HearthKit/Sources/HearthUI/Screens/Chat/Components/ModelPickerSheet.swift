@@ -98,26 +98,17 @@ struct ModelPickerSheet: View {
         isChosen ? "checkmark" : nil
     }
 
-    /// What the effort row shows as chosen: the thinking level, behind deep research while that is on. A model that
-    /// does not think has no level worth naming beside it.
-    nonisolated static func effortTitle(level: String, canThink: Bool, isResearching: Bool) -> String {
-        guard isResearching else {
-            return level
-        }
-        return canThink ? Strings.researchWithLevel(level) : Strings.research
-    }
-
-    /// The effort that goes into a reply: how hard the chosen model thinks before it, and, apart from that, whether
-    /// the question is researched on the web. A menu, since the choices are few. The thinking levels are one choice
-    /// among themselves; deep research is ticked or not beside them, the same switch as behind the plus button, so
-    /// a report is thought about at whichever level is chosen.
+    /// The effort that goes into a reply: how hard the chosen model thinks before it, or deep research. A menu, since
+    /// the choices are few, and one choice at a time: choosing deep research leaves no level ticked, and choosing a
+    /// level switches research off. Deep research is the same switch as behind the plus button, so each follows the
+    /// other; a report is still thought about at the level last chosen.
     private var effortRow: some View {
         let canThink = presenter.viewModel.selectedModel?.canThink == true
-        let chosen = EffortChoiceKind.thinking(presenter.thinkingLevel)
-        let isResearching = presenter.isResearchChosen
-        let title = Self.effortTitle(level: chosen.title(canThink: canThink), canThink: canThink, isResearching: isResearching)
+        let chosen = presenter.effortChoice
+        let title = chosen.title(canThink: canThink)
+        let choices = presenter.effortChoices + (presenter.isSearchAvailable ? [.research] : [])
         return Menu {
-            ForEach(presenter.effortChoices, id: \.self) { option in
+            ForEach(choices, id: \.self) { option in
                 Button(action: { presenter.selectEffortAction(option) }, label: {
                     // A symbol with no name is a fault in the system's symbol set, so an option not chosen has text alone.
                     if let symbol = Self.menuSymbol(isChosen: option == chosen) {
@@ -125,19 +116,10 @@ struct ModelPickerSheet: View {
                     } else {
                         Text(option.title(canThink: canThink))
                     }
-                })
-            }
-            if presenter.isSearchAvailable {
-                Divider()
-                Button(action: presenter.toggleResearchAction) {
-                    if let symbol = Self.menuSymbol(isChosen: isResearching) {
-                        Label(Strings.research, systemImage: symbol)
-                    } else {
-                        Text(Strings.research)
+                    if option == .research {
+                        Text(Strings.researchDetail)
                     }
-                    Text(Strings.researchDetail)
-                }
-                .accessibilityAddTraits(isResearching ? .isSelected : [])
+                })
             }
         } label: {
             // At the accessibility sizes the choice goes beneath the word Effort, where it has the width to be read.
@@ -152,7 +134,7 @@ struct ModelPickerSheet: View {
                 HStack(spacing: HearthSpacing.s8) {
                     Text(title)
                         .font(.hearth(.body))
-                        .foregroundStyle(isResearching ? HearthColor.pine : HearthColor.mute)
+                        .foregroundStyle(chosen == .research ? HearthColor.pine : HearthColor.mute)
                         .lineLimit(2)
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.hearth(.footnote))

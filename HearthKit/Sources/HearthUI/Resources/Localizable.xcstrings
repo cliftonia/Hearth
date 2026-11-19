@@ -3378,17 +3378,6 @@
         }
       }
     },
-    "research.withLevel": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deep research · %@"
-          }
-        }
-      }
-    },
     "research.writing": {
       "extractionState": "manual",
       "localizations": {

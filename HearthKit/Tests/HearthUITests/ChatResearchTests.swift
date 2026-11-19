@@ -109,7 +109,7 @@ struct ChatResearchTests {
 
     // MARK: Choosing
 
-    @Test func `research is switched on beside the thinking level, which goes on being chosen`() {
+    @Test func `research and a thinking level are one choice, and the switch follows whichever is chosen`() {
         let fixture = Fixture()
         let subject = fixture.makeTestSubject()
 
@@ -124,19 +124,14 @@ struct ChatResearchTests {
 
         subject.selectEffortAction(.thinking(.high))
 
-        #expect(subject.isResearchChosen)
-        #expect(fixture.settingsStore.settings.thinkingLevel == .high)
-
-        subject.toggleResearchAction()
-
         #expect(!subject.isResearchChosen)
         #expect(subject.effortChoice == .thinking(.high))
-    }
+        #expect(fixture.settingsStore.settings.thinkingLevel == .high)
 
-    @Test func `the effort row names the level, behind deep research while that is on`() {
-        #expect(ModelPickerSheet.effortTitle(level: "Medium", canThink: true, isResearching: false) == "Medium")
-        #expect(ModelPickerSheet.effortTitle(level: "Medium", canThink: true, isResearching: true) == Strings.researchWithLevel("Medium"))
-        #expect(ModelPickerSheet.effortTitle(level: Strings.effortStandard, canThink: false, isResearching: true) == Strings.research)
+        subject.selectEffortAction(.research)
+
+        #expect(subject.isResearchChosen)
+        #expect(fixture.settingsStore.settings.thinkingLevel == .high)
     }
 
     @Test func `a model that cannot think has nothing to choose, and can still research`() {

@@ -190,11 +190,10 @@ Research answers one question with a report written from pages the app searched 
 any other: it runs with the chat's selected model, streams into a reply, and is saved in the conversation.
 
 - **Switched on, beside the effort.** Research is a switch behind the + button (`AttachmentChoiceKind.research`)
-  and an entry of its own in the model sheet's Effort menu, beneath the thinking levels and ticked apart from
-  them, both shown where there is a search address. Both are the one `isResearchMode`, so a change in either
-  shows in the other. The thinking levels remain one choice among themselves. The two are independent: research is never a thinking level and is
-  never sent to the model as one, and while it is on the model thinks at the level chosen, so a report can be
-  thought about as hard or as lightly as any reply. `EffortChoiceKind` names what the next message is given,
+  and the last entry of the model sheet's Effort menu, beneath the thinking levels, both shown where there is a
+  search address. Both are the one `isResearchMode`, so a change in either shows in the other. The menu is one
+  choice at a time: choosing research leaves no level ticked, and choosing a level switches research off. Research is never a thinking level and is
+  never sent to the model as one: while it is on, the model thinks at the level last chosen. `EffortChoiceKind` names what the next message is given,
   `.thinking(ThinkingLevelKind)` or `.research`, for the composer's chip. A thinking level is saved for every chat
   (`ServerSettings.thinkingLevel`); research is only `ChatViewModel.isResearchMode`, which belongs to the open
   chat, is not saved, and is cleared by a new chat, by opening another chat and by picture mode, as switching it
