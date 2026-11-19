@@ -11,7 +11,7 @@ struct MarkdownSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: HearthSpacing.s12) {
-            ForEach(MarkdownTransformer().blocks(from: markdown)) { block in
+            ForEach(ParsedMarkdown.blocks(from: markdown)) { block in
                 view(for: block.kind)
             }
         }
@@ -67,9 +67,7 @@ struct MarkdownSection: View {
 
     /// Bold, italic, inline code and links; text that does not parse is shown as written.
     static func inline(_ text: String) -> AttributedString {
-        let options = AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
-        let readable = MathTransformer().readableInline(text)
-        return (try? AttributedString(markdown: readable, options: options)) ?? AttributedString(readable)
+        ParsedMarkdown.inline(text)
     }
 }
 
