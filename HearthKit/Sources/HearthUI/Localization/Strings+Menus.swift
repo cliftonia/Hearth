@@ -6,6 +6,8 @@ extension Strings {
     static let renameEllipsis = String(localized: "sidebar.renameEllipsis", defaultValue: "Rename…", bundle: .module)
     static let moveToProjectEllipsis = String(localized: "project.moveEllipsis", defaultValue: "Move to project…", bundle: .module)
     /// The composer's + button, which holds files and photos, pictures, a scheduled task and a new project.
+    static let addToChat = String(localized: "composer.addTitle", defaultValue: "Add to chat", bundle: .module)
+    static let photos = String(localized: "composer.photos", defaultValue: "Photos", bundle: .module)
     static let addMenu = String(localized: "composer.add", defaultValue: "Add", bundle: .module)
 
     static func newChatIn(project name: String) -> String {

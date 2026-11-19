@@ -103,15 +103,13 @@ struct AttachmentMenu: View {
         presenter.viewModel.selectedModel?.canSee == true || presenter.viewModel.isPictureMode
     }
 
-    /// The things to attach, in the order they are offered.
-    private var attachments: [AttachmentChoiceKind] {
-        CameraPicker.isAvailable ? [.camera, .photoLibrary, .file] : [.photoLibrary, .file]
+    /// The switches: what the next message asks for, and how replies are given.
+    private var switches: [AttachmentChoiceKind] {
+        (presenter.isPictureAvailable ? [.pictureMode] : []) + (presenter.isSpeechAvailable ? [.readAloud] : [])
     }
 
-    /// The switches and the things to make, in the order they are offered.
-    private var extras: [AttachmentChoiceKind] {
-        (presenter.isPictureAvailable ? [.pictureMode] : []) + (presenter.isSpeechAvailable ? [.readAloud] : []) + [.scheduleTask, .newProject]
-    }
+    /// The things to make.
+    private var makers: [AttachmentChoiceKind] { [.scheduleTask, .newProject] }
 
     private func isEnabled(_ choice: AttachmentChoiceKind) -> Bool {
         switch choice {
@@ -171,9 +169,9 @@ struct AttachmentMenu: View {
     #if targetEnvironment(macCatalyst)
     private var opener: some View {
         Menu {
-            ForEach(attachments) { menuButton($0) }
+            ForEach([AttachmentChoiceKind.file, .photoLibrary]) { menuButton($0) }
             Divider()
-            ForEach(extras) { menuButton($0) }
+            ForEach(switches + makers) { menuButton($0) }
         } label: {
             plus
         }
@@ -194,15 +192,17 @@ struct AttachmentMenu: View {
         Button(action: { isSheetPresented = true }, label: { plus })
             .buttonStyle(.plain)
             .sheet(isPresented: $isSheetPresented, onDismiss: performChosen) {
+                // The photo library is a button in the sheet's heading, so the first card holds the camera and files.
                 AttachmentSheet(
-                    attachments: attachments,
-                    extras: extras,
+                    groups: [(CameraPicker.isAvailable ? [.camera] : []) + [.file], makers],
+                    switches: switches,
                     isEnabled: isEnabled,
                     isOn: isOn,
                     chooseAction: { choice in
                         chosen = choice
                         isSheetPresented = false
-                    }
+                    },
+                    toggleAction: perform
                 )
             }
     }

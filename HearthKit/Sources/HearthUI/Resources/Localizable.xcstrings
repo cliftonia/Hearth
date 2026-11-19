@@ -782,6 +782,17 @@
         }
       }
     },
+    "composer.addTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to chat"
+          }
+        }
+      }
+    },
     "composer.attach": {
       "extractionState": "manual",
       "localizations": {
@@ -877,6 +888,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Photo library"
+          }
+        }
+      }
+    },
+    "composer.photos": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photos"
           }
         }
       }
