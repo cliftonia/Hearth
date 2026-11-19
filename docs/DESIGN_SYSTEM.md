@@ -43,7 +43,10 @@ quiet tone also have stronger values that are drawn while Increase Contrast is o
 | `line` | `#DDE2DC` | `#2A3330` | Borders and dividers |
 | `scrim` | black | black | The veil over the chat while the drawer is open |
 | `ink` | `#18211E` | `#E9EEEA` | Body text and primary symbols |
-| `mute` | `#5F6A65` | `#8B9691` | Secondary text, placeholders, quiet symbols |
+| `mute` | `#5F6A65` | `#8B9691` | Secondary text, placeholders, quiet symbols; comments in code |
+| `codeKeyword` | `#2C6B5A` | `#6FC2A8` | The words a language reserves, in a code block |
+| `codeString` | `#8A4B12` | `#E0B15A` | Text in quotes, in a code block |
+| `codeNumber` | `#3B5BA5` | `#8FB0F0` | Numbers, in a code block |
 | `pine` | `#2C6B5A` | `#6FC2A8` | The brand colour: the tint, primary buttons, anything switched on |
 | `pineSoft` | `#DCEAE4` | `#1F3A32` | The fill behind something switched on |
 | `onPine` | `#FFFFFF` | `#0E1211` | Text and symbols drawn on pine |

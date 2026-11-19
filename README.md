@@ -28,7 +28,7 @@ and run scheduled tasks. Nothing goes through anyone else's service unless you p
 
 - **Any model on your server**, local or cloud, chosen from the composer, with an **effort** for models that think:
   Off, Light, Medium or High
-- **Streamed Markdown**: headings, lists, quotes, tables, maths and code blocks with a copy button
+- **Streamed Markdown**: headings, lists, quotes, tables, maths, and coloured code blocks that copy and open full size
 - **Web search** through your SearXNG. A model that can call tools searches when it needs to, reads the top pages
   and cites them; the sources show under the reply
 - **Deep research**: choose it as the effort, ask a question, and the chat's model plans searches, reads a dozen
@@ -42,7 +42,8 @@ and run scheduled tasks. Nothing goes through anyone else's service unless you p
 - **Documents and photos**: attach PDFs and text files for any model, and photos from the library or the camera for
   models that see
 - **Pictures** made on your ComfyUI: + → Make a picture, then describe it, or attach a photo to change it
-- **Projects** group chats around one subject, with their own instructions and reference files
+- **Projects** group chats around one subject, with their own instructions and reference files; long files are
+  searched for the passages that bear on each question
 - **Memory**: lasting facts the model is told to keep, or that you add in Settings, carried into every chat
 - **Private chats** use no memories, add none and are never synced
 - **Rename, pin, share or delete** a chat from a long press, or from its menu; search finds chats by title or text
@@ -196,7 +197,10 @@ components.
 ## Good to know
 
 - **Maths is shown as text**, `x² ≤ a/b`, on one line rather than typeset.
-- **Files are read as text.** PDFs need a text layer, and each file is cut at 60,000 characters.
+- **Files are read as text.** PDFs need a text layer. A file, or a project's files together, beyond 60,000
+  characters is searched for the passages that share words with your question, and those are what the model reads.
+- **Local models are given room for the chat**: the app asks your server for a context of 8k to 128k tokens as a
+  chat grows, since a server's own default is often 4k. Larger sizes use more of the server's memory.
 - **Deep research is bounded**: at most 8 searches and 16 pages, which is about 15 to 20 requests to the chat's
   model. It takes under a minute with a cloud model and longer with a large local one.
 - **Sync is last writer wins, per item**, by each device's clock; messages are not merged. A chat larger than 20 MB

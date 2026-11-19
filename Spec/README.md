@@ -24,6 +24,7 @@ shared settings: the time, the time zone and the project fence):
 |---|---|
 | `prompt_system.json` | The system message, paragraph by paragraph, for several settings (memory and search offered or not, a project, a private chat, voice). |
 | `prompt_date.json` | The date line every prompt carries, research prompts included: `Monday 16 November 2026`, in English, in the device's time zone. |
+| `passages.json` | Which passages of long files are chosen for a question, and how they are joined: `[…]` where text was left out; nothing when there is nothing to choose by. |
 | `search_query.json` | What is searched for: the latest user message on one line, blank lines left out, at most 200 characters; nothing when it is only white space. |
 | `memory_duplicates.json` | When a fact is already remembered: whatever its case or accents. |
 | `provisional_title.json` | The first 48 characters of the first message, until the model names the chat. |

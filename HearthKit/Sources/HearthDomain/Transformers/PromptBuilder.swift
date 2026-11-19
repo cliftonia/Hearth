@@ -60,7 +60,7 @@ public struct PromptBuilder: Sendable {
         offersSearch: Bool = false,
         offersMemory: Bool = false
     ) -> [PromptMessage] {
-        var systemText = systemText(sources: sources, style: style, now: now)
+        var systemText = systemText(sources: sources, style: style, now: now, question: Self.question(in: history))
         if offersMemory {
             systemText += "\n\n" + Self.memoryGuidance
         }
@@ -86,11 +86,25 @@ public struct PromptBuilder: Sendable {
     }
 
     /// The message as the model reads it: any attached files first, then what was typed.
+    ///
+    /// A file too long to send whole is sent as the passages that best match what was typed with it, and the model
+    /// is told so; when nothing typed matches anything in it, as its beginning.
     private func text(of message: Message) -> String {
         let files = message.documents.map { document in
-            "Attached file \"\(document.name)\":\n\(document.text.prefix(Self.maximumDocumentLength))"
+            let limit = Self.maximumDocumentLength
+            guard let excerpt = PassageFinder().excerpts(of: [document.text], for: message.text, allowance: limit)?.first else {
+                return "Attached file \"\(document.name)\":\n\(document.text.prefix(limit))"
+            }
+            return "Attached file \"\(document.name)\", too long to give you whole. These are the passages of it that best match "
+                + "the message, with \(PassageFinder.gap) where text was left out:\n\(excerpt)"
         }
         return (files + [message.text]).filter { !$0.isEmpty }.joined(separator: "\n\n")
+    }
+
+    /// What the user is asking about now, for choosing passages of a project's files: their latest message, and the
+    /// one before it, since a follow-up such as "and in winter?" leans on what it follows.
+    static func question(in history: [Message]) -> String {
+        history.filter { $0.role == .user && !$0.text.isEmpty }.suffix(2).map(\.text).joined(separator: "\n")
     }
 
     /// Search results as the model reads them after asking for a search, numbered so that it can cite them.
@@ -179,7 +193,7 @@ public struct PromptBuilder: Sendable {
 
     /// The system message: who the model is and the date, then how to write, who the user is, the user's
     /// instructions, the project's instructions and files, memories and any search results.
-    private func systemText(sources: [SearchSource], style: ReplyStyle, now: Date) -> String {
+    private func systemText(sources: [SearchSource], style: ReplyStyle, now: Date, question: String) -> String {
         var parts = ["You are a helpful, direct assistant. Today is \(Self.dateText(for: now, timeZone: timeZone))."]
         switch style {
         case .chat:
@@ -197,7 +211,7 @@ public struct PromptBuilder: Sendable {
             parts.append("The user has given these standing instructions. Follow them:\n\(instructions)")
         }
         if let project {
-            parts += Self.projectParts(for: project, fence: projectFence)
+            parts += Self.projectParts(for: project, fence: projectFence, question: question)
         }
         if isPrivate {
             parts.append(

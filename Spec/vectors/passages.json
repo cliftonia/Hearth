@@ -1,0 +1,109 @@
+{
+  "about": "The passages of long texts chosen for a question (PassageFinder). Each case gives the texts, the question, the allowance in characters and the passage length; expected is one excerpt for each text, or null when there is nothing to choose by and the caller falls back to the beginning of the texts.",
+  "cases": [
+    {
+      "name": "texts that fit the allowance whole are not searched",
+      "texts": [
+        "Tomatoes need full sun all day.\nWater the beds every morning.\nCompost goes on in early spring."
+      ],
+      "question": "water",
+      "allowance": 200,
+      "passageLength": 40,
+      "expected": null
+    },
+    {
+      "name": "a question of only common words gives nothing to search by",
+      "texts": [
+        "Tomatoes need full sun all day.\nWater the beds every morning.\nCompost goes on in early spring."
+      ],
+      "question": "What is it?",
+      "allowance": 60,
+      "passageLength": 40,
+      "expected": null
+    },
+    {
+      "name": "a question none of whose words is in the texts",
+      "texts": [
+        "Tomatoes need full sun all day.\nWater the beds every morning.\nCompost goes on in early spring."
+      ],
+      "question": "greenhouse heating",
+      "allowance": 60,
+      "passageLength": 40,
+      "expected": null
+    },
+    {
+      "name": "the matching passage, with a gap either side",
+      "texts": [
+        "Tomatoes need full sun all day.\nWater the beds every morning.\nCompost goes on in early spring."
+      ],
+      "question": "When do I water?",
+      "allowance": 60,
+      "passageLength": 40,
+      "expected": [
+        "[…]\nWater the beds every morning.\n[…]"
+      ]
+    },
+    {
+      "name": "a plural finds its singular, and neighbours run on",
+      "texts": [
+        "Tomatoes need full sun all day.\nWater the beds every morning.\nCompost goes on in early spring."
+      ],
+      "question": "bed compost",
+      "allowance": 70,
+      "passageLength": 40,
+      "expected": [
+        "[…]\nWater the beds every morning.\nCompost goes on in early spring."
+      ]
+    },
+    {
+      "name": "equal scores are settled by place, and a passage that does not fit is passed over",
+      "texts": [
+        "Tomatoes need full sun all day.\nWater the beds every morning.\nCompost goes on in early spring."
+      ],
+      "question": "bed compost",
+      "allowance": 35,
+      "passageLength": 40,
+      "expected": [
+        "[…]\nWater the beds every morning.\n[…]"
+      ]
+    },
+    {
+      "name": "a text nothing was chosen from has an empty excerpt",
+      "texts": [
+        "Tomatoes need full sun all day.\nWater the beds every morning.",
+        "Slugs eat the young lettuce at night."
+      ],
+      "question": "slugs",
+      "allowance": 50,
+      "passageLength": 40,
+      "expected": [
+        "",
+        "Slugs eat the young lettuce at night."
+      ]
+    },
+    {
+      "name": "a line longer than a passage is cut through, and case does not matter",
+      "texts": [
+        "aaaa bbbb cccc dddd EEEE ffff gggg hhhh iiii jjjj"
+      ],
+      "question": "Eeee",
+      "allowance": 30,
+      "passageLength": 20,
+      "expected": [
+        "[…]\nEEEE ffff gggg hhhh\n[…]"
+      ]
+    },
+    {
+      "name": "the rarer word counts for more",
+      "texts": [
+        "Water the lettuce.\nWater the tomatoes.\nWater the beans and feed them."
+      ],
+      "question": "water feed",
+      "allowance": 40,
+      "passageLength": 32,
+      "expected": [
+        "[…]\nWater the beans and feed them."
+      ]
+    }
+  ]
+}

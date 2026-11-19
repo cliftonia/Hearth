@@ -39,8 +39,8 @@ struct SpecTextTests {
 
     @Test func `every vector file is read by a test`() throws {
         let read = [
-            "follow_ups.json", "generated_title.json", "math.json", "memory_duplicates.json", "prompt_date.json", "prompt_system.json",
-            "provisional_title.json", "renamed_title.json", "search_query.json", "sync_decisions.json"
+            "follow_ups.json", "generated_title.json", "math.json", "memory_duplicates.json", "passages.json", "prompt_date.json",
+            "prompt_system.json", "provisional_title.json", "renamed_title.json", "search_query.json", "sync_decisions.json"
         ]
         #expect(try Spec.files(in: "vectors") == read)
     }

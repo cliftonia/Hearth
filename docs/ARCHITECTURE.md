@@ -165,7 +165,17 @@ A `Conversation` points at its project through `projectID`; the project knows no
 - **In the prompt**, `PromptBuilder` (`PromptBuilder+Project`) adds the project's name and instructions to the
   system message after the user's own standing instructions, then its files, each quoted between markers made
   up afresh for the turn and described as material, never instructions. The files share one allowance of
-  60,000 characters, taken in order; the model is told which file was cut short and which were left out.
+  60,000 characters. Files that fit it are given whole. Longer ones are searched: `PassageFinder` cuts them into
+  passages, scores each by the words it shares with the user's last two messages (BM25, so it matches words, not
+  meanings, and needs no model or server), and the best that fit are quoted in the order they stand, with `[…]`
+  where text was left out. When nothing in the question matches, the files are taken in order instead and the
+  model is told which was cut short and which left out. A long file attached to a message is searched the same
+  way, by what was typed with it. `Spec/vectors/passages.json` holds both apps to the same choice.
+- **Room for the chat.** A server left to itself gives a local model about 4,000 tokens and drops what does not
+  fit. `ContextRoom` estimates what each request needs and asks for the smallest of five sizes, 8k to 128k, that
+  holds it (`options.num_ctx`), never more than the model can take, and nothing at all for a cloud model or one
+  whose own settings fix a size. `ContextRoomCache` asks the server about each model once and keeps to the largest
+  size used, so the side requests for a title or follow-ups do not make the server load the model afresh.
 - **Memory** is read in a project's chats as in any other, and never in a private one. Because reference files
   are text the user did not type, a project that has any closes the memory tools for its chats, just as a file
   attached to a message does; a project with instructions alone leaves them open.
