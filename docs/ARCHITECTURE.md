@@ -417,7 +417,7 @@ they filed. The body is the hub's (`WIRE_FORMAT.md`, section 7; `Spec/wire/task*
   the hub keeps running the tasks.
 - **Needs sync.** `ScheduledTasksPresenter.isSyncOn`: without it the page explains that tasks run on the hub, leads to
   the sync page through the settings' own navigation, and Add is disabled.
-- **From the composer.** "Schedule a task" in the + menu asks the coordinator (`chatPresenter(_:didRequestTaskWith:)`)
+- **From the composer.** "Schedule a task" under the + button asks the coordinator (`chatPresenter(_:didRequestTaskWith:)`)
   for a task asking what is being written; the composer keeps its text. With sync on, `beginTaskAction(prompt:)` fills
   the editor, title left empty, and the router shows it over the chat (`AppRouter.taskSheet`); the presenter's
   delegate closes it on save, cancel or delete. With sync off the router shows the same notice instead, and Set up

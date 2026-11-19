@@ -64,7 +64,7 @@ and run scheduled tasks. Nothing goes through anyone else's service unless you p
   chats, settings, server addresses and your profile never leave the device
 - **Scheduled tasks** (with sync on): a question the hub asks at a time you choose, every day, every week or once,
   optionally searching the web first. Pick a cloud model, or Automatic to let the hub choose. Each answer arrives on
-  every device as a new chat, gathered under Scheduled tasks in the chat list. "Schedule a task" in the + menu starts
+  every device as a new chat, gathered under Scheduled tasks in the chat list. "Schedule a task" under the + button starts
   one from what you were typing
 - **Notifications** when a reply or a picture finishes while Hearth is in the background, and when a scheduled task's
   answer arrives. They are made on the device
@@ -84,7 +84,7 @@ and run scheduled tasks. Nothing goes through anyone else's service unless you p
 
 | | | |
 |:---:|:---:|:---:|
-| <img src="docs/screenshots/models.png" width="240" alt="The model sheet with gemma4 on your server and two cloud models"><br>Models on your server and in the cloud | <img src="docs/screenshots/plus-menu.png" width="240" alt="The + menu: choose file, take photo, photo library, make a picture, read replies aloud, schedule a task, new project"><br>The + menu | <img src="docs/screenshots/canvas.png" width="240" alt="A tip calculator page running in the canvas"><br>A page in the canvas |
+| <img src="docs/screenshots/models.png" width="240" alt="The model sheet with gemma4 on your server and two cloud models"><br>Models on your server and in the cloud | <img src="docs/screenshots/plus-menu.png" width="240" alt="The + sheet: take photo, photo library and choose file, then make a picture, read replies aloud, schedule a task and new project"><br>The + sheet | <img src="docs/screenshots/canvas.png" width="240" alt="A tip calculator page running in the canvas"><br>A page in the canvas |
 | <img src="docs/screenshots/voice.png" width="240" alt="A voice conversation, listening"><br>Voice conversation | <img src="docs/screenshots/project.png" width="240" alt="The chat list showing one project's chats"><br>A project's chats | <img src="docs/screenshots/project-editor.png" width="240" alt="A project's name, instructions and reference files"><br>A project's instructions |
 | <img src="docs/screenshots/settings.png" width="240" alt="Settings: profile, memory, follow-ups, web search, scheduled tasks, voice and pictures"><br>Settings | <img src="docs/screenshots/settings-bottom.png" width="240" alt="Settings: notifications, theme, vibration, the lock, servers, sync and erase"><br>More settings | <img src="docs/screenshots/memory.png" width="240" alt="The memory page with four saved memories"><br>Memory |
 | <img src="docs/screenshots/servers.png" width="240" alt="Server addresses with a successful connection test"><br>Servers | <img src="docs/screenshots/sync.png" width="240" alt="Sync with a hub address, a saved access key and sync on"><br>Sync with your hub | <img src="docs/screenshots/tasks.png" width="240" alt="Two scheduled tasks with their schedules and last runs"><br>Scheduled tasks |
