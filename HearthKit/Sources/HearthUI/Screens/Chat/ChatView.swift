@@ -5,6 +5,13 @@ import SwiftUI
 struct ChatView: View {
     private static let followUpsID = "followUps"
     private static let messageSpacing: CGFloat = 22
+    /// Whether a new chat's composer rests in the middle of the window under the greeting, as on a Mac, whose window
+    /// is too tall to leave it alone at the foot.
+    #if targetEnvironment(macCatalyst)
+    private static let centersNewChat = true
+    #else
+    private static let centersNewChat = false
+    #endif
 
     let presenter: ChatPresenter
 
@@ -12,9 +19,11 @@ struct ChatView: View {
 
     var body: some View {
         let viewModel = presenter.viewModel
+        // With nothing said yet, a Mac's composer rises to the middle, the greeting resting on it.
+        let isCentred = Self.centersNewChat && viewModel.conversation.messages.isEmpty && presenter.isServerConfigured
         VStack(spacing: 0) {
             // Both stay in the tree with one of them hidden, rather than being swapped, so neither is rebuilt as a chat begins.
-            ZStack {
+            ZStack(alignment: isCentred ? .bottom : .center) {
                 messageList(viewModel: viewModel)
                     .opacity(viewModel.conversation.messages.isEmpty ? 0 : 1)
                 EmptyChatSection(
@@ -52,9 +61,14 @@ struct ChatView: View {
             }
             ComposerFooter(presenter: presenter)
                 .frame(maxWidth: HearthSize.readingWidth)
+            // As much room beneath the composer as above it, while it is in the middle.
+            Color.clear
+                .frame(maxHeight: isCentred ? .infinity : 0)
+                .accessibilityHidden(true)
         }
         .background(HearthColor.paper.ignoresSafeArea())
         .animation(.snappy, value: viewModel.error)
+        .animation(.snappy, value: isCentred)
         // One haptic as a turn ends, never while its text streams: soft for a reply, fuller for a picture.
         // Nothing is played for a turn that ends off screen, or one that came to nothing.
         .onChange(of: viewModel.isStreaming) { _, isStreaming in

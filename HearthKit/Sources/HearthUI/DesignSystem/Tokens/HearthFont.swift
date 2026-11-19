@@ -7,8 +7,18 @@ import SwiftUI
 enum HearthFont {
     /// The app's name beside its mark.
     static let brand = Font.hearth(.title2, design: .serif).weight(.bold)
-    /// The one large line on an otherwise empty screen.
+    /// The one large line on an otherwise empty screen. A Mac's window has the room for a larger one.
+    #if targetEnvironment(macCatalyst)
+    static let display = Font.hearth(.largeTitle, design: .serif)
+    #else
     static let display = Font.hearth(.title, design: .serif)
+    #endif
+    /// The name of a chat or a project in the chat list. A Mac sets it a step smaller, as its lists are.
+    #if targetEnvironment(macCatalyst)
+    static let listRow = Font.hearth(.subheadline)
+    #else
+    static let listRow = Font.hearth(.body)
+    #endif
     /// The caption of a voice conversation.
     static let spoken = Font.hearth(.title3, design: .serif)
     /// The contents of a code block.

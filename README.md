@@ -14,7 +14,7 @@ and run scheduled tasks. Nothing goes through anyone else's service unless you p
 <p align="center">
   <img src="docs/screenshots/welcome.png" alt="An empty chat greeting Sam by name" width="24%">
   <img src="docs/screenshots/chat.png" alt="A reply with headings, a list and two code blocks, answered by gemma4" width="24%">
-  <img src="docs/screenshots/research.png" alt="A deep research report with a table, citations and its numbered sources" width="24%">
+  <img src="docs/screenshots/research.png" alt="A deep research report with a table, citations, its numbered sources and the sources button" width="24%">
   <img src="docs/screenshots/sidebar.png" alt="The chat list with a project, a pinned chat, scheduled task answers and chats grouped by day" width="24%">
 </p>
 
@@ -83,7 +83,7 @@ and run scheduled tasks. Nothing goes through anyone else's service unless you p
 
 | | | |
 |:---:|:---:|:---:|
-| <img src="docs/screenshots/models.png" width="240" alt="The model sheet with gemma4 on your server and two cloud models"><br>Models on your server and in the cloud | <img src="docs/screenshots/plus-menu.png" width="240" alt="The + menu: choose file, take photo, photo library, make a picture, schedule a task"><br>The + menu | <img src="docs/screenshots/canvas.png" width="240" alt="A tip calculator page running in the canvas"><br>A page in the canvas |
+| <img src="docs/screenshots/models.png" width="240" alt="The model sheet with gemma4 on your server and two cloud models"><br>Models on your server and in the cloud | <img src="docs/screenshots/plus-menu.png" width="240" alt="The + menu: choose file, take photo, photo library, make a picture, read replies aloud, schedule a task, new project"><br>The + menu | <img src="docs/screenshots/canvas.png" width="240" alt="A tip calculator page running in the canvas"><br>A page in the canvas |
 | <img src="docs/screenshots/voice.png" width="240" alt="A voice conversation, listening"><br>Voice conversation | <img src="docs/screenshots/project.png" width="240" alt="The chat list showing one project's chats"><br>A project's chats | <img src="docs/screenshots/project-editor.png" width="240" alt="A project's name, instructions and reference files"><br>A project's instructions |
 | <img src="docs/screenshots/settings.png" width="240" alt="Settings: profile, memory, follow-ups, web search, scheduled tasks, voice and pictures"><br>Settings | <img src="docs/screenshots/settings-bottom.png" width="240" alt="Settings: notifications, theme, vibration, the lock, servers, sync and erase"><br>More settings | <img src="docs/screenshots/memory.png" width="240" alt="The memory page with four saved memories"><br>Memory |
 | <img src="docs/screenshots/servers.png" width="240" alt="Server addresses with a successful connection test"><br>Servers | <img src="docs/screenshots/sync.png" width="240" alt="Sync with a hub address, a saved access key and sync on"><br>Sync with your hub | <img src="docs/screenshots/tasks.png" width="240" alt="Two scheduled tasks with their schedules and last runs"><br>Scheduled tasks |

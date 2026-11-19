@@ -20,6 +20,16 @@ extension View {
         }
     }
 
+    /// Leaves the Mac window this view is in without its name in the title bar, where the view shows the name itself.
+    /// An iPhone or iPad has no title bar, and ignores it.
+    func hidesWindowTitle() -> some View {
+        onWindowScene { scene in
+            #if targetEnvironment(macCatalyst)
+            scene.titlebar?.titleVisibility = .hidden
+            #endif
+        }
+    }
+
     /// Keeps the Mac window this view is in from being made smaller than `size`. An iPhone or iPad sizes its windows
     /// itself, and ignores it.
     func windowMinimumSize(_ size: CGSize) -> some View {

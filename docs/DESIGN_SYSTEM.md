@@ -14,7 +14,7 @@ the values and `Components/` holds the few pieces built from them that are used 
    that says what it is: an orb's diameter, a row's vertical padding tuned by eye. It becomes a token
    when a second view needs it.
 5. **Interface text uses the system text styles through `Font.hearth(_:)`** (`.hearth(.body)`,
-   `.hearth(.footnote)`), so it follows Dynamic Type on iPhone and iPad. On a Mac it is set a tenth larger than
+   `.hearth(.footnote)`), so it follows Dynamic Type on iPhone and iPad. On a Mac it is set a quarter larger than
    the style's standard size, grown or shrunk in proportion to the system's preferred size for the style
    (`Font.macPointSize`), so it follows the text size chosen for the app in the Mac's settings wherever the system
    passes it on. `HearthFont` is for the serif and monospaced faces only. Never set a fixed
@@ -158,7 +158,7 @@ Apply one with `.hearthShadow(.composer)`.
 | `Haptics.play(_:)`, `.haptic(_:trigger:when:)` | The one place a haptic is played from | Every haptic; see below |
 | `.surface(_:fill:border:)` | A filled shape with a hairline border inside its edge | Any bordered shape; the modifiers below are built on it |
 | `.cardSurface(radius:border:)` | A card-coloured rounded rectangle with a border | Code blocks, tables, the search field, the composer, the error banner |
-| `.capsuleSurface(fill:)` | A bordered pill | The model picker, sources, attached files |
+| `.capsuleSurface(fill:)` | A bordered pill | The model picker, attached files |
 | `.capsuleOutline(_:)` | A capsule's border with nothing behind it | Quiet controls such as attach and dictate |
 | `.glassSurface(_:tint:)` | The system's interactive glass in the given shape on iOS 26 and later; before that a frosted fill, a hairline edge and the floating shadow | The glass buttons, and the pill holding New chat and the chat's menu |
 | `.hearthShadow(_:)` | One of the shadows above | Lifting a surface off the paper |
@@ -168,7 +168,7 @@ Apply one with `.hearthShadow(.composer)`.
 | `.iconGlyphSize()` | Caps a symbol at the largest standard text size | The symbol of every icon control drawn in a fixed frame |
 | `.largeContentLabel(_:systemImage:)` | Shows the control's name and symbol in the large content viewer | Every icon-only control |
 | `.discardChangesDialog(isPresented:discardAction:)` | Asks "Discard your changes?" with Discard Changes and Keep Editing | Cancel in an editor that has been changed, alongside `.interactiveDismissDisabled` |
-| `SectionHeading(title:kerning:)` | Small capitals in the muted colour, read as a heading | The caption above a group of rows; the caller pads it |
+| `SectionHeading(title:isQuiet:)` | Small capitals in the muted colour, or plain words where quiet, read as a heading | The caption above a group of rows, quiet in the chat list; the caller pads it |
 
 Order matters where a surface also casts a shadow: apply the surface first, then the shadow.
 

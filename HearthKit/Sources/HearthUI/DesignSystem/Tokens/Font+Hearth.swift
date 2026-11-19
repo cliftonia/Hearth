@@ -2,8 +2,9 @@ import SwiftUI
 import UIKit
 
 extension Font {
-    /// How much larger text is set on a Mac, whose window is read from further away than a phone.
-    static let macTextScale: CGFloat = 1.1
+    /// How much larger text is set on a Mac, whose window is read from further away than a phone, and which draws an
+    /// iPad's layout at about three quarters of its size.
+    static let macTextScale: CGFloat = 1.25
 
     /// A system text style. On an iPhone or iPad it follows the reader's text size; on a Mac it is set a little larger,
     /// and follows the text size chosen for the app in the Mac's settings where the system passes it on.

@@ -62,7 +62,7 @@ extension SidebarView {
                     .frame(width: rowSymbolWidth)
                     .accessibilityHidden(true)
                 Text(title)
-                    .font(.hearth(.body))
+                    .font(HearthFont.listRow)
                     .foregroundStyle(tint)
                     .lineLimit(titleLineLimit)
                     .frame(maxWidth: .infinity, alignment: .leading)

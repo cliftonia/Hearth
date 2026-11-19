@@ -146,7 +146,7 @@ struct SidebarView: View {
                     .frame(width: rowSymbolWidth)
                     .accessibilityHidden(true)
                 Text(row.title)
-                    .font(.hearth(.body))
+                    .font(HearthFont.listRow)
                     .foregroundStyle(HearthColor.ink)
                     .lineLimit(titleLineLimit)
                     .frame(maxWidth: .infinity, alignment: .leading)

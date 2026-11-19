@@ -57,6 +57,7 @@ struct RootView: View {
         .tint(HearthColor.pine)
         // On a Mac the window cannot be made so small that the chat list and the chat no longer fit.
         .windowMinimumSize(WindowMinimumSize.chat)
+        .hidesWindowTitle()
     }
 
     /// The editor of a task begun from the composer, or the notice that tasks need sync.

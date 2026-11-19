@@ -45,10 +45,10 @@ struct MenusAndTextSizeTests {
 
     // MARK: Text on a Mac
 
-    @Test func `a Mac with no text size of its own sets text a tenth larger`() {
+    @Test func `a Mac with no text size of its own sets text a quarter larger`() {
         let size = Font.macPointSize(base: 17, preferred: 17, standard: 17)
 
-        #expect(abs(size - 18.7) < 0.001)
+        #expect(abs(size - 21.25) < 0.001)
     }
 
     @Test(arguments: [(preferred: 20.0, standard: 17.0), (preferred: 14.0, standard: 17.0), (preferred: 13.0, standard: 13.0)])
