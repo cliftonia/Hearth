@@ -2,12 +2,17 @@ import Foundation
 
 /// The picture models the app can ask for, in the order they are offered.
 public enum ImageModelKind: String, Codable, Sendable, CaseIterable {
-    /// Quick and good at most things; the one to start with.
+    /// Quick and good at most things.
     case zImageTurbo
-    /// The most photographic, and the slowest.
+    /// The most photographic, and the slowest; the one used until another is chosen.
     case krea2Turbo
     /// An older, painterly model.
     case juggernautXL
+
+    /// The model used where none has been chosen: Krea 2 Turbo if the server offers it, otherwise the first it offers.
+    public static func preferred(among models: [ImageModelKind]) -> ImageModelKind? {
+        models.contains(.krea2Turbo) ? .krea2Turbo : models.first
+    }
 }
 
 /// What the picture server can do.

@@ -47,13 +47,13 @@ public final class ImageInteractor: Sendable {
         }
     }
 
-    /// The model to use: the chosen one if the server has it, otherwise the first it offers.
+    /// The model to use: the chosen one if the server has it, otherwise the preferred one of those it offers.
     /// Changing and enlarging use tools of their own, and only need those to be there.
     private func model(for request: ImageRequest, settings: ServerSettings, capabilities: ImageCapabilities) throws -> ImageModelKind {
         switch request {
         case .create:
             let chosen = settings.imageModel.flatMap { capabilities.models.contains($0) ? $0 : nil }
-            guard let model = chosen ?? capabilities.models.first else {
+            guard let model = chosen ?? ImageModelKind.preferred(among: capabilities.models) else {
                 throw ImageError.noModel
             }
             return model

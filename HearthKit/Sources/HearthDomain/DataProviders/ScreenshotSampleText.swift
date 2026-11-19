@@ -50,6 +50,24 @@ enum ScreenshotSampleText {
     It is ready to bake with once it doubles three days in a row [4].
     """
 
+    static let tasmania = """
+    March is early autumn in Tasmania: mild days around 20 °C, cool nights, and weather that turns quickly.
+
+    - **Layers**: a T-shirt, a warm fleece and a light down jacket for the evenings.
+    - **A rain jacket**: showers come through even on fine days.
+    - **Walking shoes** with grip, if you plan on Cradle Mountain or Freycinet.
+    - **Sun protection**: the UV is strong even when it feels cool.
+
+    Pack for four seasons in a day and you will be comfortable.
+    """
+
+    static let tasmaniaSources = [
+        SearchSource(title: "Tasmania in autumn: what to expect", url: URL(string: "https://island-travel.example/autumn")!, snippet: "Mild days and cool nights."),
+        SearchSource(title: "What to wear on Tasmania's walking tracks", url: URL(string: "https://parks-guide.example/clothing")!, snippet: "Layers and a rain jacket."),
+        SearchSource(title: "March weather averages for Hobart", url: URL(string: "https://weather-notes.example/hobart-march")!, snippet: "Around 20 degrees by day."),
+        SearchSource(title: "Sun safety in southern Australia", url: URL(string: "https://sun-smart.example/uv")!, snippet: "The UV index stays high into autumn.")
+    ]
+
     static let sourdoughSources = [
         SearchSource(title: "Starting a sourdough starter, day by day", url: URL(string: "https://bread-notes.example/starter")!, snippet: "Most starters take five to ten days."),
         SearchSource(title: "Why your starter went quiet on day four", url: URL(string: "https://kitchen-science.example/quiet")!, snippet: "The early rise is not the yeast."),

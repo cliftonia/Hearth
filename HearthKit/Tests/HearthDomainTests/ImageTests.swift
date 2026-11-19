@@ -109,4 +109,10 @@ struct ImageTests {
         #expect(decoded.imageAddress.isEmpty)
         #expect(decoded.imageModel == nil)
     }
+
+    @Test func `with no model chosen Krea 2 Turbo is preferred, and otherwise the first the server offers`() {
+        #expect(ImageModelKind.preferred(among: [.zImageTurbo, .krea2Turbo, .juggernautXL]) == .krea2Turbo)
+        #expect(ImageModelKind.preferred(among: [.zImageTurbo, .juggernautXL]) == .zImageTurbo)
+        #expect(ImageModelKind.preferred(among: []) == nil)
+    }
 }

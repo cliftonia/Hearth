@@ -105,7 +105,7 @@ public struct ScreenshotSamples: Sendable {
             ]),
             chat("Trip to Tasmania in March", at: now.addingTimeInterval(-4 * day), [
                 ask("What should I pack for a week in Tasmania in March?"),
-                answer("Layers: a warm fleece, a rain jacket and good walking shoes. Mornings can be cold.")
+                Message(role: .assistant, text: ScreenshotSampleText.tasmania, sources: ScreenshotSampleText.tasmaniaSources)
             ]),
             chat("Fixing a leaking tap", at: now.addingTimeInterval(-6 * day), [
                 ask("My kitchen tap drips. What do I check first?"),
