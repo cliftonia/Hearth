@@ -33,6 +33,56 @@ public struct OllamaModelDTO: Decodable, Sendable {
     }
 }
 
+/// The answer to `/api/show`: what one model was built with. Only what bears on how much it can read at once is kept.
+public struct OllamaModelShowDTO: Decodable, Sendable, Equatable {
+    /// The most tokens the model itself can take in, as its file records it; `nil` when the server does not say.
+    public let contextLength: Int?
+    /// The context size the model's own settings fix on the server, when whoever made it chose one.
+    public let fixedContextLength: Int?
+
+    public init(contextLength: Int?, fixedContextLength: Int?) {
+        self.contextLength = contextLength
+        self.fixedContextLength = fixedContextLength
+    }
+
+    private struct Key: CodingKey {
+        let stringValue: String
+        let intValue: Int? = nil
+
+        init(_ name: String) {
+            stringValue = name
+        }
+
+        init?(stringValue: String) {
+            self.stringValue = stringValue
+        }
+
+        init?(intValue: Int) {
+            nil
+        }
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: Key.self)
+        // The model's details are keyed by its family, as in `gemma3.context_length`, among values of every kind.
+        let details = try? container.nestedContainer(keyedBy: Key.self, forKey: Key("model_info"))
+        contextLength = details?.allKeys
+            .first { $0.stringValue.hasSuffix(".context_length") }
+            .flatMap { try? details?.decode(Int.self, forKey: $0) }
+        // The settings come as lines of text, a name and a value on each: `num_ctx    8192`.
+        let settings = (try? container.decodeIfPresent(String.self, forKey: Key("parameters"))) ?? ""
+        fixedContextLength = settings.split(whereSeparator: \.isNewline)
+            .map { $0.split(whereSeparator: \.isWhitespace) }
+            .first { $0.first == "num_ctx" }
+            .flatMap { $0.last.flatMap { Int($0) } }
+    }
+}
+
+/// The body of a request to `/api/show`.
+struct OllamaShowRequestDTO: Encodable, Sendable {
+    let model: String
+}
+
 // MARK: - Tools
 
 /// What a model passed when it called a tool. Each tool fills in only the fields it uses.
@@ -215,6 +265,20 @@ public enum OllamaThinkDTO: Encodable, Sendable, Equatable {
     }
 }
 
+/// How the server should run the model for one request. Only the context size is ever set.
+public struct OllamaOptionsDTO: Encodable, Sendable, Equatable {
+    /// How many tokens of conversation the model is given room for.
+    public let contextLength: Int
+
+    public init(contextLength: Int) {
+        self.contextLength = contextLength
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case contextLength = "num_ctx"
+    }
+}
+
 /// The body of a request to `/api/chat`.
 public struct OllamaChatRequestDTO: Encodable, Sendable, Equatable {
     public let model: String
@@ -224,13 +288,23 @@ public struct OllamaChatRequestDTO: Encodable, Sendable, Equatable {
     public let think: OllamaThinkDTO?
     /// Left out unless the model may call tools in this request.
     public let tools: [OllamaToolDTO]?
+    /// Left out to run the model as the server would by itself.
+    public let options: OllamaOptionsDTO?
 
-    public init(model: String, messages: [OllamaMessageDTO], stream: Bool, think: OllamaThinkDTO?, tools: [OllamaToolDTO]? = nil) {
+    public init(
+        model: String,
+        messages: [OllamaMessageDTO],
+        stream: Bool,
+        think: OllamaThinkDTO?,
+        tools: [OllamaToolDTO]? = nil,
+        options: OllamaOptionsDTO? = nil
+    ) {
         self.model = model
         self.messages = messages
         self.stream = stream
         self.think = think
         self.tools = tools
+        self.options = options
     }
 }
 

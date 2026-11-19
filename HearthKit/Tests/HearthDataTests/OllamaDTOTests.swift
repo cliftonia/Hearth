@@ -41,6 +41,28 @@ struct OllamaDTOTests {
         #expect(none["think"] == nil)
     }
 
+    @Test func `a context size is sent as num_ctx among the options, and left out when there is none`() throws {
+        let options = OllamaOptionsDTO(contextLength: 8192)
+        let sized = try json(OllamaChatRequestDTO(model: "m", messages: [], stream: true, think: nil, options: options))
+        let plain = try json(OllamaChatRequestDTO(model: "m", messages: [], stream: true, think: nil))
+
+        #expect((sized["options"] as? [String: Any])?["num_ctx"] as? Int == 8192)
+        #expect(plain["options"] == nil)
+    }
+
+    @Test func `what a model can read at once, and any size its settings fix, are read from its description`() throws {
+        let open = #"{"parameters": "top_p 0.95\ntemperature    1", "model_info": {"general.name": "x", "qwen35.context_length": 262144, "tokens": ["a"]}}"#
+        let fixed = #"{"parameters": "stop \"<end>\"\nnum_ctx                        131072", "model_info": {"gemma3.context_length": 131072}}"#
+
+        #expect(try shown(open) == OllamaModelShowDTO(contextLength: 262_144, fixedContextLength: nil))
+        #expect(try shown(fixed) == OllamaModelShowDTO(contextLength: 131_072, fixedContextLength: 131_072))
+        #expect(try shown("{}") == OllamaModelShowDTO(contextLength: nil, fixedContextLength: nil))
+    }
+
+    private func shown(_ json: String) throws -> OllamaModelShowDTO {
+        try JSONDecoder().decode(OllamaModelShowDTO.self, from: Data(json.utf8))
+    }
+
     @Test func `the web search tool is offered with its query parameter, and left out otherwise`() throws {
         let offered = try json(OllamaChatRequestDTO(model: "m", messages: [], stream: true, think: nil, tools: [.webSearch]))
         let plain = try json(OllamaChatRequestDTO(model: "m", messages: [], stream: true, think: nil))

@@ -90,15 +90,20 @@ public struct ChatDataProvider: Sendable {
 public extension ChatDataProvider {
     /// Backed by an Ollama server.
     static func live(service: OllamaService = OllamaService()) -> ChatDataProvider {
-        ChatDataProvider(
+        let contexts = ContextRoomCache { baseURL, model in
+            let shown = try await service.showModel(baseURL: baseURL, name: model.rawValue)
+            return ModelContext(limit: shown.contextLength, fixed: shown.fixedContextLength)
+        }
+        return ChatDataProvider(
             fetchModels: { baseURL in
                 try await service.fetchModels(baseURL: baseURL).compactMap(ChatModel.init(from:))
             },
             streamChat: { baseURL, request in
-                let chunks = service.streamChat(baseURL: baseURL, request: OllamaChatRequestDTO(from: request, stream: true))
-                return AsyncThrowingStream { continuation in
+                AsyncThrowingStream { continuation in
                     let task = Task {
                         do {
+                            let room = await contexts.room(for: request, on: baseURL)
+                            let chunks = service.streamChat(baseURL: baseURL, request: OllamaChatRequestDTO(from: request, stream: true, room: room))
                             for try await chunk in chunks {
                                 if let thinking = chunk.message?.thinking, !thinking.isEmpty {
                                     continuation.yield(.thinking(thinking))
@@ -121,7 +126,8 @@ public extension ChatDataProvider {
                 }
             },
             complete: { baseURL, request in
-                let chunk = try await service.chat(baseURL: baseURL, request: OllamaChatRequestDTO(from: request, stream: false))
+                let room = await contexts.room(for: request, on: baseURL)
+                let chunk = try await service.chat(baseURL: baseURL, request: OllamaChatRequestDTO(from: request, stream: false, room: room))
                 return chunk.message?.content ?? ""
             }
         )
@@ -131,14 +137,16 @@ public extension ChatDataProvider {
 // MARK: - Mapping to and from the server's types
 
 extension OllamaChatRequestDTO {
-    /// Thinking and tools are sent only to models that have them.
-    init(from request: ChatRequest, stream: Bool) {
+    /// Thinking and tools are sent only to models that have them. `room` is how many tokens of conversation to ask
+    /// the server to make room for; `nil` leaves the server to its own size.
+    init(from request: ChatRequest, stream: Bool, room: Int? = nil) {
         self.init(
             model: request.model.id.rawValue,
             messages: request.messages.map(OllamaMessageDTO.init(from:)),
             stream: stream,
             think: request.model.canThink ? OllamaThinkDTO(from: request.thinking) : nil,
-            tools: Self.tools(for: request)
+            tools: Self.tools(for: request),
+            options: room.map(OllamaOptionsDTO.init(contextLength:))
         )
     }
 

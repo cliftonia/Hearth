@@ -15,6 +15,13 @@ public struct OllamaService: Sendable {
         return try await session.decoded(OllamaTagsDTO.self, for: request).models
     }
 
+    /// What one model was built with: how much it can read at once, and whether its settings fix a context size.
+    public func showModel(baseURL: URL, name: String) async throws -> OllamaModelShowDTO {
+        var request = try URLRequest.jsonPost(url: baseURL.appending(path: "api/show"), body: OllamaShowRequestDTO(model: name))
+        request.timeoutInterval = 15
+        return try await session.decoded(OllamaModelShowDTO.self, for: request)
+    }
+
     /// Asks the server to let go of every model it has loaded, so its memory is free for other work.
     /// A model that was unloaded is loaded again the next time it is spoken to.
     public func unloadModels(baseURL: URL) async throws {
