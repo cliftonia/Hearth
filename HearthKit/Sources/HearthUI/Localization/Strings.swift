@@ -65,6 +65,7 @@ enum Strings {
     static let tryAgain = String(localized: "message.retry", defaultValue: "Try again", bundle: .module)
     static let thinking = String(localized: "message.thinking", defaultValue: "Thinking…", bundle: .module)
     static let thoughtBriefly = String(localized: "message.thoughtBriefly", defaultValue: "Thought briefly", bundle: .module)
+    static let expandCode = String(localized: "message.expandCode", defaultValue: "Open code full size", bundle: .module)
     static let copyCode = String(localized: "message.copyCode", defaultValue: "Copy code", bundle: .module)
     static let code = String(localized: "message.code", defaultValue: "code", bundle: .module)
     static let attachedPhoto = String(localized: "message.attachedPhoto", defaultValue: "Attached photo", bundle: .module)

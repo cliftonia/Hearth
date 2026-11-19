@@ -38,6 +38,37 @@ struct ReplySourcesSection: View {
     }
 }
 
+/// Above a reply that searched the web: a quiet line that says so, and lists the pages it found when tapped.
+struct ReplySearchedLine: View {
+    let sources: [SourceViewConfiguration]
+
+    @State private var isPresented = false
+
+    var body: some View {
+        Button(action: { isPresented = true }, label: {
+            HStack(spacing: HearthSpacing.s6) {
+                Image(systemName: "globe")
+                    .accessibilityHidden(true)
+                Text(Strings.searchedTheWeb)
+                Image(systemName: "chevron.right")
+                    .font(.hearth(.caption2).weight(.semibold))
+                    .accessibilityHidden(true)
+            }
+            .font(.hearth(.footnote))
+            .foregroundStyle(HearthColor.mute)
+            .contentShape(Rectangle())
+            .minimumHitTarget()
+            .hoverHighlight(Capsule())
+        })
+        .buttonStyle(.plain)
+        .accessibilityLabel(Strings.searchedTheWeb)
+        .accessibilityHint(sources.count == 1 ? Strings.sourcesCountOne : Strings.sourcesCount(sources.count))
+        .sheet(isPresented: $isPresented) {
+            ReplySourcesSheet(sources: sources)
+        }
+    }
+}
+
 /// Beside a reply's actions: the marks of its first few sources and how many there are. Tapping it lists them all.
 struct ReplySourcesButton: View {
     private static let markCount = 3

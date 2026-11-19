@@ -12,6 +12,7 @@ extension Strings {
     static let researchChecking = String(localized: "research.checking", defaultValue: "Checking for gaps", bundle: .module)
     static let researchWriting = String(localized: "research.writing", defaultValue: "Writing", bundle: .module)
     static let researchSources = String(localized: "research.sources", defaultValue: "Sources", bundle: .module)
+    static let searchedTheWeb = String(localized: "sources.searched", defaultValue: "Searched the web", bundle: .module)
     static let sourcesHeading = String(localized: "sources.heading", defaultValue: "Sources:", bundle: .module)
     static let sourcesCountOne = String(localized: "sources.count.one", defaultValue: "1 source", bundle: .module)
     static let errorResearchNotConfigured = String(localized: "error.researchNotConfigured", defaultValue: "Add a search address in Settings to research a question.", bundle: .module)

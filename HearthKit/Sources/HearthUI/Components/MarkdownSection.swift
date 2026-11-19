@@ -71,7 +71,8 @@ struct MarkdownSection: View {
     }
 }
 
-/// A table that scrolls sideways when it is wider than the chat. Then its scroll bar shows, flashing as it appears,
+/// A table set in the reply's own size of text, its heading row bolder, that scrolls sideways when it is wider than
+/// the chat. Then its scroll bar shows, flashing as it appears,
 /// and its trailing edge fades, so that it is plain there is more to see.
 private struct TableSection: View {
     /// How wide the fade is at the edge of a table that runs on past it.
@@ -98,11 +99,11 @@ private struct TableSection: View {
     var body: some View {
         let runsOn = tableWidth > visibleWidth + 1
         ScrollView(.horizontal) {
-            Grid(alignment: .leading, horizontalSpacing: HearthSpacing.s18, verticalSpacing: HearthSpacing.s8) {
+            Grid(alignment: .leading, horizontalSpacing: HearthSpacing.s18, verticalSpacing: HearthSpacing.s10) {
                 GridRow {
                     ForEach(Self.cells(header)) { cell in
                         Text(MarkdownSection.inline(cell.text))
-                            .font(.hearth(.subheadline).weight(.semibold))
+                            .font(.hearth(.body).weight(.semibold))
                             .foregroundStyle(HearthColor.ink)
                     }
                 }
@@ -112,7 +113,7 @@ private struct TableSection: View {
                     GridRow {
                         ForEach(row.cells) { cell in
                             Text(MarkdownSection.inline(cell.text))
-                                .font(.hearth(.subheadline))
+                                .font(.hearth(.body))
                                 .foregroundStyle(HearthColor.ink)
                         }
                     }
@@ -165,51 +166,5 @@ private struct ListSection: View {
                 }
             }
         }
-    }
-}
-
-/// A block of code under a bar naming its language, with a button that copies it.
-private struct CodeBlockSection: View {
-    private static let copyButtonSize = CGSize(width: 32, height: 28)
-
-    let language: String?
-    let code: String
-
-    @State private var copyCount = 0
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: HearthSpacing.s8) {
-                Text(language ?? Strings.code)
-                    .font(.hearth(.caption))
-                    .foregroundStyle(HearthColor.mute)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Button(action: copyAction) {
-                    Image(systemName: "doc.on.doc")
-                        .font(.hearth(.caption))
-                        .foregroundStyle(HearthColor.mute)
-                        .frame(size: Self.copyButtonSize)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Strings.copyCode)
-            }
-            .padding(.leading, HearthSpacing.s12)
-            .padding(.trailing, HearthSpacing.s4)
-            Hairline()
-            ScrollView(.horizontal, showsIndicators: false) {
-                Text(code)
-                    .font(HearthFont.code)
-                    .foregroundStyle(HearthColor.ink)
-                    .textSelection(.enabled)
-                    .padding(HearthSpacing.s12)
-            }
-        }
-        .cardSurface()
-        .haptic(.success, trigger: copyCount)
-    }
-
-    private func copyAction() {
-        UIPasteboard.general.string = code
-        copyCount += 1
     }
 }

@@ -47,6 +47,15 @@ enum HearthColor {
     /// The dot that says the server can be reached. Not for text: words of success are drawn in `pine`.
     static let online = Color(lightHex: 0x3FA66B, darkHex: 0x57C283, highContrast: (light: 0x22784A, dark: 0x86E0AA))
 
+    // MARK: Code
+
+    /// The words a language reserves, in a block of code. Each of these reads on `card` in both appearances.
+    static let codeKeyword = Color(lightHex: 0x2C6B5A, darkHex: 0x6FC2A8, highContrast: (light: 0x1E5446, dark: 0x95DCC5))
+    /// Text in quotes, in a block of code.
+    static let codeString = Color(lightHex: 0x8A4B12, darkHex: 0xE0B15A, highContrast: (light: 0x6B3808, dark: 0xF0CB85))
+    /// Numbers, in a block of code.
+    static let codeNumber = Color(lightHex: 0x3B5BA5, darkHex: 0x8FB0F0, highContrast: (light: 0x2A4585, dark: 0xB4CCFA))
+
     // MARK: Voice orb
 
     /// The orb's gradient, from its highlight through its body to its shaded edge.

@@ -1981,6 +1981,17 @@
         }
       }
     },
+    "message.expandCode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open code full size"
+          }
+        }
+      }
+    },
     "message.nextVersion": {
       "extractionState": "manual",
       "localizations": {
@@ -4135,6 +4146,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sources:"
+          }
+        }
+      }
+    },
+    "sources.searched": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Searched the web"
           }
         }
       }

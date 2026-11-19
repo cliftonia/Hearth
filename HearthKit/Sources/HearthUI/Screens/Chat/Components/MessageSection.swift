@@ -101,6 +101,10 @@ struct MessageSection: View {
                     .foregroundStyle(HearthColor.mute)
                     .lineLimit(2)
             }
+            // Once the reply is written, the line stays to say the web was searched for it.
+            if !sources.isEmpty, !message.isResearch, !isStreaming {
+                ReplySearchedLine(sources: sources)
+            }
             if !message.text.isEmpty, message.imagesJPEG.isEmpty {
                 ReplyBodySection(markdown: message.text, isStreaming: isStreaming, openAction: canvasAction)
             }
