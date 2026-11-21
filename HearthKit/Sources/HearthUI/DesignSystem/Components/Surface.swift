@@ -22,10 +22,10 @@ extension View {
     func frostedSurface<S: InsettableShape>(_ shape: S) -> some View {
         if #available(iOS 26, *) {
             glassEffect(.clear, in: shape)
-                .overlay { shape.strokeBorder(HearthColor.line, lineWidth: HearthSize.hairline) }
+                .overlay { shape.strokeBorder(HearthColor.glassEdge, lineWidth: HearthSize.hairline) }
         } else {
             background(.regularMaterial, in: shape)
-                .overlay { shape.strokeBorder(HearthColor.line, lineWidth: HearthSize.hairline) }
+                .overlay { shape.strokeBorder(HearthColor.glassEdge, lineWidth: HearthSize.hairline) }
         }
     }
 

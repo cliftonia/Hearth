@@ -16,6 +16,9 @@ enum HearthColor {
     static let bubble = Color(lightHex: 0xE6EBE5, darkHex: 0x232C29)
     /// Borders and dividers.
     static let line = Color(lightHex: 0xDDE2DC, darkHex: 0x2A3330, highContrast: (light: 0x7A847D, dark: 0x6A7570))
+    /// The edge of a see-through surface. Lighter than `line` in the dark, where glass catches the light along its
+    /// upper and lower edges and a border as dark as `line` would leave its sides unseen.
+    static let glassEdge = Color(lightHex: 0xDDE2DC, darkHex: 0x55605B, highContrast: (light: 0x7A847D, dark: 0x8A9590))
     /// The veil drawn over the chat while the drawer is open; its opacity follows the drawer.
     static let scrim = Color.black
 
