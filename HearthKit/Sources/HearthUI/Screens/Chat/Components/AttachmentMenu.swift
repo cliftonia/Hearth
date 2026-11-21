@@ -163,9 +163,10 @@ struct AttachmentMenu: View {
             .labelStyle(.iconOnly)
             .font(.hearth(.footnote).weight(.semibold))
             .iconGlyphSize()
-            .foregroundStyle(HearthColor.mute)
+            // In the text's own colour on a soft fill, so it stands clear of whatever shows through the composer.
+            .foregroundStyle(HearthColor.ink)
             .frame(size: HearthSize.composerControl)
-            .capsuleOutline()
+            .glassControlSurface()
             .minimumHitTarget()
             .hoverHighlight(Capsule())
     }

@@ -34,6 +34,13 @@ extension View {
         surface(Capsule(), fill: fill)
     }
 
+    /// A softly filled capsule for a quiet control on a see-through surface, where an outline alone is lost against
+    /// whatever shows through.
+    func glassControlSurface(_ border: Color? = nil) -> some View {
+        background(HearthColor.glassControl, in: Capsule())
+            .overlay { Capsule().strokeBorder(border ?? .clear, lineWidth: HearthSize.hairline) }
+    }
+
     /// A capsule's outline with nothing behind it, for a quiet control.
     func capsuleOutline(_ color: Color = HearthColor.line) -> some View {
         overlay { Capsule().strokeBorder(color, lineWidth: HearthSize.hairline) }

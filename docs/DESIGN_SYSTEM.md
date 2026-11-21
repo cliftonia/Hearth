@@ -42,6 +42,7 @@ quiet tone also have stronger values that are drawn while Increase Contrast is o
 | `bubble` | `#E6EBE5` | `#232C29` | The user's message bubble; the selected chat in the list |
 | `line` | `#DDE2DC` | `#2A3330` | Borders and dividers |
 | `glassEdge` | `#DDE2DC` | `#55605B` | The edge of a see-through surface: the composer |
+| `glassControl` | `ink` at 10% | `ink` at 10% | The fill of the composer's plus and microphone |
 | `scrim` | black | black | The veil over the chat while the drawer is open |
 | `ink` | `#18211E` | `#E9EEEA` | Body text and primary symbols |
 | `mute` | `#5F6A65` | `#8B9691` | Secondary text, placeholders, quiet symbols; comments in code |
