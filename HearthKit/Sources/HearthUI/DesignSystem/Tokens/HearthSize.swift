@@ -39,7 +39,8 @@ enum HearthSize {
     static let sidebarWidth: CGFloat = 320
     /// The widest the drawer of chats opens on a narrow screen.
     static let drawerMaximumWidth: CGFloat = 340
-    /// How far above its own top the conversation may draw, to pass beneath the header and the status bar.
+    /// How far beyond its own head and foot the conversation may draw, to pass beneath the header, the composer and
+    /// the edges of the screen.
     static let scrollUnderReach: CGFloat = 200
 }
 

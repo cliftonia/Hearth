@@ -1,9 +1,12 @@
 import HearthDomain
 import SwiftUI
 
-/// The chat screen: the conversation or its empty state under a floating header, any error, and the composer.
+/// The chat screen: the conversation or its empty state, with the header floating over its head and the composer,
+/// under any error, floating over its foot, so that the conversation scrolls on beneath both.
 struct ChatView: View {
     private static let followUpsID = "followUps"
+    /// The very end of the conversation, beneath whatever it ends with.
+    private static let endID = "end"
     private static let messageSpacing: CGFloat = 22
     /// Whether a new chat's composer rests in the middle of the window under the greeting, as on a Mac, whose window
     /// is too tall to leave it alone at the foot.
@@ -16,6 +19,8 @@ struct ChatView: View {
     let presenter: ChatPresenter
 
     @Environment(\.scenePhase) private var scenePhase
+    /// How much of the conversation's foot the composer and the keyboard cover, as it last was.
+    @State private var footInset: CGFloat = 0
 
     var body: some View {
         let viewModel = presenter.viewModel
@@ -39,32 +44,10 @@ struct ChatView: View {
             // It may shrink to nothing, so a tall keyboard squeezes this and never pushes the composer beneath itself.
             .frame(minHeight: 0, maxHeight: .infinity)
             .frame(maxWidth: .infinity)
-            // Clipped at the foot, so nothing spills onto the composer, but open at the head, so the conversation can
-            // scroll on beneath the header and the status bar.
-            .mask(alignment: .bottom) {
-                Rectangle()
-                    .padding(.top, -HearthSize.scrollUnderReach)
-            }
             // A tap anywhere in the conversation puts the keyboard away, without taking the tap from what was tapped.
             .contentShape(Rectangle())
             .simultaneousGesture(TapGesture().onEnded { Keyboard.dismiss() })
-            // The header floats over the conversation, which scrolls on beneath it.
-            .floatingTopBar { ChatHeader(presenter: presenter) }
-            if let error = viewModel.error {
-                ErrorBannerSection(
-                    configuration: error,
-                    retryAction: { Task { await presenter.retryAction() } },
-                    dismissAction: { viewModel.error = nil }
-                )
-                .frame(maxWidth: HearthSize.readingWidth)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-            ComposerFooter(presenter: presenter)
-                .frame(maxWidth: HearthSize.readingWidth)
-            // As much room beneath the composer as above it, while it is in the middle.
-            Color.clear
-                .frame(maxHeight: isCentred ? .infinity : 0)
-                .accessibilityHidden(true)
+            .modifier(ChatBarsPlacement(presenter: presenter, isCentred: isCentred))
         }
         .background(HearthColor.paper.ignoresSafeArea())
         .animation(.snappy, value: viewModel.error)
@@ -104,31 +87,40 @@ struct ChatView: View {
         let messages = viewModel.conversation.messages
         return ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: Self.messageSpacing) {
-                    ForEach(messages) { message in
-                        messageSection(message, isLast: message.id == messages.last?.id, viewModel: viewModel)
-                            .id(message.id)
-                    }
-                    if let notice = viewModel.memoryNotice {
-                        MemoryNoticeSection(notice: notice)
-                    }
-                    if !viewModel.followUps.isEmpty, !viewModel.isStreaming {
-                        FollowUpSection(questions: viewModel.followUps) { question in
-                            Task { await presenter.followUpAction(question) }
-                        }
-                        .id(Self.followUpsID)
-                        .transition(.opacity)
-                    }
+                VStack(spacing: 0) {
+                    messageStack(messages, viewModel: viewModel)
+                    // Nothing to see: a place to scroll to that is always the end.
+                    Color.clear
+                        .frame(height: 0)
+                        .id(Self.endID)
+                        .accessibilityHidden(true)
                 }
-                .animation(.snappy, value: viewModel.followUps)
-                .animation(.snappy, value: viewModel.memoryNotice)
                 .padding(.horizontal, HearthSpacing.s16)
                 .padding(.vertical, HearthSpacing.s12)
                 .frame(maxWidth: HearthSize.readingWidth)
                 .frame(maxWidth: .infinity)
             }
             .defaultScrollAnchor(.bottom)
+            .softScrollFoot()
             .scrollDismissesKeyboard(.interactively)
+            // A chat opens at its latest reply. The composer floats over the foot of the conversation and is measured
+            // only once it is laid out, so the place is found again then, rather than left where the first pass put it.
+            .onChange(of: viewModel.conversation.id, initial: true) {
+                Task { @MainActor in
+                    proxy.scrollTo(Self.endID, anchor: .bottom)
+                }
+            }
+            // When the keyboard rises, or the composer grows a line, the end of the conversation rises with it
+            // rather than being left beneath them.
+            .onGeometryChange(for: CGFloat.self, of: \.safeAreaInsets.bottom) { inset in
+                let hasGrown = inset > footInset
+                footInset = inset
+                if hasGrown {
+                    withAnimation(.snappy) {
+                        proxy.scrollTo(Self.endID, anchor: .bottom)
+                    }
+                }
+            }
             .onChange(of: messages.count) {
                 withAnimation(.snappy) {
                     proxy.scrollTo(messages.last?.id, anchor: .bottom)
@@ -140,6 +132,28 @@ struct ChatView: View {
                 }
             }
         }
+    }
+
+    /// The messages one under another, then the latest notice and the suggested questions.
+    private func messageStack(_ messages: [Message], viewModel: ChatViewModel) -> some View {
+        LazyVStack(alignment: .leading, spacing: Self.messageSpacing) {
+            ForEach(messages) { message in
+                messageSection(message, isLast: message.id == messages.last?.id, viewModel: viewModel)
+                    .id(message.id)
+            }
+            if let notice = viewModel.memoryNotice {
+                MemoryNoticeSection(notice: notice)
+            }
+            if !viewModel.followUps.isEmpty, !viewModel.isStreaming {
+                FollowUpSection(questions: viewModel.followUps) { question in
+                    Task { await presenter.followUpAction(question) }
+                }
+                .id(Self.followUpsID)
+                .transition(.opacity)
+            }
+        }
+        .animation(.snappy, value: viewModel.followUps)
+        .animation(.snappy, value: viewModel.memoryNotice)
     }
 
     /// One message, with the passing state and the actions that apply to it.
@@ -158,5 +172,57 @@ struct ChatView: View {
             canvasAction: { index in presenter.canvasAction(CanvasReference(messageID: message.id, index: index)) },
             savePictureAction: { await presenter.savePictureAction($0) }
         )
+    }
+}
+
+/// What stands at the foot of the chat: any error, and under it the composer.
+private struct ChatFooter: View {
+    let presenter: ChatPresenter
+
+    var body: some View {
+        let viewModel = presenter.viewModel
+        VStack(spacing: 0) {
+            if let error = viewModel.error {
+                ErrorBannerSection(
+                    configuration: error,
+                    retryAction: { Task { await presenter.retryAction() } },
+                    dismissAction: { viewModel.error = nil }
+                )
+                .frame(maxWidth: HearthSize.readingWidth)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+            ComposerFooter(presenter: presenter)
+                .frame(maxWidth: HearthSize.readingWidth)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+/// Where the chat's bars go: the header floating over the head of the conversation and the composer over its foot,
+/// with the conversation scrolling on beneath both.
+private struct ChatBarsPlacement: ViewModifier {
+    let presenter: ChatPresenter
+    /// Whether the composer rests in the middle of the window, as a new chat's does on a Mac.
+    let isCentred: Bool
+
+    @State private var height: CGFloat = 0
+    @State private var footerHeight: CGFloat = 0
+
+    func body(content: Content) -> some View {
+        content
+            // Kept to its own width, so nothing spills over a list beside it, but open at the head and the foot, so
+            // the conversation can scroll on beneath the header, the composer and the edges of the screen.
+            .mask {
+                Rectangle()
+                    .padding(.vertical, -HearthSize.scrollUnderReach)
+            }
+            .onGeometryChange(for: CGFloat.self, of: \.size.height) { height = $0 }
+            .floatingBottomBar {
+                ChatFooter(presenter: presenter)
+                    .onGeometryChange(for: CGFloat.self, of: \.size.height) { footerHeight = $0 }
+                    // In the middle, the composer has as much room beneath it as above it.
+                    .padding(.bottom, isCentred ? max(0, (height - footerHeight) / 2) : 0)
+            }
+            .floatingTopBar { ChatHeader(presenter: presenter) }
     }
 }

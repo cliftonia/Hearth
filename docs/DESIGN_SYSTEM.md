@@ -135,7 +135,7 @@ Rounded rectangles are always drawn with `style: .continuous`. Pills and round b
 | `readingWidth` | 780 | The widest a line of chat grows |
 | `sidebarWidth` | 320 | The chat list beside the chat |
 | `drawerMaximumWidth` | 340 | The widest the drawer opens |
-| `scrollUnderReach` | 200 | How far above its own top the conversation may draw, to pass beneath the floating header |
+| `scrollUnderReach` | 200 | How far beyond its own head and foot the conversation may draw, to pass beneath the floating header and composer |
 
 A size that is a `CGSize` is applied with `.frame(size:)`.
 
@@ -171,6 +171,7 @@ Apply one with `.hearthShadow(.composer)`.
 | `.hoverHighlight(_:)` | The system's highlight under an iPad's pointer, a faint wash of ink on a Mac, in the given shape | Every control drawn with the plain button style: the round buttons, the chips, menu labels, the composer's controls, the rows of the chat list and the settings. Put it after `.minimumHitTarget()` |
 | `.minimumHitTarget()` | Grows the touchable area of a control to at least 44 points a side without moving or redrawing it | Every icon control drawn smaller than 44 points; put it last on the label |
 | `.floatingTopBar(_:)` | Floats a bar over the top of a view, with the system's scroll edge blur on iOS 26 and a fade into the paper before it | The chat's header, which the conversation scrolls beneath |
+| `.floatingBottomBar(_:)` | The same at the foot of a view | The chat's composer, which the conversation scrolls on beneath |
 | `.folded(_:)` | Keeps a view in place but folds it to nothing: unseen, untouchable and unread | A line that comes and goes, such as a check's result or an empty note, without an `if` |
 | `.iconGlyphSize()` | Caps a symbol at the largest standard text size | The symbol of every icon control drawn in a fixed frame |
 | `.largeContentLabel(_:systemImage:)` | Shows the control's name and symbol in the large content viewer | Every icon-only control |

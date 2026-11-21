@@ -184,6 +184,14 @@ A `Conversation` points at its project through `projectID`; the project knows no
   sheets are presented from `AppRouter.projectSheet`, one value for both so that the picker can give way to the
   sheet that makes a project.
 
+## The chat's bars
+
+The header floats over the head of the conversation and the composer, under any error, over its foot
+(`.floatingTopBar`, `.floatingBottomBar`), so replies scroll on beneath both and stop clear of them only at their
+ends. iOS 26 softens what passes beneath with the system's scroll edge; earlier systems fade it into the paper. A
+chat opens at its latest reply, and when the keyboard rises or the composer grows a line the end of the conversation
+rises with it. On a Mac a new chat's composer rests in the middle of the window, lifted there by padding beneath it.
+
 ## Deep research
 
 Research answers one question with a report written from pages the app searched for and read. It is a turn like
