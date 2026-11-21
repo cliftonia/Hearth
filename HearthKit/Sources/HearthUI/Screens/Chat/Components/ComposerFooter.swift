@@ -10,6 +10,8 @@ struct ComposerFooter: View {
     private static let cancelEditSize = CGSize(width: 28, height: 24)
     /// Rounds the model chip into a capsule while it is one line high.
     private static let chipRadius = HearthSize.optionChip.height / 2
+    /// How strongly the effort is drawn beside the model's name on the chip.
+    private static let chipEffortOpacity = 0.78
     /// How much larger the composer stands while a finger rests on it.
     private static let heldScale: CGFloat = 1.06
     /// The gap beneath the composer.
@@ -138,14 +140,15 @@ struct ComposerFooter: View {
         return Button(action: { viewModel.isModelPickerPresented = true }, label: {
             layout {
                 Text(name)
-                    .font(.hearth(.footnote).weight(.medium))
-                    .foregroundStyle(HearthColor.ink)
+                    .font(.hearth(.footnote).weight(.semibold))
+                    .foregroundStyle(HearthColor.onPine)
                     .lineLimit(1)
                     .truncationMode(.middle)
-                // Research stands out in the brand colour, so it is plain that the next message will be researched.
+                // The effort is quieter than the name, except research, which is drawn as strongly, so it is plain
+                // that the next message will be researched.
                 Text(effort)
-                    .font(.hearth(.footnote))
-                    .foregroundStyle(presenter.isResearchChosen ? HearthColor.pine : HearthColor.mute)
+                    .font(.hearth(.footnote).weight(presenter.isResearchChosen ? .semibold : .regular))
+                    .foregroundStyle(HearthColor.onPine.opacity(presenter.isResearchChosen ? 1 : Self.chipEffortOpacity))
                     .lineLimit(1)
                     // Research is never shortened; where room is tight the model's name gives way to it.
                     .fixedSize(horizontal: presenter.isResearchChosen && !isLarge, vertical: false)
@@ -156,8 +159,8 @@ struct ComposerFooter: View {
             .padding(.horizontal, HearthSpacing.s12)
             .padding(.vertical, isLarge ? HearthSpacing.s6 : 0)
             .frame(minHeight: HearthSize.optionChip.height)
-            // The brand's soft fill rather than the bubble's grey-green, which loses its colour on the glass.
-            .background(HearthColor.pineSoft, in: RoundedRectangle(cornerRadius: isLarge ? HearthRadius.card : Self.chipRadius, style: .continuous))
+            // The brand colour, as the voice button beside it, so the two read as a pair on the glass.
+            .background(HearthColor.pine, in: RoundedRectangle(cornerRadius: isLarge ? HearthRadius.card : Self.chipRadius, style: .continuous))
             .minimumHitTarget()
             .hoverHighlight(RoundedRectangle(cornerRadius: isLarge ? HearthRadius.card : Self.chipRadius, style: .continuous))
         })
