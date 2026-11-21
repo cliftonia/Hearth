@@ -19,9 +19,11 @@ enum HearthColor {
     /// The edge of a see-through surface. Lighter than `line` in the dark, where glass catches the light along its
     /// upper and lower edges and a border as dark as `line` would leave its sides unseen.
     static let glassEdge = Color(lightHex: 0xDDE2DC, darkHex: 0x55605B, highContrast: (light: 0x7A847D, dark: 0x8A9590))
+    /// The wash laid into a see-through surface, so that what scrolls beneath shows through quietly.
+    static let glassWash = card.opacity(0.6)
     /// The fill of a quiet control that sits on a see-through surface, such as the composer's plus and microphone:
     /// a breath of the text colour, so the control keeps its shape whatever scrolls beneath the glass.
-    static let glassControl = ink.opacity(0.1)
+    static let glassControl = ink.opacity(0.14)
     /// The veil drawn over the chat while the drawer is open; its opacity follows the drawer.
     static let scrim = Color.black
 

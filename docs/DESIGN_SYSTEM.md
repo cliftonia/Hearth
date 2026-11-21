@@ -42,7 +42,8 @@ quiet tone also have stronger values that are drawn while Increase Contrast is o
 | `bubble` | `#E6EBE5` | `#232C29` | The user's message bubble; the selected chat in the list |
 | `line` | `#DDE2DC` | `#2A3330` | Borders and dividers |
 | `glassEdge` | `#DDE2DC` | `#55605B` | The edge of a see-through surface: the composer |
-| `glassControl` | `ink` at 10% | `ink` at 10% | The fill of the composer's plus and microphone |
+| `glassWash` | `card` at 60% | `card` at 60% | The wash laid into the glass composer, quietening what shows through |
+| `glassControl` | `ink` at 14% | `ink` at 14% | The fill of the composer's plus and microphone |
 | `scrim` | black | black | The veil over the chat while the drawer is open |
 | `ink` | `#18211E` | `#E9EEEA` | Body text and primary symbols |
 | `mute` | `#5F6A65` | `#8B9691` | Secondary text, placeholders, quiet symbols; comments in code |
@@ -126,7 +127,7 @@ Rounded rectangles are always drawn with `style: .continuous`. Pills and round b
 | `hairline` | 1 | Borders and dividers |
 | `iconButton` | 40 | An `IconButton`, and anything that lines up with one |
 | `glassButton` | 44 | A `GlassCircleButton`, and the pill of glass beside it at the top of the chat |
-| `composerControl` | 34 × 32 | Attach and dictate |
+| `composerControl` | 36 × 36 | Attach and dictate |
 | `optionChip` | 38 × 32 | A switch in the composer's options |
 | `sendButton` | 34 | The composer's send button |
 | `messageAction` | 34 × 30 | Copy, share, read aloud, try again |

@@ -161,7 +161,7 @@ struct AttachmentMenu: View {
         // button and nothing beside it.
         Label(Strings.addMenu, systemImage: "plus")
             .labelStyle(.iconOnly)
-            .font(.hearth(.footnote).weight(.semibold))
+            .font(.hearth(.subheadline).weight(.semibold))
             .iconGlyphSize()
             // In the text's own colour on a soft fill, so it stands clear of whatever shows through the composer.
             .foregroundStyle(HearthColor.ink)

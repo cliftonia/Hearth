@@ -21,7 +21,9 @@ extension View {
     @ViewBuilder
     func frostedSurface<S: InsettableShape>(_ shape: S) -> some View {
         if #available(iOS 26, *) {
-            glassEffect(.clear, in: shape)
+            // Clear glass alone shows what is beneath too sharply, and what sits on it is lost against that; a wash
+            // of the card's colour quietens it while leaving it to be seen.
+            glassEffect(.clear.tint(HearthColor.glassWash), in: shape)
                 .overlay { shape.strokeBorder(HearthColor.glassEdge, lineWidth: HearthSize.hairline) }
         } else {
             background(.regularMaterial, in: shape)

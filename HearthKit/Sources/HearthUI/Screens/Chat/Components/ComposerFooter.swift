@@ -156,7 +156,8 @@ struct ComposerFooter: View {
             .padding(.horizontal, HearthSpacing.s12)
             .padding(.vertical, isLarge ? HearthSpacing.s6 : 0)
             .frame(minHeight: HearthSize.optionChip.height)
-            .background(HearthColor.bubble, in: RoundedRectangle(cornerRadius: isLarge ? HearthRadius.card : Self.chipRadius, style: .continuous))
+            // The brand's soft fill rather than the bubble's grey-green, which loses its colour on the glass.
+            .background(HearthColor.pineSoft, in: RoundedRectangle(cornerRadius: isLarge ? HearthRadius.card : Self.chipRadius, style: .continuous))
             .minimumHitTarget()
             .hoverHighlight(RoundedRectangle(cornerRadius: isLarge ? HearthRadius.card : Self.chipRadius, style: .continuous))
         })
@@ -271,7 +272,7 @@ private extension ComposerFooter {
         let isDictating = presenter.viewModel.isDictating
         return Button(action: { Task { await presenter.dictationAction() } }, label: {
             Image(systemName: isDictating ? "mic.fill" : "mic")
-                .font(.hearth(.footnote).weight(.medium))
+                .font(.hearth(.subheadline).weight(.medium))
                 .iconGlyphSize()
                 .foregroundStyle(isDictating ? HearthColor.danger : HearthColor.ink)
                 .frame(size: HearthSize.composerControl)

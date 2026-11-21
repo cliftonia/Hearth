@@ -17,7 +17,7 @@ enum HearthSize {
     /// The side of a `GlassCircleButton`: the lone buttons at the top of the chat, each in its own bubble of glass.
     static let glassButton: CGFloat = 44
     /// The outlined buttons in the composer: attach and dictate.
-    static let composerControl = CGSize(width: 34, height: 32)
+    static let composerControl = CGSize(width: 36, height: 36)
     /// A switch in the composer's row of options.
     static let optionChip = CGSize(width: 38, height: 32)
     /// The diameter of the composer's send button.
