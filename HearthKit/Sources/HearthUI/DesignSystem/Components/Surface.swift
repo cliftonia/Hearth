@@ -16,11 +16,13 @@ extension View {
 
     /// A see-through surface for something that floats over scrolling content, which shows softened through it.
     ///
-    /// iOS 26 and later draw the system's glass. Earlier systems get a frosted fill with a hairline edge.
+    /// iOS 26 and later draw the system's glass. Earlier systems get a frosted fill. Both are given the same hairline
+    /// all the way round: glass alone catches the light along its upper and lower edges only, and its sides are lost.
     @ViewBuilder
     func frostedSurface<S: InsettableShape>(_ shape: S) -> some View {
         if #available(iOS 26, *) {
             glassEffect(.clear, in: shape)
+                .overlay { shape.strokeBorder(HearthColor.line, lineWidth: HearthSize.hairline) }
         } else {
             background(.regularMaterial, in: shape)
                 .overlay { shape.strokeBorder(HearthColor.line, lineWidth: HearthSize.hairline) }
