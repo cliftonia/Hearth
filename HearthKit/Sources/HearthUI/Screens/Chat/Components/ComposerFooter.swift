@@ -44,7 +44,9 @@ struct ComposerFooter: View {
             // The recording row lies over the composer's own row, which stays in place so the field keeps its identity.
             ZStack {
                 ComposerLayout(isCompact: !isExpanded, spacing: isExpanded ? HearthSpacing.s10 : HearthSpacing.s6) {
-                    TextField(placeholder, text: $viewModel.draft, axis: .vertical)
+                    // The words in the empty field are drawn in the secondary colour rather than the system's fainter
+                    // one, so that they read on the see-through composer whatever scrolls beneath it.
+                    TextField(placeholder, text: $viewModel.draft, prompt: Text(placeholder).foregroundStyle(HearthColor.mute), axis: .vertical)
                         .lineLimit(1...6)
                         .font(.hearth(.body))
                         .foregroundStyle(HearthColor.ink)
@@ -74,7 +76,8 @@ struct ComposerFooter: View {
         .padding(.horizontal, HearthSpacing.s12)
         .padding(.top, isExpanded ? HearthSpacing.s12 : HearthSpacing.s10)
         .padding(.bottom, HearthSpacing.s10)
-        .cardSurface(radius: HearthRadius.composer)
+        // See-through, so the conversation that scrolls on beneath the composer shows faintly through it.
+        .frostedSurface(RoundedRectangle(cornerRadius: HearthRadius.composer, style: .continuous))
         .hearthShadow(.composer)
         // The moment a finger rests on it the composer grows a little, and stays so for as long as it is held,
         // unless motion is reduced.
@@ -189,7 +192,8 @@ struct ComposerFooter: View {
         // At rest the composer says what can be done with it; once opened it says who is being written to, beside the
         // chip that changes it.
         if !isExpanded {
-            return Strings.composerRestingPlaceholder
+            // Once the chat is under way, what is written next is a reply.
+            return presenter.viewModel.conversation.messages.isEmpty ? Strings.composerRestingPlaceholder : Strings.composerReplyPlaceholder
         }
         return presenter.viewModel.selectedModel.map { Strings.messageModel($0.displayName) } ?? Strings.composerPlaceholder
     }

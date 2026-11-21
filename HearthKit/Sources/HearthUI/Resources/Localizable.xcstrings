@@ -914,6 +914,17 @@
         }
       }
     },
+    "composer.placeholder.reply": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply or hold to talk"
+          }
+        }
+      }
+    },
     "composer.placeholder.resting": {
       "extractionState": "manual",
       "localizations": {

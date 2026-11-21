@@ -14,6 +14,19 @@ extension View {
         surface(RoundedRectangle(cornerRadius: radius, style: .continuous), border: border)
     }
 
+    /// A see-through surface for something that floats over scrolling content, which shows softened through it.
+    ///
+    /// iOS 26 and later draw the system's glass. Earlier systems get a frosted fill with a hairline edge.
+    @ViewBuilder
+    func frostedSurface<S: InsettableShape>(_ shape: S) -> some View {
+        if #available(iOS 26, *) {
+            glassEffect(.clear, in: shape)
+        } else {
+            background(.regularMaterial, in: shape)
+                .overlay { shape.strokeBorder(HearthColor.line, lineWidth: HearthSize.hairline) }
+        }
+    }
+
     /// A pill: an attached file, the caption of a voice conversation.
     func capsuleSurface(fill: Color = HearthColor.card) -> some View {
         surface(Capsule(), fill: fill)
